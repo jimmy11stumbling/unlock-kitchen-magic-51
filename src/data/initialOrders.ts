@@ -1,3 +1,4 @@
+
 import type { Order, KitchenOrder } from "@/types/staff";
 
 export const initialOrders: Order[] = [
@@ -13,7 +14,7 @@ export const initialOrders: Order[] = [
     total: 98.95,
     timestamp: new Date().toISOString(),
     serverName: "Sofia Chen",
-    specialInstructions: "Allergy Alert: Guest has dairy sensitivity",
+    specialInstructions: "Allergy: dairy",
     guestCount: 4,
     estimatedPrepTime: 35
   },
@@ -22,30 +23,14 @@ export const initialOrders: Order[] = [
     tableNumber: 3,
     status: "preparing",
     items: [
-      { id: 7, name: "Seafood Paella", quantity: 2, price: 34.99 },
-      { id: 4, name: "Tuna Tartare", quantity: 1, price: 19.99 },
-      { id: 5, name: "Crème Brûlée", quantity: 2, price: 12.99 }
-    ],
-    total: 115.95,
-    timestamp: new Date(Date.now() - 1800000).toISOString(),
-    serverName: "James Wilson",
-    specialInstructions: "VIP Guest - Owner's family",
-    guestCount: 2,
-    estimatedPrepTime: 45
-  },
-  {
-    id: 3,
-    tableNumber: 7,
-    status: "ready",
-    items: [
       { id: 2, name: "Mediterranean Quinoa Bowl", quantity: 1, price: 18.99 },
-      { id: 8, name: "Chocolate Soufflé", quantity: 2, price: 14.99 }
+      { id: 4, name: "Tuna Tartare", quantity: 2, price: 19.99 }
     ],
-    total: 48.97,
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    serverName: "Maria Garcia",
-    specialInstructions: "Gluten-free preparation required",
-    guestCount: 3,
+    total: 58.97,
+    timestamp: new Date().toISOString(),
+    serverName: "James Wilson",
+    specialInstructions: "VIP Guest - Priority Service",
+    guestCount: 2,
     estimatedPrepTime: 25
   }
 ];
@@ -62,27 +47,34 @@ export const initialKitchenOrders: KitchenOrder[] = [
         startTime: new Date(Date.now() - 900000).toISOString(),
         cookingStation: "grill",
         assignedChef: "Isabella Martinez",
-        modifications: [
-          "1x Medium Rare",
-          "1x Medium Well",
-          "Extra truffle aioli on side"
-        ],
+        modifications: ["1x Medium Rare", "1x Medium Well"],
         allergenAlert: true
       },
       {
         menuItemId: 3,
         quantity: 1,
         status: "pending",
-        startTime: new Date(Date.now() - 600000).toISOString(),
+        startTime: new Date().toISOString(),
         cookingStation: "soup",
         assignedChef: "James Wilson",
-        modifications: ["Extra garnish"],
+        modifications: ["No cream"],
         allergenAlert: true
+      },
+      {
+        menuItemId: 6,
+        quantity: 2,
+        status: "ready",
+        startTime: new Date(Date.now() - 600000).toISOString(),
+        completionTime: new Date().toISOString(),
+        cookingStation: "bar",
+        assignedChef: "Alex Thompson",
+        modifications: [],
+        allergenAlert: false
       }
     ],
     priority: "high",
-    notes: "Dairy sensitivity - use dairy-free alternatives where possible",
-    coursing: "appetizers first",
+    notes: "Dairy allergy - use alternatives where possible",
+    coursing: "standard",
     estimatedDeliveryTime: new Date(Date.now() + 1200000).toISOString()
   },
   {
@@ -90,71 +82,29 @@ export const initialKitchenOrders: KitchenOrder[] = [
     orderId: 2,
     items: [
       {
-        menuItemId: 7,
-        quantity: 2,
-        status: "preparing",
-        startTime: new Date(Date.now() - 1200000).toISOString(),
-        cookingStation: "hot-line",
-        assignedChef: "Isabella Martinez",
-        modifications: ["Extra crispy rice"],
-        allergenAlert: true
-      },
-      {
-        menuItemId: 4,
+        menuItemId: 2,
         quantity: 1,
-        status: "ready",
-        startTime: new Date(Date.now() - 1500000).toISOString(),
-        completionTime: new Date(Date.now() - 900000).toISOString(),
+        status: "preparing",
+        startTime: new Date().toISOString(),
         cookingStation: "cold-line",
         assignedChef: "James Wilson",
-        modifications: [],
+        modifications: ["Extra feta on side"],
         allergenAlert: false
       },
       {
-        menuItemId: 5,
+        menuItemId: 4,
         quantity: 2,
         status: "pending",
-        startTime: new Date(Date.now() - 300000).toISOString(),
-        cookingStation: "pastry",
-        assignedChef: "Maria Garcia",
-        modifications: [],
+        startTime: new Date().toISOString(),
+        cookingStation: "cold-line",
+        assignedChef: "James Wilson",
+        modifications: ["Spicy"],
         allergenAlert: false
       }
     ],
     priority: "rush",
-    notes: "VIP - Owner's family. Ensure perfect presentation.",
-    coursing: "serve together",
+    notes: "VIP Guest - Priority Service",
+    coursing: "standard",
     estimatedDeliveryTime: new Date(Date.now() + 900000).toISOString()
-  },
-  {
-    id: 3,
-    orderId: 3,
-    items: [
-      {
-        menuItemId: 2,
-        quantity: 1,
-        status: "ready",
-        startTime: new Date(Date.now() - 1800000).toISOString(),
-        completionTime: new Date(Date.now() - 1200000).toISOString(),
-        cookingStation: "cold-line",
-        assignedChef: "James Wilson",
-        modifications: ["No feta", "Extra vegetables"],
-        allergenAlert: false
-      },
-      {
-        menuItemId: 8,
-        quantity: 2,
-        status: "preparing",
-        startTime: new Date(Date.now() - 900000).toISOString(),
-        cookingStation: "pastry",
-        assignedChef: "Maria Garcia",
-        modifications: ["1x Regular", "1x Gluten-free"],
-        allergenAlert: true
-      }
-    ],
-    priority: "normal",
-    notes: "Gluten-free soufflé must be prepared in separate area",
-    coursing: "desserts after clearing mains",
-    estimatedDeliveryTime: new Date(Date.now() + 600000).toISOString()
   }
 ];
