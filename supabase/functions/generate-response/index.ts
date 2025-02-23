@@ -20,8 +20,6 @@ serve(async (req) => {
       throw new Error('Claude API key not configured');
     }
 
-    console.log('Making request to Claude API with messages:', messages);
-
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -30,10 +28,7 @@ serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        messages: messages.map(msg => ({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content
-        })),
+        messages,
         model: "claude-3-opus-20240229",
         max_tokens: 1000,
         system: "You are a helpful AI assistant that helps users with their restaurant management system. Be concise but friendly in your responses."
@@ -41,14 +36,9 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log('Claude API response:', data);
     
     if (data.error) {
       throw new Error(data.error.message || 'Unknown error from Claude API');
-    }
-    
-    if (!data.content || !data.content[0] || !data.content[0].text) {
-      throw new Error('Unexpected response format from Claude API');
     }
     
     return new Response(
@@ -63,11 +53,9 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in generate-response function:', error);
+    console.error('Error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message 
-      }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: { 

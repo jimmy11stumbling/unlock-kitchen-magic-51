@@ -31,38 +31,28 @@ export const AIAssistant = () => {
     setIsLoading(true);
 
     try {
-      console.log('Sending messages to API:', [...messages, userMessage]);
-      
-      const { data: responseData, error } = await supabase.functions.invoke('generate-response', {
+      const { data, error } = await supabase.functions.invoke('generate-response', {
         body: { 
-          messages: [...messages, userMessage].map(msg => ({
-            role: msg.role,
-            content: msg.content
-          }))
+          messages: [...messages, userMessage]
         }
       });
 
-      console.log('API Response:', responseData);
+      if (error) throw error;
 
-      if (error) {
-        console.error('API Error:', error);
-        throw error;
-      }
-
-      if (responseData?.message) {
+      if (data?.message) {
         const assistantMessage = {
           role: "assistant" as const,
-          content: responseData.message
+          content: data.message
         };
         setMessages(prev => [...prev, assistantMessage]);
       } else {
-        throw new Error('No message in response');
+        throw new Error('No response from assistant');
       }
     } catch (error) {
-      console.error('Error details:', error);
+      console.error('Error:', error);
       toast({
         title: "Error",
-        description: "Failed to generate response. Please try again.",
+        description: "Failed to get a response. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -88,21 +78,22 @@ export const AIAssistant = () => {
       </Button>
 
       {isOpen && (
-        <div className="assistant-panel fixed bottom-20 right-4 w-96 bg-background border rounded-lg shadow-lg p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">AI Assistant</h3>
+        <div className="assistant-panel fixed bottom-24 right-8 w-[500px] bg-background/95 backdrop-blur-lg border border-border/50 rounded-xl shadow-2xl p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-semibold">AI Assistant</h3>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(false)}
               aria-label="Close AI Assistant"
+              className="hover:bg-secondary/80"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <ScrollArea className="h-[300px] mb-4">
-            <div className="space-y-4">
+          <ScrollArea className="h-[400px] mb-6 pr-4">
+            <div className="space-y-6">
               {messages.map((message, i) => (
                 <div
                   key={i}
@@ -111,10 +102,10 @@ export const AIAssistant = () => {
                   }`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
+                    className={`max-w-[85%] rounded-xl p-4 ${
                       message.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary"
+                        ? "bg-primary text-primary-foreground ml-12"
+                        : "bg-secondary/50 backdrop-blur-sm mr-12"
                     }`}
                   >
                     {message.content}
@@ -124,18 +115,20 @@ export const AIAssistant = () => {
             </div>
           </ScrollArea>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your question..."
-              className="flex-1"
+              placeholder="Type your message..."
+              className="flex-1 bg-secondary/50 border-secondary/50 backdrop-blur-sm"
               disabled={isLoading}
             />
             <Button 
               onClick={handleSend} 
               disabled={isLoading}
+              size="icon"
+              className="shrink-0"
               aria-label="Send message"
             >
               <Send className="h-4 w-4" />
