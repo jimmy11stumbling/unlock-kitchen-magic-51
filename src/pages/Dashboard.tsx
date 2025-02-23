@@ -10,6 +10,7 @@ import {
   ChefHat,
   MessageSquare,
   Tags,
+  FileText,
 } from "lucide-react";
 import { useState } from "react";
 import type { 
@@ -25,6 +26,7 @@ import type {
   KitchenOrder,
   CustomerFeedback,
   Promotion,
+  DailyReport,
 } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
@@ -39,6 +41,7 @@ import { TablePanel } from "@/components/dashboard/TablePanel";
 import { KitchenDisplay } from "@/components/dashboard/KitchenDisplay";
 import { FeedbackPanel } from "@/components/dashboard/FeedbackPanel";
 import { PromotionsPanel } from "@/components/dashboard/PromotionsPanel";
+import { DailyReportsPanel } from "@/components/dashboard/DailyReportsPanel";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -54,6 +57,16 @@ const Dashboard = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [feedback, setFeedback] = useState<CustomerFeedback[]>([]);
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
+  const [dailyReports, setDailyReports] = useState<DailyReport[]>([{
+    date: new Date().toISOString(),
+    totalRevenue: 0,
+    totalOrders: 0,
+    averageOrderValue: 0,
+    topSellingItems: [],
+    laborCosts: 0,
+    inventoryCosts: 0,
+    netProfit: 0,
+  }]);
 
   const addStaffMember = (data: { name: string; role: string; salary: string }) => {
     const newStaffMember: StaffMember = {
@@ -337,6 +350,10 @@ const Dashboard = () => {
               <LayoutDashboard className="h-4 w-4 mr-2" />
               Overview
             </TabsTrigger>
+            <TabsTrigger value="daily-reports" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
+              <FileText className="h-4 w-4 mr-2" />
+              Daily Reports
+            </TabsTrigger>
             <TabsTrigger value="orders" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
               <ShoppingCart className="h-4 w-4 mr-2" />
               Orders
@@ -387,6 +404,10 @@ const Dashboard = () => {
               staff={staff}
               orders={orders}
             />
+          </TabsContent>
+
+          <TabsContent value="daily-reports">
+            <DailyReportsPanel reports={dailyReports} />
           </TabsContent>
 
           <TabsContent value="orders">
