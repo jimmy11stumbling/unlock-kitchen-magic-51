@@ -513,35 +513,47 @@ export type Database = {
       }
       menu_items: {
         Row: {
+          allergens: string[] | null
           available: boolean | null
           category: string
           created_at: string | null
           description: string | null
           id: number
           image_url: string | null
+          last_ordered_at: string | null
           name: string
+          order_count: number | null
+          preparation_time: number | null
           price: number
           updated_at: string | null
         }
         Insert: {
+          allergens?: string[] | null
           available?: boolean | null
           category: string
           created_at?: string | null
           description?: string | null
           id?: number
           image_url?: string | null
+          last_ordered_at?: string | null
           name: string
+          order_count?: number | null
+          preparation_time?: number | null
           price: number
           updated_at?: string | null
         }
         Update: {
+          allergens?: string[] | null
           available?: boolean | null
           category?: string
           created_at?: string | null
           description?: string | null
           id?: number
           image_url?: string | null
+          last_ordered_at?: string | null
           name?: string
+          order_count?: number | null
+          preparation_time?: number | null
           price?: number
           updated_at?: string | null
         }

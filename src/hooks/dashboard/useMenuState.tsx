@@ -1,149 +1,179 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { MenuItem } from "@/types/staff";
-
-const initialMenuItems: MenuItem[] = [
-  {
-    id: 1,
-    name: "Truffle Wagyu Burger",
-    price: 24.99,
-    category: "main",
-    description: "Premium wagyu beef patty with truffle aioli, caramelized onions, and aged cheddar",
-    available: true,
-    allergens: ["dairy", "gluten", "eggs"],
-    preparationTime: 20,
-    image: "/placeholder.svg",
-    orderCount: 342
-  },
-  {
-    id: 2,
-    name: "Mediterranean Quinoa Bowl",
-    price: 18.99,
-    category: "main",
-    description: "Fresh quinoa with roasted vegetables, feta, and herb-lemon dressing",
-    available: true,
-    allergens: ["dairy"],
-    preparationTime: 15,
-    image: "/placeholder.svg",
-    orderCount: 256
-  },
-  {
-    id: 3,
-    name: "Lobster Bisque",
-    price: 16.99,
-    category: "appetizer",
-    description: "Creamy lobster soup with cognac and fresh herbs",
-    available: true,
-    allergens: ["shellfish", "dairy"],
-    preparationTime: 12,
-    image: "/placeholder.svg",
-    orderCount: 189
-  },
-  {
-    id: 4,
-    name: "Tuna Tartare",
-    price: 19.99,
-    category: "appetizer",
-    description: "Fresh tuna with avocado, sesame-soy dressing, and wonton crisps",
-    available: true,
-    allergens: ["fish", "soy"],
-    preparationTime: 15,
-    image: "/placeholder.svg",
-    orderCount: 167
-  },
-  {
-    id: 5,
-    name: "Crème Brûlée",
-    price: 12.99,
-    category: "dessert",
-    description: "Classic vanilla bean custard with caramelized sugar crust",
-    available: true,
-    allergens: ["dairy", "eggs"],
-    preparationTime: 8,
-    image: "/placeholder.svg",
-    orderCount: 298
-  },
-  {
-    id: 6,
-    name: "Signature Martini",
-    price: 15.99,
-    category: "beverage",
-    description: "House-infused gin with vermouth and olive tapenade",
-    available: true,
-    allergens: [],
-    preparationTime: 5,
-    image: "/placeholder.svg",
-    orderCount: 423
-  },
-  {
-    id: 7,
-    name: "Seafood Paella",
-    price: 34.99,
-    category: "main",
-    description: "Saffron rice with fresh seafood, chorizo, and seasonal vegetables",
-    available: true,
-    allergens: ["shellfish", "fish"],
-    preparationTime: 30,
-    image: "/placeholder.svg",
-    orderCount: 178
-  },
-  {
-    id: 8,
-    name: "Chocolate Soufflé",
-    price: 14.99,
-    category: "dessert",
-    description: "Warm chocolate soufflé with vanilla bean ice cream",
-    available: true,
-    allergens: ["dairy", "eggs", "gluten"],
-    preparationTime: 20,
-    image: "/placeholder.svg",
-    orderCount: 245
-  },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useMenuState = () => {
   const { toast } = useToast();
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
+  const queryClient = useQueryClient();
 
-  const addMenuItem = (item: Omit<MenuItem, "id">) => {
-    const newItem: MenuItem = {
-      id: menuItems.length + 1,
-      ...item,
-      orderCount: 0,
+  // Fetch menu items
+  const { data: menuItems = [], isLoading } = useQuery({
+    queryKey: ['menuItems'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*');
+      
+      if (error) {
+        toast({
+          title: "Error fetching menu items",
+          description: error.message,
+          variant: "destructive",
+        });
+        return [];
+      }
+      
+      return data.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        category: item.category,
+        description: item.description || "",
+        available: item.available ?? true,
+        image: item.image_url || "/placeholder.svg",
+        allergens: item.allergens || [],
+        preparationTime: item.preparation_time || 15,
+        orderCount: item.order_count || 0
+      }));
+    }
+  });
+
+  // Add menu item mutation
+  const addMenuItemMutation = useMutation({
+    mutationFn: async (item: Omit<MenuItem, "id">) => {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .insert({
+          name: item.name,
+          price: item.price,
+          category: item.category,
+          description: item.description,
+          available: item.available,
+          image_url: item.image,
+          allergens: item.allergens,
+          preparation_time: item.preparationTime
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+      toast({
+        title: "Menu Item Added",
+        description: "New item has been added to the menu.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error adding menu item",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Update menu item mutation
+  const updateMenuItemMutation = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<MenuItem> & { id: number }) => {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .update({
+          name: updates.name,
+          price: updates.price,
+          category: updates.category,
+          description: updates.description,
+          available: updates.available,
+          image_url: updates.image,
+          allergens: updates.allergens,
+          preparation_time: updates.preparationTime
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+      toast({
+        title: "Menu Item Updated",
+        description: "Item has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating menu item",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Delete menu item mutation
+  const deleteMenuItemMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase
+        .from('menu_items')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+      toast({
+        title: "Menu Item Deleted",
+        description: "Item has been removed from the menu.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error deleting menu item",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('menu-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'menu_items'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-    setMenuItems([...menuItems, newItem]);
-  };
-
-  const updateMenuItemAvailability = (itemId: number, available: boolean) => {
-    setMenuItems(menuItems.map(item =>
-      item.id === itemId ? { ...item, available } : item
-    ));
-  };
-
-  const updateMenuItemPrice = (itemId: number, price: number) => {
-    if (price <= 0) return;
-    setMenuItems(menuItems.map(item =>
-      item.id === itemId ? { ...item, price } : item
-    ));
-  };
-
-  const deleteMenuItem = (itemId: number) => {
-    setMenuItems(menuItems.filter(item => item.id !== itemId));
-  };
-
-  const updateMenuItem = (itemId: number, updatedFields: Partial<MenuItem>) => {
-    setMenuItems(menuItems.map(item =>
-      item.id === itemId ? { ...item, ...updatedFields } : item
-    ));
-  };
+  }, [queryClient]);
 
   return {
     menuItems,
-    addMenuItem,
-    updateMenuItemAvailability,
-    updateMenuItemPrice,
-    deleteMenuItem,
-    updateMenuItem,
+    isLoading,
+    addMenuItem: (item: Omit<MenuItem, "id">) => addMenuItemMutation.mutate(item),
+    updateMenuItem: (id: number, updates: Partial<MenuItem>) => 
+      updateMenuItemMutation.mutate({ id, ...updates }),
+    deleteMenuItem: (id: number) => deleteMenuItemMutation.mutate(id),
+    updateMenuItemAvailability: (id: number, available: boolean) => 
+      updateMenuItemMutation.mutate({ id, available }),
+    updateMenuItemPrice: (id: number, price: number) => 
+      updateMenuItemMutation.mutate({ id, price }),
   };
 };
