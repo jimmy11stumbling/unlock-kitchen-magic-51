@@ -12,40 +12,15 @@ import {
   Settings,
   UserPlus,
   Calendar,
-  CheckCircle2,
-  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-interface StaffMember {
-  id: number;
-  name: string;
-  role: string;
-  status: "active" | "on_break" | "off_duty";
-  shift: string;
-}
-
-interface Shift {
-  id: number;
-  staffId: number;
-  date: string;
-  time: string;
-}
-
-const formSchema = z.object({
-  role: z.string().min(1, "Please select a role"),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { StaffTable } from "@/components/dashboard/StaffTable";
+import { AddStaffForm } from "@/components/dashboard/AddStaffForm";
+import { ScheduleView } from "@/components/dashboard/ScheduleView";
+import type { StaffMember, Shift } from "@/types/staff";
 
 const Dashboard = () => {
   const [staff, setStaff] = useState<StaffMember[]>([
@@ -61,14 +36,7 @@ const Dashboard = () => {
     { id: 3, staffId: 3, date: "2024-02-20", time: "5:00 PM - 1:00 AM" },
   ]);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      role: "",
-    },
-  });
-
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = (data: { role: string }) => {
     const newStaffMember: StaffMember = {
       id: staff.length + 1,
       name: `New Staff ${staff.length + 1}`,
@@ -77,7 +45,6 @@ const Dashboard = () => {
       shift: "Morning",
     };
     setStaff([...staff, newStaffMember]);
-    form.reset();
   };
 
   const updateStaffStatus = (staffId: number, newStatus: StaffMember["status"]) => {
@@ -226,27 +193,7 @@ const Dashboard = () => {
                         <DialogTitle>Staff Schedule</DialogTitle>
                       </DialogHeader>
                       <div className="mt-4">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Staff Member</TableHead>
-                              <TableHead>Date</TableHead>
-                              <TableHead>Shift Time</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {shifts.map((shift) => {
-                              const staffMember = staff.find((s) => s.id === shift.staffId);
-                              return (
-                                <TableRow key={shift.id}>
-                                  <TableCell>{staffMember?.name}</TableCell>
-                                  <TableCell>{shift.date}</TableCell>
-                                  <TableCell>{shift.time}</TableCell>
-                                </TableRow>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
+                        <ScheduleView shifts={shifts} staff={staff} />
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -263,33 +210,7 @@ const Dashboard = () => {
                         <SheetTitle>Add New Staff Member</SheetTitle>
                       </SheetHeader>
                       <div className="mt-4 space-y-4">
-                        <Form {...form}>
-                          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="role"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Role</FormLabel>
-                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select role" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="chef">Chef</SelectItem>
-                                      <SelectItem value="server">Server</SelectItem>
-                                      <SelectItem value="bartender">Bartender</SelectItem>
-                                      <SelectItem value="host">Host</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormItem>
-                              )}
-                            />
-                            <Button type="submit">Add Staff Member</Button>
-                          </form>
-                        </Form>
+                        <AddStaffForm onSubmit={onSubmit} />
                       </div>
                     </SheetContent>
                   </Sheet>
@@ -297,60 +218,11 @@ const Dashboard = () => {
               </div>
 
               <Card className="p-6">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Current Shift</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {staff.map((member) => (
-                      <TableRow key={member.id}>
-                        <TableCell>{member.name}</TableCell>
-                        <TableCell>{member.role}</TableCell>
-                        <TableCell>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            member.status === "active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
-                            member.status === "on_break" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
-                            "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
-                          }`}>
-                            {member.status === "active" ? (
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                            ) : member.status === "on_break" ? (
-                              <Clock className="w-3 h-3 mr-1" />
-                            ) : (
-                              <XCircle className="w-3 h-3 mr-1" />
-                            )}
-                            {member.status.replace("_", " ")}
-                          </span>
-                        </TableCell>
-                        <TableCell>{member.shift}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => updateStaffStatus(member.id, member.status === "active" ? "on_break" : "active")}
-                            >
-                              {member.status === "active" ? "Set Break" : "Set Active"}
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => addShift(member.id, "2024-02-21", "9:00 AM - 5:00 PM")}
-                            >
-                              Add Shift
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <StaffTable 
+                  staff={staff} 
+                  onUpdateStatus={updateStaffStatus}
+                  onAddShift={addShift}
+                />
               </Card>
             </div>
           </TabsContent>
