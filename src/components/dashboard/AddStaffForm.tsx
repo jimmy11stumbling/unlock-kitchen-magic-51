@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -30,54 +30,59 @@ export const AddStaffForm = ({ onSubmit }: AddStaffFormProps) => {
   });
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Name</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter staff name" {...field} />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="role"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Role</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
               <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
+                <Input placeholder="Enter staff name" {...field} />
               </FormControl>
-              <SelectContent>
-                <SelectItem value="chef">Chef</SelectItem>
-                <SelectItem value="server">Server</SelectItem>
-                <SelectItem value="bartender">Bartender</SelectItem>
-                <SelectItem value="host">Host</SelectItem>
-              </SelectContent>
-            </Select>
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="salary"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Salary</FormLabel>
-            <FormControl>
-              <Input type="number" placeholder="Enter salary" {...field} />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-      <Button type="submit" className="w-full">Add Staff Member</Button>
-    </form>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="chef">Chef</SelectItem>
+                  <SelectItem value="server">Server</SelectItem>
+                  <SelectItem value="bartender">Bartender</SelectItem>
+                  <SelectItem value="host">Host</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="salary"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Salary</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="Enter salary" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" className="w-full">Add Staff Member</Button>
+      </form>
+    </Form>
   );
 };
