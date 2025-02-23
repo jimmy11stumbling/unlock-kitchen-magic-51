@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { SearchBar } from "./SearchBar";
 import { DateRangeSelector } from "./DateRangeSelector";
@@ -62,9 +61,9 @@ export const DashboardOverview = ({
   const pendingReservations = reservations.filter(r => r.status === 'pending').length;
   const lowStockItems = inventory.filter(item => item.quantity <= item.minQuantity).length;
   
-  // Calculate top selling items
-  const topSellingItems = menuItems
-    .sort((a, b) => (b.orderCount || 0) - (a.orderCount || 0))
+  // Calculate top selling items with null check
+  const topSellingItems = [...menuItems]
+    .sort((a, b) => ((b.orderCount ?? 0) - (a.orderCount ?? 0)))
     .slice(0, 5);
 
   // Calculate average order value
@@ -218,7 +217,7 @@ export const DashboardOverview = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-yellow-400" />
-                  <span className="text-sm">{item.orderCount || 0} orders</span>
+                  <span className="text-sm">{item.orderCount ?? 0} orders</span>
                 </div>
               </div>
             ))}

@@ -76,6 +76,7 @@ export interface MenuItem {
   image?: string;
   allergens: string[];
   preparationTime: number;
+  orderCount?: number;
 }
 
 export interface TableLayout {
