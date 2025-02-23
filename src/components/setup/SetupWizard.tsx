@@ -5,12 +5,19 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, Users, ChefHat, DollarSign, MapPin, Menu } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { BasicInfoTab } from "./tabs/BasicInfoTab";
 import { LayoutTab } from "./tabs/LayoutTab";
 import { RestaurantInfo, LayoutInfo } from "./types";
 
 export const SetupWizard = () => {
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState("basic");
+  const [tabValidation, setTabValidation] = useState<Record<string, boolean>>({
+    basic: false,
+    layout: false
+  });
+  
   const daysOfWeek = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
   const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({
@@ -35,11 +42,43 @@ export const SetupWizard = () => {
   });
 
   const handleSave = () => {
+    if (!Object.values(tabValidation).every(Boolean)) {
+      toast({
+        title: "Validation Error",
+        description: "Please complete all required fields before proceeding",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Save all information to your state management system
     console.log("Saving restaurant configuration:", {
       restaurantInfo,
       layoutInfo
     });
+
+    toast({
+      title: "Success",
+      description: "Restaurant configuration has been saved",
+    });
+  };
+
+  const handleTabChange = (tab: string) => {
+    // Only allow navigation if current tab is valid or going backwards
+    const steps = ["basic", "layout", "menu", "staff", "payment", "kitchen"];
+    const currentIndex = steps.indexOf(currentStep);
+    const targetIndex = steps.indexOf(tab);
+
+    if (targetIndex > currentIndex && !tabValidation[currentStep]) {
+      toast({
+        title: "Please complete current section",
+        description: "Fill in all required fields before proceeding",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCurrentStep(tab);
   };
 
   return (
@@ -49,7 +88,7 @@ export const SetupWizard = () => {
           <DialogTitle className="text-2xl font-bold mb-4">Restaurant Setup Wizard</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={currentStep} onValueChange={setCurrentStep}>
+        <Tabs value={currentStep} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-6 mb-6">
             <TabsTrigger value="basic" className="flex flex-col items-center gap-2 p-4">
               <MapPin className="h-5 w-5" />
@@ -81,6 +120,8 @@ export const SetupWizard = () => {
             <BasicInfoTab 
               restaurantInfo={restaurantInfo}
               setRestaurantInfo={setRestaurantInfo}
+              onValidationChange={(isValid) => 
+                setTabValidation(prev => ({ ...prev, basic: isValid }))}
             />
           </TabsContent>
 
@@ -88,6 +129,8 @@ export const SetupWizard = () => {
             <LayoutTab 
               layoutInfo={layoutInfo}
               setLayoutInfo={setLayoutInfo}
+              onValidationChange={(isValid) => 
+                setTabValidation(prev => ({ ...prev, layout: isValid }))}
             />
           </TabsContent>
 
@@ -142,10 +185,16 @@ export const SetupWizard = () => {
             onClick={() => {
               const steps = ["basic", "layout", "menu", "staff", "payment", "kitchen"];
               const currentIndex = steps.indexOf(currentStep);
-              if (currentIndex < steps.length - 1) {
+              if (currentIndex < steps.length - 1 && tabValidation[currentStep]) {
                 setCurrentStep(steps[currentIndex + 1]);
-              } else {
+              } else if (currentIndex === steps.length - 1) {
                 handleSave();
+              } else {
+                toast({
+                  title: "Please complete current section",
+                  description: "Fill in all required fields before proceeding",
+                  variant: "destructive",
+                });
               }
             }}
           >
