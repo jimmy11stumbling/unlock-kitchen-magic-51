@@ -1,7 +1,22 @@
 
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import type { Order, KitchenOrder } from "@/types/staff";
+import type { Order, KitchenOrder, MenuItem } from "@/types/staff";
+
+const menuItems: MenuItem[] = [
+  {
+    id: 1,
+    name: "Truffle Wagyu Burger",
+    price: 24.99,
+    category: "main",
+    description: "Premium wagyu beef patty with truffle aioli",
+    available: true,
+    allergens: ["dairy", "gluten"],
+    preparationTime: 20,
+    orderCount: 0
+  },
+  // ... Add other menu items as needed
+];
 
 const initialOrders: Order[] = [
   {
@@ -174,7 +189,6 @@ export const useOrderState = () => {
       ...order,
     };
     
-    // Calculate estimated prep time based on items
     const estimatedPrepTime = Math.max(
       ...order.items.map(item => {
         const menuItem = menuItems.find(m => m.id === item.id);
@@ -182,7 +196,6 @@ export const useOrderState = () => {
       })
     );
     
-    // Create corresponding kitchen order
     const newKitchenOrder: KitchenOrder = {
       id: kitchenOrders.length + 1,
       orderId: newOrder.id,
@@ -282,7 +295,6 @@ export const useOrderState = () => {
       )
     );
 
-    // Check if all items are ready and update main order status
     const updatedOrder = kitchenOrders.find(o => o.id === orderId);
     if (updatedOrder && updatedOrder.items.every(item => item.status === "ready")) {
       updateOrderStatus(updatedOrder.orderId, "ready");
@@ -291,7 +303,7 @@ export const useOrderState = () => {
     toast({
       title: "Item status updated",
       description: `Item status updated to ${status}`,
-      variant: status === "ready" ? "default" : "secondary"
+      variant: "default"
     });
   };
 

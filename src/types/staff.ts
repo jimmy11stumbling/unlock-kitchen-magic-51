@@ -57,6 +57,10 @@ export interface Order {
   status: "pending" | "preparing" | "ready" | "delivered";
   total: number;
   timestamp: string;
+  serverName: string;
+  specialInstructions?: string;
+  guestCount: number;
+  estimatedPrepTime: number;
 }
 
 export interface OrderItem {
@@ -135,9 +139,15 @@ export interface KitchenOrder {
     status: "pending" | "preparing" | "ready" | "delivered";
     startTime?: string;
     completionTime?: string;
+    cookingStation: string;
+    assignedChef: string;
+    modifications: string[];
+    allergenAlert: boolean;
   }[];
   priority: "normal" | "high" | "rush";
   notes: string;
+  coursing: "standard" | "appetizers first" | "serve together" | "desserts after clearing mains";
+  estimatedDeliveryTime: string;
 }
 
 export interface CustomerFeedback {
