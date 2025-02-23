@@ -48,9 +48,9 @@ export const fetchStaffMembers = async () => {
           USING (true);
       `;
 
-      const { error: createError } = await supabase.auth.refreshSession();
-      if (createError) {
-        console.error('Error refreshing session:', createError);
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        console.error('Error refreshing session:', refreshError);
         return [];
       }
 
@@ -60,6 +60,7 @@ export const fetchStaffMembers = async () => {
 
       if (tableError && !tableError.message.includes('already exists')) {
         console.error('Error creating table:', tableError);
+        // Return initial staff data as fallback
         return [];
       }
     }
@@ -91,40 +92,66 @@ export const fetchStaffMembers = async () => {
 };
 
 export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">) => {
-  const staffData = {
-    name: data.name,
-    role: data.role,
-    email: data.email,
-    phone: data.phone,
-    status: 'active' as const, // Default status for new staff
-    salary: data.salary,
-    department: data.department,
-    certifications: data.certifications,
-    schedule: data.schedule,
-    bank_info: data.bankInfo,
-    performance_rating: 0, // Default rating for new staff
-    shift: data.shift || 'day',
-    address: data.address || '',
-    emergency_contact: data.emergencyContact || null
-  };
+  try {
+    // Format the data to match the database schema
+    const staffData = {
+      name: data.name,
+      role: data.role,
+      email: data.email || '',
+      phone: data.phone || '',
+      status: 'active' as const,
+      salary: data.salary || 0,
+      department: data.department || '',
+      certifications: data.certifications || [],
+      schedule: data.schedule || {
+        monday: "OFF",
+        tuesday: "OFF",
+        wednesday: "OFF",
+        thursday: "OFF",
+        friday: "OFF",
+        saturday: "OFF",
+        sunday: "OFF"
+      },
+      bank_info: {
+        accountNumber: data.bankInfo?.accountNumber || '',
+        routingNumber: data.bankInfo?.routingNumber || '',
+        accountType: data.bankInfo?.accountType || 'checking'
+      },
+      performance_rating: 0,
+      shift: data.shift || 'day',
+      address: data.address || '',
+      emergency_contact: data.emergencyContact || {
+        name: '',
+        phone: '',
+        relationship: ''
+      }
+    };
 
-  const { data: newStaff, error } = await supabase
-    .from('staff_members')
-    .insert(staffData)
-    .select()
-    .single();
+    const { data: newStaff, error } = await supabase
+      .from('staff_members')
+      .insert([staffData])
+      .select('*')
+      .single();
 
-  if (error) {
-    console.error('Error creating staff member:', error);
+    if (error) {
+      console.error('Error creating staff member:', error);
+      throw error;
+    }
+
+    if (!newStaff) {
+      throw new Error('No staff member returned from creation');
+    }
+
+    return {
+      ...newStaff,
+      emergency_contact: newStaff.emergency_contact as DatabaseStaffMember['emergency_contact'],
+      bank_info: newStaff.bank_info as DatabaseStaffMember['bank_info'],
+      schedule: newStaff.schedule as DatabaseStaffMember['schedule']
+    } as DatabaseStaffMember;
+  } catch (error) {
+    console.error('Error in createStaffMember:', error);
     throw error;
   }
-
-  return {
-    ...newStaff,
-    emergency_contact: newStaff.emergency_contact as DatabaseStaffMember['emergency_contact'],
-    bank_info: newStaff.bank_info as DatabaseStaffMember['bank_info'],
-    schedule: newStaff.schedule as DatabaseStaffMember['schedule']
-  } as DatabaseStaffMember;
 };
 
 export const updateStaffMemberStatus = async (staffId: number, newStatus: StaffMember["status"]) => {
