@@ -1,7 +1,7 @@
-
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import type { StaffMember, Shift } from "@/types/staff";
+import { useStaffBasic } from "./staff/useStaffBasic";
+import { useShiftManagement } from "./staff/useShiftManagement";
+import { usePerformanceManagement } from "./staff/usePerformanceManagement";
+import type { StaffMember } from "@/types/staff";
 
 const initialStaff: StaffMember[] = [
   {
@@ -181,126 +181,10 @@ const initialStaff: StaffMember[] = [
   }
 ];
 
-const initialShifts: Shift[] = [
-  {
-    id: 1,
-    staffId: 1,
-    date: new Date().toISOString().split('T')[0],
-    time: "14:00-22:00"
-  },
-  {
-    id: 2,
-    staffId: 2,
-    date: new Date().toISOString().split('T')[0],
-    time: "06:00-14:00"
-  },
-  {
-    id: 3,
-    staffId: 3,
-    date: new Date().toISOString().split('T')[0],
-    time: "16:00-24:00"
-  },
-  {
-    id: 4,
-    staffId: 4,
-    date: new Date().toISOString().split('T')[0],
-    time: "16:00-24:00"
-  },
-  {
-    id: 5,
-    staffId: 5,
-    date: new Date().toISOString().split('T')[0],
-    time: "15:00-23:00"
-  }
-];
-
 export const useStaffState = () => {
-  const { toast } = useToast();
-  const [staff, setStaff] = useState<StaffMember[]>(initialStaff);
-  const [shifts, setShifts] = useState<Shift[]>(initialShifts);
-
-  const addStaffMember = (data: Omit<StaffMember, "id" | "status">) => {
-    const newStaffMember: StaffMember = {
-      id: staff.length + 1,
-      status: "off_duty",
-      ...data,
-    };
-    setStaff([...staff, newStaffMember]);
-    toast({
-      title: "Staff member added",
-      description: `${data.name} has been added to the staff list.`,
-    });
-  };
-
-  const updateStaffStatus = (staffId: number, newStatus: StaffMember["status"]) => {
-    setStaff(staff.map(member => 
-      member.id === staffId ? { ...member, status: newStatus } : member
-    ));
-    const member = staff.find(m => m.id === staffId);
-    toast({
-      title: "Status updated",
-      description: `${member?.name}'s status has been updated to ${newStatus.replace("_", " ")}.`,
-    });
-  };
-
-  const updateStaffInfo = (staffId: number, updates: Partial<StaffMember>) => {
-    setStaff(staff.map(member =>
-      member.id === staffId ? { ...member, ...updates } : member
-    ));
-    toast({
-      title: "Staff info updated",
-      description: "Staff member information has been updated successfully.",
-    });
-  };
-
-  const addShift = (staffId: number, date: string, time: string) => {
-    const newShift: Shift = {
-      id: shifts.length + 1,
-      staffId,
-      date,
-      time,
-    };
-    
-    const hasOverlap = shifts.some(
-      shift => shift.staffId === staffId && shift.date === date && shift.time === time
-    );
-
-    if (hasOverlap) {
-      toast({
-        title: "Schedule conflict",
-        description: "This staff member already has a shift during this time.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setShifts([...shifts, newShift]);
-    const member = staff.find(m => m.id === staffId);
-    toast({
-      title: "Shift added",
-      description: `New shift added for ${member?.name} on ${date}.`,
-    });
-  };
-
-  const updateStaffSchedule = (staffId: number, schedule: StaffMember["schedule"]) => {
-    setStaff(staff.map(member =>
-      member.id === staffId ? { ...member, schedule } : member
-    ));
-    toast({
-      title: "Schedule updated",
-      description: "Staff member's schedule has been updated.",
-    });
-  };
-
-  const updateStaffPerformance = (staffId: number, rating: number, notes: string) => {
-    setStaff(staff.map(member =>
-      member.id === staffId ? { ...member, performanceRating: rating, notes } : member
-    ));
-    toast({
-      title: "Performance updated",
-      description: "Staff member's performance review has been updated.",
-    });
-  };
+  const { staff, addStaffMember, updateStaffStatus, updateStaffInfo } = useStaffBasic(initialStaff);
+  const { shifts, addShift } = useShiftManagement();
+  const { updateStaffPerformance, updateStaffSchedule } = usePerformanceManagement(staff, setStaff => setStaff);
 
   return {
     staff,
