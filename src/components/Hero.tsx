@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Bot, Gauge, Zap } from "lucide-react";
+import { ArrowRight, ChefHat, Utensils, Clock, LineChart } from "lucide-react";
 
 export function Hero() {
   return (
@@ -10,10 +10,10 @@ export function Hero() {
         <div className="flex flex-col items-center space-y-8 text-center">
           <div className="space-y-2">
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-              Automate Your Business Flow
+              Intelligent Restaurant Management
             </h1>
             <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl dark:text-gray-400">
-              Streamline operations, boost productivity, and drive growth with intelligent automation solutions.
+              Transform your restaurant operations with AI-powered automation. From kitchen to table, MaestroAI orchestrates everything.
             </p>
           </div>
           <div className="space-x-4">
@@ -32,19 +32,19 @@ export function Hero() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
             {[
               {
-                icon: <Bot className="h-6 w-6" />,
-                title: "AI-Powered",
-                description: "Intelligent automation that learns and adapts to your business needs"
+                icon: <ChefHat className="h-6 w-6" />,
+                title: "Kitchen Management",
+                description: "Optimize kitchen operations with smart order routing and prep timing"
               },
               {
-                icon: <Zap className="h-6 w-6" />,
-                title: "Lightning Fast",
-                description: "Real-time processing and instant updates across your organization"
+                icon: <Utensils className="h-6 w-6" />,
+                title: "Table Service",
+                description: "Seamless order taking and service management for your front-of-house"
               },
               {
-                icon: <Gauge className="h-6 w-6" />,
-                title: "Scalable",
-                description: "Built to grow with your business, from startup to enterprise"
+                icon: <LineChart className="h-6 w-6" />,
+                title: "Business Analytics",
+                description: "Real-time insights into your restaurant's performance and trends"
               }
             ].map((feature, i) => (
               <div key={i} className="flex flex-col items-center space-y-2 p-4 rounded-lg bg-white/5">
