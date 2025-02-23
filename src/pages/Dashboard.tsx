@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BarChart,
@@ -10,6 +9,7 @@ import {
   Calendar,
   ChefHat,
   MessageSquare,
+  Tags,
 } from "lucide-react";
 import { useState } from "react";
 import type { 
@@ -38,6 +38,7 @@ import { MenuPanel } from "@/components/dashboard/MenuPanel";
 import { TablePanel } from "@/components/dashboard/TablePanel";
 import { KitchenDisplay } from "@/components/dashboard/KitchenDisplay";
 import { FeedbackPanel } from "@/components/dashboard/FeedbackPanel";
+import { PromotionsPanel } from "@/components/dashboard/PromotionsPanel";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -297,6 +298,31 @@ const Dashboard = () => {
     });
   };
 
+  const addPromotion = (promotionData: Omit<Promotion, "id">) => {
+    const newPromotion: Promotion = {
+      id: promotions.length + 1,
+      ...promotionData,
+    };
+    setPromotions([...promotions, newPromotion]);
+    toast({
+      title: "Promotion created",
+      description: `${promotionData.name} has been added to active promotions.`,
+    });
+  };
+
+  const togglePromotion = (promotionId: number) => {
+    setPromotions(promotions.map(promo =>
+      promo.id === promotionId
+        ? { ...promo, active: !promo.active }
+        : promo
+    ));
+    const promo = promotions.find(p => p.id === promotionId);
+    toast({
+      title: "Promotion updated",
+      description: `${promo?.name} has been ${promo?.active ? 'deactivated' : 'activated'}.`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="space-y-8">
@@ -348,6 +374,10 @@ const Dashboard = () => {
             <TabsTrigger value="feedback" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
               <MessageSquare className="h-4 w-4 mr-2" />
               Feedback
+            </TabsTrigger>
+            <TabsTrigger value="promotions" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
+              <Tags className="h-4 w-4 mr-2" />
+              Promotions
             </TabsTrigger>
           </TabsList>
 
@@ -428,6 +458,14 @@ const Dashboard = () => {
             <FeedbackPanel
               feedback={feedback}
               onResolveFeedback={resolveFeedback}
+            />
+          </TabsContent>
+
+          <TabsContent value="promotions">
+            <PromotionsPanel
+              promotions={promotions}
+              onAddPromotion={addPromotion}
+              onTogglePromotion={togglePromotion}
             />
           </TabsContent>
         </Tabs>
