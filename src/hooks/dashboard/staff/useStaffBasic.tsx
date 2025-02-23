@@ -17,7 +17,7 @@ interface DatabaseStaffMember {
   certifications: string[] | null;
   performance_rating: number | null;
   notes: string | null;
-  schedule: Record<string, string>;
+  schedule: Record<string, string> | string;
   bank_info: Record<string, any> | null;
   created_at: string | null;
   updated_at: string | null;
@@ -96,7 +96,7 @@ export const useStaffBasic = () => {
 
       if (error) throw error;
       
-      const mappedStaff = (data || []).map(mapDatabaseToStaffMember);
+      const mappedStaff = (data || []).map((item) => mapDatabaseToStaffMember(item as DatabaseStaffMember));
       setStaff(mappedStaff);
     } catch (error) {
       console.error('Error fetching staff:', error);
