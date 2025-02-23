@@ -14,37 +14,36 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    const claudeApiKey = Deno.env.get('CLAUDE_API_KEY');
 
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!claudeApiKey) {
+      throw new Error('Claude API key not configured');
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
+        'x-api-key': claudeApiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful AI assistant that helps users with their restaurant management system. Be concise but friendly in your responses.',
-          },
-          ...messages,
-        ],
-        temperature: 0.7,
-        max_tokens: 150,
+        system: "You are a helpful AI assistant that helps users with their restaurant management system. Be concise but friendly in your responses.",
+        messages: messages.map(msg => ({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        })),
+        model: "claude-3-opus-20240229",
+        max_tokens: 1000
       }),
     });
 
     const data = await response.json();
+    console.log('Claude API response:', data);
     
     return new Response(
       JSON.stringify({ 
-        message: data.choices[0].message.content 
+        message: data.content[0].text
       }),
       { 
         headers: { 
