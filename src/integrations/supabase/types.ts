@@ -349,36 +349,36 @@ export type Database = {
       kitchen_orders: {
         Row: {
           coursing: string
-          created_at: string
+          created_at: string | null
           estimated_delivery_time: string
           id: number
           items: Json
           notes: string | null
           order_id: number | null
           priority: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           coursing: string
-          created_at?: string
+          created_at?: string | null
           estimated_delivery_time: string
           id?: number
           items: Json
           notes?: string | null
           order_id?: number | null
           priority: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           coursing?: string
-          created_at?: string
+          created_at?: string | null
           estimated_delivery_time?: string
           id?: number
           items?: Json
           notes?: string | null
           order_id?: number | null
           priority?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -547,7 +547,6 @@ export type Database = {
           description: string | null
           id: number
           image_url: string | null
-          last_ordered_at: string | null
           name: string
           order_count: number | null
           preparation_time: number | null
@@ -562,7 +561,6 @@ export type Database = {
           description?: string | null
           id?: number
           image_url?: string | null
-          last_ordered_at?: string | null
           name: string
           order_count?: number | null
           preparation_time?: number | null
@@ -577,7 +575,6 @@ export type Database = {
           description?: string | null
           id?: number
           image_url?: string | null
-          last_ordered_at?: string | null
           name?: string
           order_count?: number | null
           preparation_time?: number | null
@@ -609,7 +606,7 @@ export type Database = {
       }
       orders: {
         Row: {
-          created_at: string
+          created_at: string | null
           estimated_prep_time: number
           guest_count: number
           id: number
@@ -618,12 +615,12 @@ export type Database = {
           special_instructions: string | null
           status: string
           table_number: number
-          timestamp: string
+          timestamp: string | null
           total: number
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           estimated_prep_time: number
           guest_count: number
           id?: number
@@ -632,12 +629,12 @@ export type Database = {
           special_instructions?: string | null
           status: string
           table_number: number
-          timestamp?: string
+          timestamp?: string | null
           total: number
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           estimated_prep_time?: number
           guest_count?: number
           id?: number
@@ -646,9 +643,9 @@ export type Database = {
           special_instructions?: string | null
           status?: string
           table_number?: number
-          timestamp?: string
+          timestamp?: string | null
           total?: number
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1469,9 +1466,10 @@ export type Database = {
         | "database"
         | "email"
         | "webhook"
+      order_status: "pending" | "preparing" | "ready" | "delivered"
       payment_method: "cash" | "card" | "bank_transfer" | "check"
       property_status: "active" | "inactive" | "archived"
-      staff_role: "chef" | "server" | "host" | "bartender" | "manager"
+      staff_role: "manager" | "chef" | "server" | "host" | "bartender"
       staff_status: "active" | "on_break" | "off_duty"
       subscription_tier: "free" | "starter" | "professional" | "enterprise"
       tenant_status: "active" | "inactive" | "pending"

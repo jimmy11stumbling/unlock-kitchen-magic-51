@@ -10,24 +10,49 @@ import { useOrderActions } from "@/hooks/dashboard/orders/useOrderActions";
 import { useMenuState } from "@/hooks/dashboard/useMenuState";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Orders() {
   const [activeTab, setActiveTab] = useState("current");
-  const { orders, isLoading: ordersLoading } = useOrders();
-  const { kitchenOrders, isLoading: kitchenLoading } = useKitchenOrders();
+  const { orders, isLoading: ordersLoading, error: ordersError } = useOrders();
+  const { kitchenOrders, isLoading: kitchenLoading, error: kitchenError } = useKitchenOrders();
   const { addOrder, updateOrderStatus, updateKitchenOrderStatus } = useOrderActions(kitchenOrders);
-  const { menuItems, isLoading: menuLoading } = useMenuState();
+  const { menuItems, isLoading: menuLoading, error: menuError } = useMenuState();
 
   useInstantOrderProcessing();
 
   if (ordersLoading || kitchenLoading || menuLoading) {
     return (
       <div className="p-8 space-y-4">
-        <div className="h-8 bg-muted rounded w-1/4 animate-pulse"></div>
+        <Skeleton className="h-8 w-1/4" />
         <div className="space-y-3">
-          <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-          <div className="h-4 bg-muted rounded w-2/3 animate-pulse"></div>
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
         </div>
+      </div>
+    );
+  }
+
+  const error = ordersError || kitchenError || menuError;
+  if (error) {
+    return (
+      <div className="p-8">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error}
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }

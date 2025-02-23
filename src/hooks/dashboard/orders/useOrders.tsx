@@ -9,7 +9,7 @@ export interface SupabaseOrder {
   table_number: number;
   guest_count: number;
   items: any;
-  status: string;  // Changed from Order["status"] to string since that's what Supabase returns
+  status: string;
   total: number;
   timestamp: string;
   server_name: string;
@@ -24,40 +24,52 @@ const isValidOrderStatus = (status: string): status is Order["status"] => {
 };
 
 const mapSupabaseOrderToOrder = (order: SupabaseOrder): Order => {
-  if (!isValidOrderStatus(order.status)) {
-    throw new Error(`Invalid order status: ${order.status}`);
-  }
+  try {
+    if (!order) throw new Error("Invalid order data: Order is null or undefined");
+    if (!isValidOrderStatus(order.status)) {
+      throw new Error(`Invalid order status: ${order.status}`);
+    }
+    if (!Array.isArray(JSON.parse(JSON.stringify(order.items)))) {
+      throw new Error("Invalid items format: Expected an array");
+    }
 
-  return {
-    id: order.id,
-    tableNumber: order.table_number,
-    items: order.items,
-    status: order.status, // TypeScript now knows this is a valid Order["status"]
-    total: order.total,
-    timestamp: order.timestamp,
-    serverName: order.server_name,
-    specialInstructions: order.special_instructions,
-    guestCount: order.guest_count,
-    estimatedPrepTime: order.estimated_prep_time,
-  };
+    return {
+      id: order.id,
+      tableNumber: order.table_number,
+      items: order.items,
+      status: order.status,
+      total: order.total,
+      timestamp: order.timestamp,
+      serverName: order.server_name,
+      specialInstructions: order.special_instructions,
+      guestCount: order.guest_count,
+      estimatedPrepTime: order.estimated_prep_time,
+    };
+  } catch (error) {
+    throw new Error(`Error mapping order data: ${error.message}`);
+  }
 };
 
 export const useOrders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const { data, error } = await supabase
+        setIsLoading(true);
+        setError(null);
+
+        const { data, error: supabaseError } = await supabase
           .from('orders')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (supabaseError) throw supabaseError;
+        if (!data) throw new Error("No data returned from database");
 
-        // Try to map each order, show toast for any invalid orders
         const mappedOrders = data
           .map(raw => {
             try {
@@ -76,10 +88,12 @@ export const useOrders = () => {
 
         setOrders(mappedOrders);
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
         console.error('Error fetching orders:', error);
+        setError(errorMessage);
         toast({
           title: "Error fetching orders",
-          description: "Could not load orders. Please try again.",
+          description: errorMessage,
           variant: "destructive"
         });
       } finally {
@@ -96,15 +110,30 @@ export const useOrders = () => {
           schema: 'public',
           table: 'orders'
         },
-        (payload) => {
+        async (payload) => {
           try {
             const mappedOrder = mapSupabaseOrderToOrder(payload.new as SupabaseOrder);
+            
             if (payload.eventType === 'INSERT') {
               setOrders(prev => [mappedOrder, ...prev]);
+              toast({
+                title: "New Order",
+                description: `Order #${mappedOrder.id} has been created`,
+              });
             } else if (payload.eventType === 'UPDATE') {
               setOrders(prev => prev.map(order => 
                 order.id === mappedOrder.id ? mappedOrder : order
               ));
+              toast({
+                title: "Order Updated",
+                description: `Order #${mappedOrder.id} has been updated`,
+              });
+            } else if (payload.eventType === 'DELETE') {
+              setOrders(prev => prev.filter(order => order.id !== payload.old.id));
+              toast({
+                title: "Order Removed",
+                description: `Order #${payload.old.id} has been removed`,
+              });
             }
           } catch (e) {
             console.error('Error processing order update:', e);
@@ -125,5 +154,5 @@ export const useOrders = () => {
     };
   }, [toast]);
 
-  return { orders, isLoading };
+  return { orders, isLoading, error };
 };
