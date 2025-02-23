@@ -13,6 +13,7 @@ import Reservations from "@/routes/dashboard/Reservations";
 import Feedback from "@/routes/dashboard/Feedback";
 import Promotions from "@/routes/dashboard/Promotions";
 import Tables from "@/routes/dashboard/Tables";
+import Orders from "@/routes/dashboard/Orders";
 import { useLocation } from "react-router-dom";
 
 const Dashboard = () => {
@@ -27,6 +28,9 @@ const Dashboard = () => {
             <DashboardTabs />
             <TabsContent value="overview" className="m-0">
               <Overview />
+            </TabsContent>
+            <TabsContent value="orders" className="m-0">
+              <Orders />
             </TabsContent>
             <TabsContent value="menu" className="m-0">
               <Menu />

@@ -1,17 +1,26 @@
 
-import { useOrders } from "./orders/useOrders";
-import { useKitchenOrders } from "./orders/useKitchenOrders";
-import { useOrderActions } from "./orders/useOrderActions";
+import { useState } from "react";
+import type { KitchenOrder } from "@/types/staff";
 
 export const useOrderState = () => {
-  const { orders, isLoading: ordersLoading } = useOrders();
-  const { kitchenOrders, isLoading: kitchenOrdersLoading } = useKitchenOrders();
-  const { addOrder, updateOrderStatus, updateKitchenOrderStatus } = useOrderActions(kitchenOrders);
+  const [kitchenOrders] = useState<KitchenOrder[]>([]);
+
+  const addOrder = async () => {
+    console.log("Order functionality being rebuilt around tables");
+  };
+
+  const updateOrderStatus = async () => {
+    console.log("Order functionality being rebuilt around tables");
+  };
+
+  const updateKitchenOrderStatus = async () => {
+    console.log("Order functionality being rebuilt around tables");
+  };
 
   return {
-    orders,
+    orders: [],
     kitchenOrders,
-    isLoading: ordersLoading || kitchenOrdersLoading,
+    isLoading: false,
     addOrder,
     updateOrderStatus,
     updateKitchenOrderStatus,
