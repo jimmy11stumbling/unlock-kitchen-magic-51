@@ -16,7 +16,6 @@ export default function Orders() {
   const { kitchenOrders, isLoading: kitchenLoading } = useKitchenOrders();
   const { addOrder, updateOrderStatus, updateKitchenOrderStatus } = useOrderActions(kitchenOrders);
 
-  // Initialize instant order processing
   useInstantOrderProcessing();
 
   if (ordersLoading || kitchenLoading) {
@@ -64,7 +63,7 @@ export default function Orders() {
         </TabsContent>
 
         <TabsContent value="new">
-          <CreateOrderPanel onAddOrder={addOrder} />
+          <CreateOrderPanel onCreateOrder={addOrder} />
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
