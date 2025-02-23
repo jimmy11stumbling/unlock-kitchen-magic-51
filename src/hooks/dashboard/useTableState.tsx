@@ -4,6 +4,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { TableLayout } from "@/types/staff";
 
+const validateSection = (section: string): TableLayout["section"] => {
+  if (section === "indoor" || section === "outdoor" || section === "bar") {
+    return section;
+  }
+  // Default to indoor if invalid section is provided
+  console.warn(`Invalid section "${section}" provided, defaulting to "indoor"`);
+  return "indoor";
+};
+
 export const useTableState = () => {
   const { toast } = useToast();
   const [tables, setTables] = useState<TableLayout[]>([]);
@@ -25,7 +34,7 @@ export const useTableState = () => {
           number: table.number,
           capacity: table.capacity,
           status: table.status,
-          section: table.section,
+          section: validateSection(table.section),
         }));
 
         setTables(mappedTables);
@@ -61,7 +70,7 @@ export const useTableState = () => {
               number: payload.new.number,
               capacity: payload.new.capacity,
               status: payload.new.status,
-              section: payload.new.section,
+              section: validateSection(payload.new.section),
             }]);
           } else if (payload.eventType === 'UPDATE') {
             setTables(prev => prev.map(table =>
@@ -71,7 +80,7 @@ export const useTableState = () => {
                     number: payload.new.number,
                     capacity: payload.new.capacity,
                     status: payload.new.status,
-                    section: payload.new.section,
+                    section: validateSection(payload.new.section),
                   }
                 : table
             ));
