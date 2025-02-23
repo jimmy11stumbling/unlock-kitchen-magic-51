@@ -1,9 +1,9 @@
 
-import { ShoppingCart, PlusCircle, History } from "lucide-react";
+import { ShoppingCart, PlusCircle, History, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrdersPanel } from "@/components/dashboard/OrdersPanel";
 import { CreateOrderPanel } from "@/components/dashboard/orders/CreateOrderPanel";
-import { Alert, AlertCircle, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Order, KitchenOrder } from "@/types/staff";
 import type { MenuItem } from "@/types/staff";
 
