@@ -6,23 +6,28 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { TableLayout } from "@/types/staff";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface TablePanelProps {
   tables: TableLayout[];
   onAddTable: (table: Omit<TableLayout, "id">) => void;
   onUpdateStatus: (tableId: number, status: TableLayout["status"]) => void;
+  onStartOrder?: (tableId: number) => number | undefined;
 }
 
 export const TablePanel = ({
   tables,
   onAddTable,
   onUpdateStatus,
+  onStartOrder,
 }: TablePanelProps) => {
+  const { toast } = useToast();
   const [newTable, setNewTable] = useState<Omit<TableLayout, "id">>({
     number: 1,
     capacity: 4,
     status: "available",
     section: "indoor",
+    activeOrder: null,
   });
 
   const sections: { [key: string]: TableLayout[] } = {
@@ -38,6 +43,18 @@ export const TablePanel = ({
       case "reserved": return "bg-yellow-100 text-yellow-800";
       case "cleaning": return "bg-blue-100 text-blue-800";
       default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const handleStartOrder = (tableId: number) => {
+    if (onStartOrder) {
+      const orderId = onStartOrder(tableId);
+      if (orderId) {
+        toast({
+          title: "Order Started",
+          description: `Order #${orderId} has been started for table ${tables.find(t => t.id === tableId)?.number}`,
+        });
+      }
     }
   };
 
@@ -98,6 +115,7 @@ export const TablePanel = ({
                       capacity: 4,
                       status: "available",
                       section: "indoor",
+                      activeOrder: null,
                     });
                   }}
                 >
@@ -139,10 +157,23 @@ export const TablePanel = ({
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-2 flex justify-between items-center">
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(table.status)}`}>
                         {table.status}
                       </span>
+                      {table.status === "occupied" && !table.activeOrder && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleStartOrder(table.id)}
+                        >
+                          Start Order
+                        </Button>
+                      )}
+                      {table.activeOrder && (
+                        <span className="text-xs text-muted-foreground">
+                          Order #{table.activeOrder}
+                        </span>
+                      )}
                     </div>
                   </Card>
                 ))}

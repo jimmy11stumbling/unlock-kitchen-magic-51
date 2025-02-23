@@ -3,7 +3,7 @@ import { TablePanel } from "@/components/dashboard/TablePanel";
 import { useDashboardState } from "@/hooks/useDashboardState";
 
 const Tables = () => {
-  const { tables, addTable, updateTableStatus } = useDashboardState();
+  const { tables, addTable, updateTableStatus, startOrder } = useDashboardState();
 
   return (
     <div className="p-8 space-y-8">
@@ -12,6 +12,7 @@ const Tables = () => {
         tables={tables}
         onAddTable={addTable}
         onUpdateStatus={updateTableStatus}
+        onStartOrder={startOrder}
       />
     </div>
   );
