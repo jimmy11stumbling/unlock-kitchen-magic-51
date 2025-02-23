@@ -881,6 +881,63 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_members: {
+        Row: {
+          bank_info: Json | null
+          certifications: string[] | null
+          created_at: string | null
+          department: string | null
+          email: string | null
+          id: number
+          name: string
+          notes: string | null
+          performance_rating: number | null
+          phone: string | null
+          role: Database["public"]["Enums"]["staff_role"]
+          salary: number | null
+          schedule: Json | null
+          shift: string | null
+          status: Database["public"]["Enums"]["staff_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          bank_info?: Json | null
+          certifications?: string[] | null
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          id?: number
+          name: string
+          notes?: string | null
+          performance_rating?: number | null
+          phone?: string | null
+          role: Database["public"]["Enums"]["staff_role"]
+          salary?: number | null
+          schedule?: Json | null
+          shift?: string | null
+          status?: Database["public"]["Enums"]["staff_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          bank_info?: Json | null
+          certifications?: string[] | null
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          id?: number
+          name?: string
+          notes?: string | null
+          performance_rating?: number | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["staff_role"]
+          salary?: number | null
+          schedule?: Json | null
+          shift?: string | null
+          status?: Database["public"]["Enums"]["staff_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           active: boolean
@@ -1414,6 +1471,8 @@ export type Database = {
         | "webhook"
       payment_method: "cash" | "card" | "bank_transfer" | "check"
       property_status: "active" | "inactive" | "archived"
+      staff_role: "chef" | "server" | "host" | "bartender" | "manager"
+      staff_status: "active" | "on_break" | "off_duty"
       subscription_tier: "free" | "starter" | "professional" | "enterprise"
       tenant_status: "active" | "inactive" | "pending"
       transaction_type: "income" | "expense"
