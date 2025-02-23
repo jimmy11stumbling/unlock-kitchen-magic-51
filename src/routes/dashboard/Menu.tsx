@@ -1,3 +1,4 @@
+
 import { MenuPanel } from "@/components/dashboard/MenuPanel";
 import { useDashboardState } from "@/hooks/useDashboardState";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,6 +24,7 @@ const Menu = () => {
     updateMenuItem,
     staff 
   } = useDashboardState();
+
   const { toast } = useToast();
 
   const activeStaffCount = staff.filter(member => member.status === 'active').length;

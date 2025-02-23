@@ -1,8 +1,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ImageUpload } from "./ImageUpload";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import type { MenuItem } from "@/types/staff";
 import type { MenuItemFormData } from "./types";
 
@@ -16,15 +22,6 @@ interface MenuItemFormProps {
 export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItemFormProps) => {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Image</label>
-        <ImageUpload
-          image={data.image}
-          onImageUpload={(image) => onChange({ ...data, image })}
-          onImageRemove={() => onChange({ ...data, image: undefined })}
-        />
-      </div>
-
       <div>
         <label className="text-sm font-medium">Name</label>
         <Input
@@ -58,6 +55,7 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
         <label className="text-sm font-medium">Price</label>
         <Input
           type="number"
+          step="0.01"
           value={data.price}
           onChange={(e) => onChange({ ...data, price: Number(e.target.value) })}
           placeholder="Price"
@@ -66,7 +64,7 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
 
       <div>
         <label className="text-sm font-medium">Description</label>
-        <Input
+        <Textarea
           value={data.description}
           onChange={(e) => onChange({ ...data, description: e.target.value })}
           placeholder="Description"
@@ -83,20 +81,22 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
       </div>
 
       <div>
-        <label className="text-sm font-medium">Allergens (comma-separated)</label>
+        <label className="text-sm font-medium">Allergens</label>
         <Input
           value={data.allergens.join(", ")}
           onChange={(e) => onChange({
             ...data,
-            allergens: e.target.value.split(",").map(a => a.trim())
+            allergens: e.target.value.split(",").map(a => a.trim()).filter(Boolean)
           })}
           placeholder="e.g., nuts, dairy, gluten"
         />
       </div>
 
-      <Button className="w-full" onClick={onSubmit}>
-        {submitLabel}
-      </Button>
+      <div className="pt-4">
+        <Button className="w-full" onClick={onSubmit}>
+          {submitLabel}
+        </Button>
+      </div>
     </div>
   );
 };
