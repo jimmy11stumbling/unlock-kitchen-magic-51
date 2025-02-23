@@ -1,4 +1,3 @@
-
 import {
   Wallet,
   LayoutDashboard,
@@ -7,6 +6,7 @@ import {
   Calendar,
   PieChart,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const features = [
   {
@@ -14,6 +14,7 @@ const features = [
     title: "Intuitive Dashboard",
     description:
       "Get a complete overview of your restaurant's performance at a glance",
+    link: "/dashboard"
   },
   {
     icon: <ShoppingCart className="h-6 w-6" />,
@@ -58,9 +59,10 @@ export const Features = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div
+            <Link
+              to={feature.link || "#"}
               key={index}
-              className="feature-card dark:hover:bg-gray-800/50 animate-in"
+              className="feature-card dark:hover:bg-gray-800/50 animate-in cursor-pointer"
               style={{ animationDelay: `${(index + 2) * 0.1}s` }}
             >
               <div className="icon-container">
@@ -74,7 +76,7 @@ export const Features = () => {
               <p className="text-gray-600 dark:text-gray-300 transition-colors">
                 {feature.description}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
