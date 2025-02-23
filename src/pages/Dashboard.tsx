@@ -1,9 +1,13 @@
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { Tabs } from "@/components/ui/tabs";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 
 const Dashboard = () => {
+  const location = useLocation();
+  const currentTab = location.pathname.split('/')[2] || 'overview';
+
   return (
     <div className="min-h-screen bg-background">
       <div className="p-8 space-y-8">
@@ -17,7 +21,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <DashboardTabs />
+        <Tabs value={currentTab} defaultValue="overview">
+          <DashboardTabs />
+        </Tabs>
         
         <Outlet />
       </div>
