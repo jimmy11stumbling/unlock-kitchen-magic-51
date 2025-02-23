@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { MenuItem } from "@/types/staff";
@@ -30,7 +30,7 @@ export const useMenuState = () => {
         id: item.id,
         name: item.name,
         price: item.price,
-        category: item.category,
+        category: item.category as MenuItem["category"], // Explicitly cast to the correct type
         description: item.description || "",
         available: item.available ?? true,
         image: item.image_url || "/placeholder.svg",
