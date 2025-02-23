@@ -4,8 +4,15 @@ import { useDashboardState } from "@/hooks/useDashboardState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { 
-  User, Clock, FileText, BookOpen, Star
+  User, Clock, FileText, BookOpen, Star,
+  ChevronDown
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Staff = () => {
   const { 
@@ -18,11 +25,34 @@ const Staff = () => {
 
   return (
     <div className="p-8 space-y-8">
-      <div className="flex flex-col items-start gap-2 mb-8">
-        <h1 className="font-playfair text-4xl font-bold bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent animate-fade-in">
-          MaestroAI
-        </h1>
-        <p className="text-muted-foreground">Staff Management Dashboard</p>
+      <div className="flex flex-col items-start gap-4 mb-8">
+        <div className="flex items-center gap-2">
+          <h1 className="font-playfair text-4xl font-bold bg-gradient-to-r from-sage-500 to-sage-700 bg-clip-text text-transparent animate-fade-in">
+            MaestroAI
+          </h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <ChevronDown className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[200px] p-2">
+              <DropdownMenuItem className="cursor-pointer">
+                Staff Management System
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                Performance Tracking
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                Schedule Optimization
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                Attendance Monitoring
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <p className="text-muted-foreground text-sm">
+          Comprehensive staff management and scheduling system
+        </p>
       </div>
 
       <Tabs defaultValue="list" className="w-full">
