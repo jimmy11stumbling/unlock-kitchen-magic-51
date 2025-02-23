@@ -27,8 +27,12 @@ export const BasicInfoTab = ({
 
   const validateField = (field: keyof RestaurantInfo, value: any) => {
     try {
-      const schema = restaurantInfoSchema.pick({ [field]: true });
-      schema.parse({ [field]: value });
+      const partialData = { [field]: value } as Partial<RestaurantInfo>;
+      const partialSchema = restaurantInfoSchema.pick({ 
+        [field]: true 
+      } as const);
+      
+      partialSchema.parse(partialData);
       setErrors(prev => ({ ...prev, [field]: "" }));
       return true;
     } catch (error: any) {
