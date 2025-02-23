@@ -40,19 +40,17 @@ export const useKitchenOrders = () => {
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (supabaseError) {
-          setError(supabaseError.message);
-          throw supabaseError;
-        }
+        if (supabaseError) throw supabaseError;
+        if (!data) throw new Error("No data returned from database");
+
         setKitchenOrders(data.map(mapSupabaseKitchenOrderToKitchenOrder));
         setError(null);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Could not load kitchen orders";
-        setError(message);
         console.error('Error fetching kitchen orders:', error);
+        setError(error instanceof Error ? error.message : "Could not load kitchen orders");
         toast({
           title: "Error fetching kitchen orders",
-          description: message,
+          description: "Could not load kitchen orders. Please try again.",
           variant: "destructive"
         });
       } finally {

@@ -16,9 +16,8 @@ export const useMenuState = () => {
         .from('menu_items')
         .select('*');
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      if (!data) throw new Error("No menu items found");
       
       return data.map(item => ({
         id: item.id,
@@ -161,7 +160,7 @@ export const useMenuState = () => {
   return {
     menuItems,
     isLoading,
-    error,
+    error: error instanceof Error ? error.message : null,
     addMenuItem: (item: Omit<MenuItem, "id">) => addMenuItemMutation.mutate(item),
     updateMenuItem: (id: number, updates: Partial<MenuItem>) => 
       updateMenuItemMutation.mutate({ id, ...updates }),
