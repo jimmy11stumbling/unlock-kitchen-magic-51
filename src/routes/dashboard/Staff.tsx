@@ -5,13 +5,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { 
   User, Clock, FileText, BookOpen, Star,
-  ChevronDown
+  ChevronDown, BarChart, Award, Target,
+  Calendar, BookMarked, GraduationCap
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 const Staff = () => {
@@ -36,44 +38,49 @@ const Staff = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="start" 
-              className="w-[200px] p-2 bg-popover border border-border shadow-lg"
+              className="w-[280px] p-2 bg-popover border border-border shadow-lg rounded-lg"
             >
-              <DropdownMenuItem className="cursor-pointer hover:bg-muted">
+              <DropdownMenuItem className="cursor-pointer hover:bg-muted flex items-center gap-2 p-3">
+                <User className="h-4 w-4" />
                 Staff Management System
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer hover:bg-muted">
-                Performance Tracking
+              <DropdownMenuItem className="cursor-pointer hover:bg-muted flex items-center gap-2 p-3">
+                <BarChart className="h-4 w-4" />
+                Performance Analytics
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer hover:bg-muted">
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer hover:bg-muted flex items-center gap-2 p-3">
+                <Calendar className="h-4 w-4" />
                 Schedule Optimization
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer hover:bg-muted">
-                Attendance Monitoring
+              <DropdownMenuItem className="cursor-pointer hover:bg-muted flex items-center gap-2 p-3">
+                <Target className="h-4 w-4" />
+                Goal Tracking
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
         <p className="text-muted-foreground text-sm">
-          Comprehensive staff management and scheduling system
+          Advanced AI-powered staff management and optimization platform
         </p>
       </div>
 
       <Tabs defaultValue="list" className="w-full">
         <TabsList className="grid w-full grid-cols-4 gap-4 mb-4">
-          <TabsTrigger value="list">
-            <User className="h-4 w-4 mr-2" />
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
             Staff List
           </TabsTrigger>
-          <TabsTrigger value="schedule">
-            <Clock className="h-4 w-4 mr-2" />
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
             Schedules
           </TabsTrigger>
-          <TabsTrigger value="performance">
-            <Star className="h-4 w-4 mr-2" />
+          <TabsTrigger value="performance" className="flex items-center gap-2">
+            <Award className="h-4 w-4" />
             Performance
           </TabsTrigger>
-          <TabsTrigger value="training">
-            <BookOpen className="h-4 w-4 mr-2" />
+          <TabsTrigger value="training" className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
             Training
           </TabsTrigger>
         </TabsList>
@@ -91,24 +98,36 @@ const Staff = () => {
         <TabsContent value="schedule">
           <Card className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">Staff Schedules</h2>
+              <div>
+                <h2 className="text-lg font-semibold">Staff Schedules</h2>
+                <p className="text-sm text-muted-foreground">Manage and optimize staff scheduling</p>
+              </div>
             </div>
+            {/* Schedule content will be implemented in the next iteration */}
           </Card>
         </TabsContent>
 
         <TabsContent value="performance">
           <Card className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">Performance Reviews</h2>
+              <div>
+                <h2 className="text-lg font-semibold">Performance Analytics</h2>
+                <p className="text-sm text-muted-foreground">Track and analyze staff performance metrics</p>
+              </div>
             </div>
+            {/* Performance metrics will be implemented in the next iteration */}
           </Card>
         </TabsContent>
 
         <TabsContent value="training">
           <Card className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">Training Programs</h2>
+              <div>
+                <h2 className="text-lg font-semibold">Training Programs</h2>
+                <p className="text-sm text-muted-foreground">Manage staff development and certifications</p>
+              </div>
             </div>
+            {/* Training modules will be implemented in the next iteration */}
           </Card>
         </TabsContent>
       </Tabs>
