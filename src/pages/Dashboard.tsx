@@ -6,9 +6,10 @@ import {
   LayoutDashboard,
   Box,
   Settings,
+  Calendar,
 } from "lucide-react";
 import { useState } from "react";
-import type { StaffMember, Shift, InventoryItem, Order, Reservation, SalesData, PaymentTransaction } from "@/types/staff";
+import type { StaffMember, Shift, InventoryItem, Order, Reservation, SalesData, PaymentTransaction, MenuItem } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { OrdersPanel } from "@/components/dashboard/OrdersPanel";
@@ -16,6 +17,7 @@ import { StaffPanel } from "@/components/dashboard/StaffPanel";
 import { InventoryPanel } from "@/components/dashboard/InventoryPanel";
 import { AnalyticsPanel } from "@/components/dashboard/AnalyticsPanel";
 import { SettingsPanel } from "@/components/dashboard/SettingsPanel";
+import { ReservationsPanel } from "@/components/dashboard/ReservationsPanel";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -26,6 +28,7 @@ const Dashboard = () => {
   const [salesData, setSalesData] = useState<SalesData[]>([]);
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
 
   const addStaffMember = (data: { name: string; role: string; salary: string }) => {
     const newStaffMember: StaffMember = {
@@ -123,20 +126,13 @@ const Dashboard = () => {
     });
   };
 
-  const processPayment = (payment: Omit<PaymentTransaction, "id" | "timestamp" | "status">) => {
-    const newPayment: PaymentTransaction = {
-      id: payments.length + 1,
-      timestamp: new Date().toISOString(),
-      status: "completed",
-      ...payment,
-    };
-    setPayments([...payments, newPayment]);
-    
-    updateOrderStatus(payment.orderId, "delivered");
-    
+  const updateReservationStatus = (reservationId: number, status: Reservation["status"]) => {
+    setReservations(reservations.map(reservation =>
+      reservation.id === reservationId ? { ...reservation, status } : reservation
+    ));
     toast({
-      title: "Payment processed",
-      description: `Payment of $${payment.amount.toFixed(2)} has been processed.`,
+      title: "Reservation updated",
+      description: `Reservation status has been updated to ${status}.`,
     });
   };
 
@@ -196,6 +192,10 @@ const Dashboard = () => {
               <ShoppingCart className="h-4 w-4 mr-2" />
               Orders
             </TabsTrigger>
+            <TabsTrigger value="reservations" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
+              <Calendar className="h-4 w-4 mr-2" />
+              Reservations
+            </TabsTrigger>
             <TabsTrigger value="staff" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
               <Users className="h-4 w-4 mr-2" />
               Staff
@@ -229,6 +229,14 @@ const Dashboard = () => {
             />
           </TabsContent>
 
+          <TabsContent value="reservations">
+            <ReservationsPanel
+              reservations={reservations}
+              onAddReservation={addReservation}
+              onUpdateStatus={updateReservationStatus}
+            />
+          </TabsContent>
+
           <TabsContent value="staff">
             <StaffPanel
               staff={staff}
@@ -239,7 +247,11 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="inventory">
-            <InventoryPanel inventory={inventory} />
+            <InventoryPanel 
+              inventory={inventory}
+              onUpdateQuantity={updateInventoryQuantity}
+              onAddItem={addInventoryItem}
+            />
           </TabsContent>
 
           <TabsContent value="analytics">
