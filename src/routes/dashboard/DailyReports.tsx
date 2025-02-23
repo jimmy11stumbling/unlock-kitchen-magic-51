@@ -24,7 +24,7 @@ export default function DailyReports() {
     if (analyticsError) {
       toast({
         title: "Error loading reports",
-        description: "There was a problem loading the reports data. Please try again.",
+        description: analyticsError || "There was a problem loading the reports data. Please try again.",
         variant: "destructive",
       });
     }

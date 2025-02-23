@@ -79,38 +79,59 @@ export const useAnalyticsState = () => {
   const [dailyReports, setDailyReports] = useState<DailyReport[]>(initialDailyReports);
   const [feedback, setFeedback] = useState<CustomerFeedback[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const addSalesData = (data: Omit<SalesData, "profit">) => {
-    const profit = data.revenue - data.costs;
-    const newSalesData: SalesData = {
-      ...data,
-      profit,
-    };
-    setSalesData([...salesData, newSalesData]);
+    try {
+      const profit = data.revenue - data.costs;
+      const newSalesData: SalesData = {
+        ...data,
+        profit,
+      };
+      setSalesData([...salesData, newSalesData]);
+    } catch (err) {
+      setError("Failed to add sales data");
+      throw err;
+    }
   };
 
   const resolveFeedback = (feedbackId: number) => {
-    setFeedback(
-      feedback.map((item) =>
-        item.id === feedbackId ? { ...item, resolved: true } : item
-      )
-    );
+    try {
+      setFeedback(
+        feedback.map((item) =>
+          item.id === feedbackId ? { ...item, resolved: true } : item
+        )
+      );
+    } catch (err) {
+      setError("Failed to resolve feedback");
+      throw err;
+    }
   };
 
   const addPromotion = (promotionData: Omit<Promotion, "id">) => {
-    const newPromotion: Promotion = {
-      id: promotions.length + 1,
-      ...promotionData,
-    };
-    setPromotions([...promotions, newPromotion]);
+    try {
+      const newPromotion: Promotion = {
+        id: promotions.length + 1,
+        ...promotionData,
+      };
+      setPromotions([...promotions, newPromotion]);
+    } catch (err) {
+      setError("Failed to add promotion");
+      throw err;
+    }
   };
 
   const togglePromotion = (promotionId: number) => {
-    setPromotions(promotions.map(promo =>
-      promo.id === promotionId
-        ? { ...promo, active: !promo.active }
-        : promo
-    ));
+    try {
+      setPromotions(promotions.map(promo =>
+        promo.id === promotionId
+          ? { ...promo, active: !promo.active }
+          : promo
+      ));
+    } catch (err) {
+      setError("Failed to toggle promotion");
+      throw err;
+    }
   };
 
   return {
@@ -118,6 +139,7 @@ export const useAnalyticsState = () => {
     dailyReports,
     feedback,
     promotions,
+    error,
     addSalesData,
     resolveFeedback,
     addPromotion,
