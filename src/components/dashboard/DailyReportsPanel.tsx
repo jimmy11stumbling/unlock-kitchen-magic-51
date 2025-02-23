@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,7 +29,7 @@ import {
   Activity,
   Percent
 } from "lucide-react";
-import { exportToCSV } from "@/utils/exportUtils";
+import { exportToCSV, exportReport } from "@/utils/exportUtils";
 import { useState, useMemo, useCallback } from "react";
 import type { DailyReport, MenuItem, SalesData } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
@@ -54,13 +53,14 @@ export const DailyReportsPanel = ({
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
   
   const handleExport = async () => {
     try {
-      await exportToCSV(reports, 'daily-reports');
+      await exportReport(reports, 'daily-reports', exportFormat);
       toast({
         title: "Export Successful",
-        description: "Your report has been exported successfully.",
+        description: `Your report has been exported as ${exportFormat.toUpperCase()} successfully.`,
       });
     } catch (error) {
       console.error('Export error:', error);
@@ -180,9 +180,21 @@ export const DailyReportsPanel = ({
                 <SelectItem value="month">Monthly</SelectItem>
               </SelectContent>
             </Select>
+            <Select
+              value={exportFormat}
+              onValueChange={(value: 'csv' | 'pdf') => setExportFormat(value)}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Format" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="csv">CSV</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" onClick={handleExport}>
               <Download className="w-4 h-4 mr-2" />
-              Export
+              Export {exportFormat.toUpperCase()}
             </Button>
           </div>
         </div>
