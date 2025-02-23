@@ -1,6 +1,7 @@
 
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Menu, ChefHat } from "lucide-react";
 
