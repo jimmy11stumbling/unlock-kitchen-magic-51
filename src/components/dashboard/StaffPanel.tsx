@@ -84,12 +84,37 @@ export const StaffPanel = ({
 
   const handleAddShift = () => {
     if (selectedStaffId && selectedDate) {
+      const shiftTimes = {
+        Morning: "06:00-14:00",
+        Afternoon: "14:00-22:00",
+        Evening: "22:00-06:00"
+      };
+      
       onAddShift(
         selectedStaffId,
         selectedDate.toISOString().split('T')[0],
-        selectedShiftTime
+        shiftTimes[selectedShiftTime as keyof typeof shiftTimes]
       );
     }
+  };
+
+  const calculateWeeklyHours = (staffId: number): number => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    
+    return staff
+      .find(member => member.id === staffId)
+      ?.schedule
+      ? Object.values(staff.find(member => member.id === staffId)!.schedule)
+          .filter(time => time !== "OFF")
+          .reduce((total, time) => {
+            const [start, end] = time.split("-");
+            const startHour = parseInt(start.split(":")[0]);
+            const endHour = parseInt(end.split(":")[0]);
+            return total + (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);
+          }, 0)
+      : 0;
   };
 
   const getStatusColor = (status: StaffMember["status"]) => {
@@ -105,15 +130,10 @@ export const StaffPanel = ({
     }
   };
 
-  const calculateAttendance = (staffId: number) => {
-    // Simulated attendance calculation
-    return Math.floor(Math.random() * 30) + 70; // 70-100%
-  };
-
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 gap-4 mb-4">
+        <TabsList className="grid w-full grid-cols-2 gap-4 mb-4">
           <TabsTrigger value="list">
             <User className="h-4 w-4 mr-2" />
             Staff List
@@ -121,14 +141,6 @@ export const StaffPanel = ({
           <TabsTrigger value="schedule">
             <Clock className="h-4 w-4 mr-2" />
             Schedule
-          </TabsTrigger>
-          <TabsTrigger value="performance">
-            <ClipboardList className="h-4 w-4 mr-2" />
-            Performance
-          </TabsTrigger>
-          <TabsTrigger value="training">
-            <BookOpen className="h-4 w-4 mr-2" />
-            Training
           </TabsTrigger>
         </TabsList>
 
@@ -259,78 +271,79 @@ export const StaffPanel = ({
 
         <TabsContent value="schedule">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Schedule Management</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <Select
-                  value={selectedStaffId?.toString() || ""}
-                  onValueChange={(value) => setSelectedStaffId(Number(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select staff member" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {staff.map((member) => (
-                      <SelectItem key={member.id} value={member.id.toString()}>
-                        {member.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <h3 className="text-lg font-semibold mb-4">Add New Shift</h3>
+                <div className="space-y-4">
+                  <Select
+                    value={selectedStaffId?.toString() || ""}
+                    onValueChange={(value) => setSelectedStaffId(Number(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select staff member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staff.map((member) => (
+                        <SelectItem key={member.id} value={member.id.toString()}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                <div className="mt-4">
                   <Calendar
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     className="rounded-md border"
                   />
+
+                  <Select
+                    value={selectedShiftTime}
+                    onValueChange={setSelectedShiftTime}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Morning">Morning Shift (6AM - 2PM)</SelectItem>
+                      <SelectItem value="Afternoon">Afternoon Shift (2PM - 10PM)</SelectItem>
+                      <SelectItem value="Evening">Evening Shift (10PM - 6AM)</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    className="w-full"
+                    onClick={handleAddShift}
+                    disabled={!selectedStaffId || !selectedDate}
+                  >
+                    Add Shift
+                  </Button>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <Select
-                  value={selectedShiftTime}
-                  onValueChange={setSelectedShiftTime}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Morning">Morning Shift (6AM - 2PM)</SelectItem>
-                    <SelectItem value="Afternoon">Afternoon Shift (2PM - 10PM)</SelectItem>
-                    <SelectItem value="Evening">Evening Shift (10PM - 6AM)</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button
-                  className="w-full"
-                  onClick={handleAddShift}
-                  disabled={!selectedStaffId || !selectedDate}
-                >
-                  Add Shift
-                </Button>
-
-                <Card className="p-4 mt-4">
-                  <h4 className="font-medium mb-2">Scheduled Shifts</h4>
-                  {/* Add scheduled shifts list here */}
-                </Card>
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Weekly Hours Summary</h3>
+                <div className="space-y-4">
+                  {staff.map((member) => (
+                    <Card key={member.id} className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">{member.name}</h4>
+                          <p className="text-sm text-muted-foreground">{member.role}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-semibold">
+                            {calculateWeeklyHours(member.id)} hrs
+                          </p>
+                          <p className="text-sm text-muted-foreground">This Week</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="performance">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Performance Metrics</h3>
-            {/* Add performance metrics here */}
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="training">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Training Programs</h3>
-            {/* Add training programs here */}
           </Card>
         </TabsContent>
       </Tabs>
