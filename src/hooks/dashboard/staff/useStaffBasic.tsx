@@ -41,7 +41,7 @@ export const useStaffBasic = () => {
       setLoading(true);
       setError(null);
       const data = await fetchStaffMembers();
-      const mappedStaff = data.map((item) => mapDatabaseToStaffMember(item));
+      const mappedStaff = data.map(mapDatabaseToStaffMember);
       setStaff(mappedStaff);
     } catch (error) {
       console.error('Error fetching staff:', error);
@@ -104,11 +104,16 @@ export const useStaffBasic = () => {
   const updateStaffInfo = async (staffId: number, updates: Partial<DatabaseStaffMember>) => {
     try {
       await updateStaffMemberInfo(staffId, updates);
+      const updatedMember = staff.find(m => m.id === staffId);
+      if (!updatedMember) throw new Error('Staff member not found');
+      
+      const updatedData = { ...updatedMember, ...updates };
+      const mappedMember = mapDatabaseToStaffMember(updatedData as DatabaseStaffMember);
+      
       setStaff(prev => prev.map(member => 
-        member.id === staffId 
-          ? { ...member, ...updates }
-          : member
+        member.id === staffId ? mappedMember : member
       ));
+      
       toast({
         title: "Staff info updated",
         description: "Staff member information has been updated successfully.",

@@ -1,5 +1,5 @@
 
-import type { StaffRole } from "@/types/staff";
+import type { StaffRole, StaffStatus } from "@/types/staff";
 
 export interface DatabaseStaffMember {
   id: number;
@@ -7,7 +7,7 @@ export interface DatabaseStaffMember {
   role: StaffRole;
   email: string | null;
   phone: string | null;
-  status: 'active' | 'on_break' | 'off_duty';
+  status: StaffStatus;
   salary: number | null;
   shift: string | null;
   department: string | null;
@@ -15,7 +15,11 @@ export interface DatabaseStaffMember {
   performance_rating: number | null;
   notes: string | null;
   schedule: Record<string, string> | string;
-  bank_info: Record<string, any> | null;
+  bank_info: {
+    accountNumber?: string;
+    routingNumber?: string;
+    accountType?: "checking" | "savings";
+  } | null;
   created_at: string | null;
   updated_at: string | null;
 }
