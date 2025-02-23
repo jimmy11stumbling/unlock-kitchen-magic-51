@@ -8,19 +8,27 @@ const API_URL = "https://api.anthropic.com/v1/messages";
 export const useAIAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { menuItems, orders, reservations, staff, tables } = useDashboardState();
+  const state = useDashboardState();
+
+  // Initialize with empty arrays if state properties are undefined
+  const menuItems = state.menuItems || [];
+  const orders = state.orders || [];
+  const reservations = state.reservations || [];
+  const staff = state.staff || [];
+  const tables = state.tables || [];
 
   const generateSystemPrompt = () => {
-    const menuSummary = menuItems.map(item => `${item.name} - $${item.price}`).join(", ");
-    const activeStaff = staff.filter(s => s.status === "active").length;
-    const availableTables = tables.filter(t => t.status === "available").length;
-    const pendingOrders = orders.filter(o => o.status === "pending").length;
-    const todayReservations = reservations.filter(r => {
-      const today = new Date().toISOString().split('T')[0];
-      return r.date === today;
-    }).length;
+    try {
+      const menuSummary = menuItems.map(item => `${item.name} - $${item.price}`).join(", ");
+      const activeStaff = staff.filter(s => s.status === "active").length;
+      const availableTables = tables.filter(t => t.status === "available").length;
+      const pendingOrders = orders.filter(o => o.status === "pending").length;
+      const todayReservations = reservations.filter(r => {
+        const today = new Date().toISOString().split('T')[0];
+        return r.date === today;
+      }).length;
 
-    return `You are Luna, the restaurant's AI assistant. You have access to the restaurant's real-time data:
+      return `You are Luna, the restaurant's AI assistant. You have access to the restaurant's real-time data:
 
 Restaurant Status:
 - Menu Items: ${menuSummary}
@@ -30,6 +38,10 @@ Restaurant Status:
 - Today's Reservations: ${todayReservations}
 
 Provide friendly, accurate assistance with menu details, reservations, wait times, staff info, and restaurant policies.`;
+    } catch (err) {
+      console.error("Error generating system prompt:", err);
+      return "You are Luna, the restaurant's AI assistant. Provide friendly assistance with menu details, reservations, and general restaurant information.";
+    }
   };
 
   const sendMessage = async (message: string) => {
@@ -46,9 +58,7 @@ Provide friendly, accurate assistance with menu details, reservations, wait time
         },
         body: JSON.stringify({
           system: generateSystemPrompt(),
-          messages: [
-            { role: "user", content: message }
-          ],
+          messages: [{ role: "user", content: message }],
           model: "claude-3-opus-20240229",
           max_tokens: 1000
         })
@@ -61,7 +71,7 @@ Provide friendly, accurate assistance with menu details, reservations, wait time
         throw new Error(data.error?.message || "Failed to get response");
       }
 
-      return data.content[0].text;
+      return data.content?.[0]?.text || "I apologize, but I'm having trouble processing your request at the moment.";
     } catch (err) {
       console.error("AI Assistant Error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
