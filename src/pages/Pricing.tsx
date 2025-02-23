@@ -2,8 +2,16 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ChefHat, Check } from "lucide-react";
+import { useState } from "react";
+import { SetupWizard } from "@/components/setup/SetupWizard";
 
 const Pricing = () => {
+  const [showSetup, setShowSetup] = useState(false);
+
+  const handleGetStarted = () => {
+    setShowSetup(true);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="fixed top-0 w-full z-50 border-b bg-background/80 backdrop-blur-sm">
@@ -34,7 +42,7 @@ const Pricing = () => {
                 </li>
               ))}
             </ul>
-            <Button className="w-full">Get Started</Button>
+            <Button className="w-full" onClick={handleGetStarted}>Get Started</Button>
           </div>
 
           {/* Professional Plan */}
@@ -56,7 +64,7 @@ const Pricing = () => {
                 </li>
               ))}
             </ul>
-            <Button className="w-full">Get Started</Button>
+            <Button className="w-full" onClick={handleGetStarted}>Get Started</Button>
           </div>
 
           {/* Enterprise Plan */}
@@ -78,7 +86,7 @@ const Pricing = () => {
                 </li>
               ))}
             </ul>
-            <Button className="w-full">Contact Sales</Button>
+            <Button className="w-full" onClick={handleGetStarted}>Contact Sales</Button>
           </div>
         </div>
       </main>
@@ -96,6 +104,8 @@ const Pricing = () => {
           </p>
         </div>
       </footer>
+
+      {showSetup && <SetupWizard />}
     </div>
   );
 };

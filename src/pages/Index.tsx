@@ -10,6 +10,10 @@ import { SetupWizard } from "@/components/setup/SetupWizard";
 const Index = () => {
   const [showSetup, setShowSetup] = useState(false);
 
+  const handleGetStarted = () => {
+    setShowSetup(true);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="fixed top-0 w-full z-50 border-b bg-background/80 backdrop-blur-sm">
@@ -28,7 +32,7 @@ const Index = () => {
               About
             </Link>
             <Button 
-              onClick={() => setShowSetup(true)}
+              onClick={handleGetStarted}
               className="gap-2"
             >
               Get Started
