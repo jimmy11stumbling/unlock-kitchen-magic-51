@@ -31,23 +31,35 @@ export const AIAssistant = () => {
     setIsLoading(true);
 
     try {
-      const { data: response, error } = await supabase
-        .functions.invoke('generate-response', {
-          body: { 
-            messages: [...messages, userMessage],
-          }
-        });
-
-      if (error) throw error;
-
-      const assistantMessage = {
-        role: "assistant" as const,
-        content: response.message || "I encountered an error processing your request."
-      };
+      console.log('Sending messages to API:', [...messages, userMessage]);
       
-      setMessages(prev => [...prev, assistantMessage]);
+      const { data: responseData, error } = await supabase.functions.invoke('generate-response', {
+        body: { 
+          messages: [...messages, userMessage].map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+        }
+      });
+
+      console.log('API Response:', responseData);
+
+      if (error) {
+        console.error('API Error:', error);
+        throw error;
+      }
+
+      if (responseData?.message) {
+        const assistantMessage = {
+          role: "assistant" as const,
+          content: responseData.message
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        throw new Error('No message in response');
+      }
     } catch (error) {
-      console.error('Error generating response:', error);
+      console.error('Error details:', error);
       toast({
         title: "Error",
         description: "Failed to generate response. Please try again.",
