@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -41,6 +40,47 @@ export const StaffPanel = ({
   const [selectedShiftTime, setSelectedShiftTime] = useState("Morning");
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("list");
+
+  const handleAddStaff = () => {
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    const completeStaffData: Omit<StaffMember, "id" | "status"> = {
+      name: newStaff.name,
+      role: newStaff.role,
+      salary: newStaff.salary,
+      shift: "Morning",
+      email: "",
+      phone: "",
+      address: "",
+      emergencyContact: {
+        name: "",
+        phone: "",
+        relationship: ""
+      },
+      startDate: currentDate,
+      department: newStaff.role,
+      certifications: [],
+      performanceRating: 0,
+      notes: "",
+      schedule: {
+        monday: "OFF",
+        tuesday: "OFF",
+        wednesday: "OFF",
+        thursday: "OFF",
+        friday: "OFF",
+        saturday: "OFF",
+        sunday: "OFF"
+      },
+      bankInfo: {
+        accountNumber: "",
+        routingNumber: "",
+        accountType: "checking"
+      }
+    };
+
+    onAddStaff(completeStaffData);
+    setNewStaff({ name: "", role: "", salary: "" });
+  };
 
   const handleAddShift = () => {
     if (selectedStaffId && selectedDate) {
@@ -148,10 +188,7 @@ export const StaffPanel = ({
                       </div>
                     </div>
                     <Button
-                      onClick={() => {
-                        onAddStaff(newStaff);
-                        setNewStaff({ name: "", role: "", salary: "" });
-                      }}
+                      onClick={handleAddStaff}
                       className="w-full"
                     >
                       Add Staff Member
