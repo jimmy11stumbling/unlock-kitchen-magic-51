@@ -11,19 +11,16 @@ export function Hero() {
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
               Welcome to MaestroAI Restaurant Management
             </h1>
-            <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
               Streamline your restaurant operations with our intelligent management system.
-              From orders to inventory, we've got you covered.
             </p>
           </div>
-          <div className="space-x-4">
-            <Link to="/dashboard">
-              <Button>Get Started</Button>
-            </Link>
-            <Link to="/features">
-              <Button variant="outline">Learn More</Button>
-            </Link>
-          </div>
+          <Link to="/dashboard">
+            <Button className="gap-2">
+              Get Started
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

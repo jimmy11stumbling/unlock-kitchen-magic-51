@@ -4,6 +4,7 @@ import Index from "./pages/Index";
 import Features from "./pages/Features";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import { AIAssistant } from "@/components/AIAssistant";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/dashboard/:tab" element={<Dashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <AIAssistant />
     </Router>
   );
 }
