@@ -31,6 +31,12 @@ export const DailyReportsPanel = ({ reports }: DailyReportsPanelProps) => {
     exportToCSV(exportData, 'daily-reports');
   };
 
+  const revenueMetrics = {
+    totalRevenue: reports.reduce((acc, curr) => acc + curr.totalRevenue, 0),
+    totalOrders: reports.reduce((acc, curr) => acc + curr.totalOrders, 0),
+    averageOrder: reports.reduce((acc, curr) => acc + curr.averageOrderValue, 0) / reports.length,
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -64,17 +70,17 @@ export const DailyReportsPanel = ({ reports }: DailyReportsPanelProps) => {
               <h3 className="text-sm font-medium">Revenue</h3>
             </div>
             <p className="text-2xl font-bold mt-2">
-              ${reports[0]?.totalRevenue.toFixed(2) || '0.00'}
+              ${revenueMetrics.totalRevenue.toFixed(2)}
             </p>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center space-x-2">
               <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-medium">Orders</h3>
+              <h3 className="text-sm font-medium">Total Orders</h3>
             </div>
             <p className="text-2xl font-bold mt-2">
-              {reports[0]?.totalOrders || 0}
+              {revenueMetrics.totalOrders}
             </p>
           </Card>
 
@@ -84,7 +90,7 @@ export const DailyReportsPanel = ({ reports }: DailyReportsPanelProps) => {
               <h3 className="text-sm font-medium">Average Order Value</h3>
             </div>
             <p className="text-2xl font-bold mt-2">
-              ${reports[0]?.averageOrderValue.toFixed(2) || '0.00'}
+              ${revenueMetrics.averageOrder.toFixed(2)}
             </p>
           </Card>
         </div>
@@ -96,42 +102,40 @@ export const DailyReportsPanel = ({ reports }: DailyReportsPanelProps) => {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="totalRevenue" stroke="#8884d8" />
+              <Line type="monotone" dataKey="totalRevenue" stroke="#8884d8" name="Revenue" />
+              <Line type="monotone" dataKey="netProfit" stroke="#82ca9d" name="Net Profit" />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Daily Reports</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead onClick={() => requestSort('date')} className="cursor-pointer">
-                  Date {sortConfig?.key === 'date' && <ArrowUpDown className="inline h-4 w-4" />}
-                </TableHead>
-                <TableHead onClick={() => requestSort('totalRevenue')} className="cursor-pointer">
-                  Revenue {sortConfig?.key === 'totalRevenue' && <ArrowUpDown className="inline h-4 w-4" />}
-                </TableHead>
-                <TableHead onClick={() => requestSort('totalOrders')} className="cursor-pointer">
-                  Orders {sortConfig?.key === 'totalOrders' && <ArrowUpDown className="inline h-4 w-4" />}
-                </TableHead>
-                <TableHead onClick={() => requestSort('netProfit')} className="cursor-pointer">
-                  Net Profit {sortConfig?.key === 'netProfit' && <ArrowUpDown className="inline h-4 w-4" />}
-                </TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead onClick={() => requestSort('date')} className="cursor-pointer">
+                Date {sortConfig?.key === 'date' && <ArrowUpDown className="inline h-4 w-4" />}
+              </TableHead>
+              <TableHead onClick={() => requestSort('totalRevenue')} className="cursor-pointer">
+                Revenue {sortConfig?.key === 'totalRevenue' && <ArrowUpDown className="inline h-4 w-4" />}
+              </TableHead>
+              <TableHead onClick={() => requestSort('totalOrders')} className="cursor-pointer">
+                Orders {sortConfig?.key === 'totalOrders' && <ArrowUpDown className="inline h-4 w-4" />}
+              </TableHead>
+              <TableHead onClick={() => requestSort('netProfit')} className="cursor-pointer">
+                Net Profit {sortConfig?.key === 'netProfit' && <ArrowUpDown className="inline h-4 w-4" />}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedReports.map((report) => (
+              <TableRow key={report.date}>
+                <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
+                <TableCell>${report.totalRevenue.toFixed(2)}</TableCell>
+                <TableCell>{report.totalOrders}</TableCell>
+                <TableCell>${report.netProfit.toFixed(2)}</TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedReports.map((report) => (
-                <TableRow key={report.date}>
-                  <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
-                  <TableCell>${report.totalRevenue.toFixed(2)}</TableCell>
-                  <TableCell>{report.totalOrders}</TableCell>
-                  <TableCell>${report.netProfit.toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );
