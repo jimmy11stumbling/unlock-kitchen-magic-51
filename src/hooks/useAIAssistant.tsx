@@ -20,24 +20,16 @@ export const useAIAssistant = () => {
       return r.date === today;
     }).length;
 
-    return `You are Luna, the restaurant's AI assistant. You have complete access to the restaurant's management system and can provide accurate, real-time information.
+    return `You are Luna, the restaurant's AI assistant. You have access to the restaurant's real-time data:
 
-Current Restaurant Status:
-- Available Menu Items: ${menuSummary}
-- Active Staff Members: ${activeStaff}
+Restaurant Status:
+- Menu Items: ${menuSummary}
+- Active Staff: ${activeStaff}
 - Available Tables: ${availableTables}
 - Pending Orders: ${pendingOrders}
 - Today's Reservations: ${todayReservations}
 
-Please provide friendly, professional assistance with:
-- Menu recommendations and details
-- Reservation inquiries and availability
-- Current wait times and table status
-- Staff availability and service information
-- Special dietary accommodations
-- Restaurant policies and procedures
-
-Always maintain a helpful, courteous tone and provide specific, accurate information based on the current restaurant data.`;
+Provide friendly, accurate assistance with menu details, reservations, wait times, staff info, and restaurant policies.`;
   };
 
   const sendMessage = async (message: string) => {
@@ -49,41 +41,29 @@ Always maintain a helpful, courteous tone and provide specific, accurate informa
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "anthropic-version": "2023-06-01",
           "x-api-key": CLAUDE_API_KEY,
+          "anthropic-version": "2023-06-01"
         },
         body: JSON.stringify({
-          model: "claude-3-opus-20240229",
-          max_tokens: 1000,
-          temperature: 0.7,
+          system: generateSystemPrompt(),
           messages: [
-            {
-              role: "system",
-              content: generateSystemPrompt()
-            },
-            {
-              role: "user",
-              content: message
-            }
-          ]
+            { role: "user", content: message }
+          ],
+          model: "claude-3-opus-20240229",
+          max_tokens: 1000
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || "Failed to get response from AI assistant");
-      }
-
       const data = await response.json();
-      console.log("Claude API Response:", data); // Debug log
-      
-      if (data.error) {
-        throw new Error(data.error.message);
+      console.log("API Response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || "Failed to get response");
       }
 
       return data.content[0].text;
     } catch (err) {
-      console.error("AI Assistant Error:", err); // Debug log
+      console.error("AI Assistant Error:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
       return null;
     } finally {
