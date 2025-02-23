@@ -41,6 +41,16 @@ export const StaffPanel = ({
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("list");
 
+  const calculateAttendance = (staffId: number): number => {
+    const member = staff.find(m => m.id === staffId);
+    if (!member) return 0;
+
+    const scheduledDays = Object.values(member.schedule).filter(day => day !== "OFF").length;
+    const totalPossibleDays = 7;
+    
+    return Math.round((scheduledDays / totalPossibleDays) * 100);
+  };
+
   const handleAddStaff = () => {
     const currentDate = new Date().toISOString().split('T')[0];
     
