@@ -34,6 +34,11 @@ export interface StaffMember {
   };
 }
 
+export interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export interface Shift {
   id: number;
   staffId: number;

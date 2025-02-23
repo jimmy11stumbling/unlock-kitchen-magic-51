@@ -7,7 +7,8 @@ export const checkScheduleConflicts = (
 ): boolean => {
   const existingShift = Object.entries(staffMember.schedule)
     .find(([day, hours]) => {
-      if (new Date(newShift.date).toLocaleLowerCase().includes(day)) {
+      const shiftDate = new Date(newShift.date).toLocaleDateString('en-US', { weekday: 'lowercase' });
+      if (shiftDate.includes(day)) {
         const [existingStart, existingEnd] = hours.split('-');
         const newTime = newShift.time;
         return isTimeConflict(existingStart, existingEnd, newTime);
