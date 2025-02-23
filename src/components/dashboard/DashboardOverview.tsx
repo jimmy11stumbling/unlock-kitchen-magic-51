@@ -32,6 +32,7 @@ export const DashboardOverview = ({
   const [endDate, setEndDate] = useState<Date>();
   const [filteredSalesData, setFilteredSalesData] = useState<SalesData[]>(salesData);
 
+  // This effect filters the sales data whenever dates change
   useEffect(() => {
     const filtered = salesData.filter((data) => {
       const date = new Date(data.date);
