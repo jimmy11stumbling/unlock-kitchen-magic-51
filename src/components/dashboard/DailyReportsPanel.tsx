@@ -1,47 +1,23 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  BarChart,
-  LineChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
-import { 
-  Download, 
-  TrendingUp, 
-  DollarSign, 
-  ShoppingBag, 
-  CreditCard, 
-  Users, 
-  Clock,
-  AlertTriangle,
-  BarChart3,
-  Activity,
-  Percent
-} from "lucide-react";
-import { exportToCSV, exportReport } from "@/utils/exportUtils";
+import { Download, AlertTriangle } from "lucide-react";
+import { exportReport } from "@/utils/exportUtils";
 import { useState, useMemo, useCallback } from "react";
 import type { DailyReport, MenuItem, SalesData } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { DateRangeSelector } from "./DateRangeSelector";
+import { MetricsCards } from "./reports/MetricsCards";
+import { RevenueChart } from "./reports/RevenueChart";
+import { TopPerformingItems } from "./reports/TopPerformingItems";
+import { ReportsTable } from "./reports/ReportsTable";
 
 interface DailyReportsPanelProps {
   reports: DailyReport[];
   salesData: SalesData[];
   onAddSalesData: (data: Omit<SalesData, "profit">) => void;
 }
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export const DailyReportsPanel = ({ 
   reports, 
@@ -111,8 +87,7 @@ export const DailyReportsPanel = ({
       profitMargin: (totalProfit / totalRevenue) * 100,
       laborCostRatio: (totalLaborCosts / totalRevenue) * 100,
       inventoryCostRatio: (totalInventoryCosts / totalRevenue) * 100,
-      averageDailyRevenue: totalRevenue / filteredReports.length,
-      averageDailyOrders: totalOrders / filteredReports.length
+      averageDailyRevenue: totalRevenue / filteredReports.length
     };
   }, [filteredReports]);
 
@@ -199,182 +174,18 @@ export const DailyReportsPanel = ({
           </div>
         </div>
 
-        {metrics && (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-            <Card className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="w-8 h-8 text-green-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold">${metrics.totalRevenue.toFixed(2)}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="w-8 h-8 text-blue-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Net Profit</p>
-                  <p className="text-2xl font-bold">${metrics.totalProfit.toFixed(2)}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center space-x-2">
-                <Percent className="w-8 h-8 text-purple-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Profit Margin</p>
-                  <p className="text-2xl font-bold">{metrics.profitMargin.toFixed(1)}%</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center space-x-2">
-                <Activity className="w-8 h-8 text-yellow-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Avg Daily Revenue</p>
-                  <p className="text-2xl font-bold">${metrics.averageDailyRevenue.toFixed(2)}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center space-x-2">
-                <ShoppingBag className="w-8 h-8 text-indigo-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Orders</p>
-                  <p className="text-2xl font-bold">{metrics.totalOrders}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center space-x-2">
-                <CreditCard className="w-8 h-8 text-pink-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Avg Order Value</p>
-                  <p className="text-2xl font-bold">${metrics.averageOrderValue.toFixed(2)}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center space-x-2">
-                <Users className="w-8 h-8 text-red-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Labor Cost Ratio</p>
-                  <p className="text-2xl font-bold">{metrics.laborCostRatio.toFixed(1)}%</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="w-8 h-8 text-orange-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Inventory Cost</p>
-                  <p className="text-2xl font-bold">{metrics.inventoryCostRatio.toFixed(1)}%</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
+        <MetricsCards metrics={metrics} />
 
         <div className="grid gap-6 md:grid-cols-2 mb-6">
-          <Card className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Revenue Trend</h3>
-              <Select
-                value={chartType}
-                onValueChange={(value: 'line' | 'bar') => setChartType(value)}
-              >
-                <SelectTrigger className="w-[100px]">
-                  <SelectValue placeholder="Chart type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="line">Line</SelectItem>
-                  <SelectItem value="bar">Bar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                {chartType === 'line' ? (
-                  <LineChart data={filteredReports}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="totalRevenue" stroke="#8884d8" name="Revenue" />
-                    <Line type="monotone" dataKey="netProfit" stroke="#82ca9d" name="Profit" />
-                  </LineChart>
-                ) : (
-                  <BarChart data={filteredReports}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="totalRevenue" fill="#8884d8" name="Revenue" />
-                    <Bar dataKey="netProfit" fill="#82ca9d" name="Profit" />
-                  </BarChart>
-                )}
-              </ResponsiveContainer>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <h3 className="text-lg font-semibold mb-4">Top Performing Items</h3>
-            <div className="space-y-4">
-              {topPerformingItems.map((item, index) => (
-                <div key={item.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-muted-foreground">#{index + 1}</span>
-                    <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.count} orders</p>
-                    </div>
-                  </div>
-                  <span className="font-medium">${item.revenue.toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
+          <RevenueChart 
+            reports={filteredReports}
+            chartType={chartType}
+            onChartTypeChange={setChartType}
+          />
+          <TopPerformingItems items={topPerformingItems} />
         </div>
 
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Total Orders</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>Labor Cost</TableHead>
-                <TableHead>Inventory Cost</TableHead>
-                <TableHead>Net Profit</TableHead>
-                <TableHead>Profit Margin</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredReports.map((report) => {
-                const profitMargin = (report.netProfit / report.totalRevenue) * 100;
-                return (
-                  <TableRow key={report.date}>
-                    <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{report.totalOrders}</TableCell>
-                    <TableCell>${report.totalRevenue.toFixed(2)}</TableCell>
-                    <TableCell>${report.laborCosts.toFixed(2)}</TableCell>
-                    <TableCell>${report.inventoryCosts.toFixed(2)}</TableCell>
-                    <TableCell>${report.netProfit.toFixed(2)}</TableCell>
-                    <TableCell>{profitMargin.toFixed(1)}%</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <ReportsTable reports={filteredReports} />
       </Card>
     </div>
   );
