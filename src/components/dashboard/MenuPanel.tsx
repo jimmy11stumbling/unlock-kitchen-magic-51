@@ -11,6 +11,7 @@ import type { MenuPanelProps, MenuItemFormData } from "./menu/types";
 import { MenuItemForm } from "./menu/MenuItemForm";
 import { MenuItemGrid } from "./menu/MenuItemGrid";
 import { MenuItemTable } from "./menu/MenuItemTable";
+import { MenuSearchFilters } from "./menu/MenuSearchFilters";
 
 const defaultMenuItem: MenuItemFormData = {
   name: "",
@@ -35,11 +36,32 @@ export const MenuPanel = ({
   const [selectedCategory, setSelectedCategory] = useState<MenuItem["category"] | "all">("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [newItem, setNewItem] = useState<MenuItemFormData>(defaultMenuItem);
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "price" | "category">("name");
+  const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "available" | "unavailable">("all");
 
-  const filteredItems = selectedCategory === "all" 
-    ? menuItems 
-    : menuItems.filter(item => item.category === selectedCategory);
+  const filteredItems = menuItems
+    .filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
+      const matchesAvailability = availabilityFilter === "all" ||
+                                (availabilityFilter === "available" && item.available) ||
+                                (availabilityFilter === "unavailable" && !item.available);
+      return matchesSearch && matchesCategory && matchesAvailability;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "price":
+          return a.price - b.price;
+        case "category":
+          return a.category.localeCompare(b.category);
+        default:
+          return 0;
+      }
+    });
 
   const handleAddItem = () => {
     if (!newItem.name || newItem.price <= 0) {
@@ -69,9 +91,7 @@ export const MenuPanel = ({
                 Add Menu Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="max
-
--w-md">
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Add New Menu Item</DialogTitle>
               </DialogHeader>
@@ -85,23 +105,18 @@ export const MenuPanel = ({
           </Dialog>
         </div>
 
-        <div className="flex justify-between items-center mb-4">
-          <Select
-            value={selectedCategory}
-            onValueChange={(value: MenuItem["category"] | "all") => setSelectedCategory(value)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="appetizer">Appetizers</SelectItem>
-              <SelectItem value="main">Main Courses</SelectItem>
-              <SelectItem value="dessert">Desserts</SelectItem>
-              <SelectItem value="beverage">Beverages</SelectItem>
-            </SelectContent>
-          </Select>
+        <MenuSearchFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          availabilityFilter={availabilityFilter}
+          onAvailabilityChange={setAvailabilityFilter}
+        />
 
+        <div className="flex justify-end items-center mb-4 mt-4">
           <div className="flex items-center gap-2">
             <Button
               variant={viewMode === "grid" ? "default" : "outline"}
@@ -124,43 +139,22 @@ export const MenuPanel = ({
           <MenuItemGrid
             items={filteredItems}
             onUpdateAvailability={onUpdateAvailability}
-            onUpdatePrice={onUpdatePrice}
-            onEdit={setEditingItem}
-            onDelete={onDeleteMenuItem}
+            onUpdateMenuItem={onUpdateMenuItem}
+            onDeleteMenuItem={onDeleteMenuItem}
           />
         ) : (
           <MenuItemTable
             items={filteredItems}
             onUpdateAvailability={onUpdateAvailability}
-            onUpdatePrice={onUpdatePrice}
-            onEdit={setEditingItem}
-            onDelete={onDeleteMenuItem}
+            onUpdateMenuItem={onUpdateMenuItem}
+            onDeleteMenuItem={onDeleteMenuItem}
           />
         )}
 
         {filteredItems.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-            No menu items found in this category
+            No menu items found
           </div>
-        )}
-
-        {editingItem && (
-          <Dialog open={!!editingItem} onOpenChange={() => setEditingItem(null)}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Edit Menu Item</DialogTitle>
-              </DialogHeader>
-              <MenuItemForm
-                data={editingItem}
-                onChange={(data) => setEditingItem({ ...editingItem, ...data })}
-                onSubmit={() => {
-                  onUpdateMenuItem?.(editingItem.id, editingItem);
-                  setEditingItem(null);
-                }}
-                submitLabel="Save Changes"
-              />
-            </DialogContent>
-          </Dialog>
         )}
       </Card>
     </div>

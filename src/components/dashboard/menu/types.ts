@@ -1,7 +1,9 @@
 
 import type { MenuItem } from "@/types/staff";
 
-export interface MenuItemFormData extends Omit<MenuItem, "id"> {}
+export interface MenuItemFormData extends Omit<MenuItem, "id" | "orderCount"> {
+  id?: number;
+}
 
 export interface MenuPanelProps {
   menuItems: MenuItem[];
