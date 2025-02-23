@@ -1,8 +1,6 @@
 
-import { SearchBar } from "./SearchBar";
 import { DateRangeSelector } from "./DateRangeSelector";
 import { useState, useEffect } from "react";
-import { useSearch } from "@/hooks/useSearch";
 import { KeyMetrics } from "./overview/KeyMetrics";
 import { RevenueChart } from "./overview/RevenueChart";
 import { OrdersChart } from "./overview/OrdersChart";
@@ -33,8 +31,6 @@ export const DashboardOverview = ({
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [filteredSalesData, setFilteredSalesData] = useState<SalesData[]>(salesData);
-  
-  const { searchQuery, setSearchQuery, filteredItems: filteredStaff } = useSearch(staff, ['name', 'role']);
 
   useEffect(() => {
     const filtered = salesData.filter((data) => {
@@ -73,12 +69,7 @@ export const DashboardOverview = ({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SearchBar 
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search staff, menu items, or orders..."
-        />
+      <div className="flex justify-end">
         <DateRangeSelector
           startDate={startDate}
           endDate={endDate}
@@ -88,7 +79,7 @@ export const DashboardOverview = ({
 
       <KeyMetrics 
         salesData={filteredSalesData}
-        staff={filteredStaff}
+        staff={staff}
         orders={orders}
         reservations={reservations}
       />
@@ -114,7 +105,7 @@ export const DashboardOverview = ({
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">Active Staff</h3>
             <div className="space-y-1">
-              {filteredStaff
+              {staff
                 .filter(member => member.status === "active")
                 .map(member => (
                   <div key={member.id} className="flex justify-between items-center">
