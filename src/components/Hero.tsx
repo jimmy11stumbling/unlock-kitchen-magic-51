@@ -5,8 +5,18 @@ import { ArrowRight, ChefHat, Utensils, Clock, LineChart } from "lucide-react";
 
 export function Hero() {
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-background via-background/90 to-background">
-      <div className="container px-4 md:px-6">
+    <section className="relative w-full py-12 md:py-24 lg:py-32 xl:py-48">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="https://images.unsplash.com/photo-1556910103-1c02745aae4d"
+          alt="Rustic Restaurant Kitchen"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/90 to-background pointer-events-none" />
+      </div>
+
+      <div className="container relative z-10 px-4 md:px-6">
         <div className="flex flex-col items-center space-y-8 text-center">
           <div className="space-y-2">
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
@@ -47,12 +57,12 @@ export function Hero() {
                 description: "Real-time insights into your restaurant's performance and trends"
               }
             ].map((feature, i) => (
-              <div key={i} className="flex flex-col items-center space-y-2 p-4 rounded-lg bg-white/5">
+              <div key={i} className="flex flex-col items-center space-y-2 p-4 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10">
                 <div className="p-2 rounded-full bg-primary/10">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold">{feature.title}</h3>
-                <p className="text-sm text-gray-400 text-center">{feature.description}</p>
+                <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
+                <p className="text-sm text-gray-300 text-center">{feature.description}</p>
               </div>
             ))}
           </div>
