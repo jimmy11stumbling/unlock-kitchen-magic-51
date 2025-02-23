@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useDashboardState } from "@/hooks/useDashboardState";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
@@ -15,6 +14,7 @@ import { KitchenDisplay } from "@/components/dashboard/KitchenDisplay";
 import { FeedbackPanel } from "@/components/dashboard/FeedbackPanel";
 import { PromotionsPanel } from "@/components/dashboard/PromotionsPanel";
 import { DailyReportsPanel } from "@/components/dashboard/DailyReportsPanel";
+import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 
 const Dashboard = () => {
   const {
@@ -51,9 +51,14 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold dark:text-white">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to your restaurant dashboard</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold dark:text-white">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome to your restaurant dashboard</p>
+          </div>
+          <div className="w-80">
+            <NotificationsPanel />
+          </div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
