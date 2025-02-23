@@ -4,8 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Order, MenuItem, KitchenOrder } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
+import { calculateTax, getAvailableStates } from "@/utils/taxCalculator";
 
 interface OrderDetailsProps {
   order: Order;
@@ -23,6 +25,11 @@ export const OrderDetails = ({
   const { toast } = useToast();
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [selectedState, setSelectedState] = useState<string>("California");
+  const states = getAvailableStates();
+  
+  const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const { tax, total } = calculateTax(subtotal, selectedState);
 
   const addItemToOrder = () => {
     if (!selectedItem) return;
@@ -128,12 +135,37 @@ export const OrderDetails = ({
           ))}
         </div>
 
-        <div className="border-t pt-4">
+        <div>
+          <label className="text-sm font-medium">State</label>
+          <Select
+            value={selectedState}
+            onValueChange={setSelectedState}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {states.map((state) => (
+                <SelectItem key={state} value={state}>
+                  {state}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="border-t pt-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal</span>
+            <span>${subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Tax ({selectedState})</span>
+            <span>${tax.toFixed(2)}</span>
+          </div>
           <div className="flex justify-between text-lg font-semibold">
             <span>Total</span>
-            <span>
-              ${order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
-            </span>
+            <span>${total.toFixed(2)}</span>
           </div>
         </div>
       </div>
