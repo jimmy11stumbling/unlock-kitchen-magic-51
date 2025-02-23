@@ -27,12 +27,33 @@ export const BasicInfoTab = ({
 
   const validateField = (field: keyof RestaurantInfo, value: any) => {
     try {
-      const partialData = { [field]: value } as Partial<RestaurantInfo>;
-      const partialSchema = restaurantInfoSchema.pick({ 
-        [field]: true 
-      } as const);
+      const partialData = { [field]: value };
+      let fieldSchema;
       
-      partialSchema.parse(partialData);
+      switch (field) {
+        case "name":
+          fieldSchema = restaurantInfoSchema.shape.name;
+          break;
+        case "address":
+          fieldSchema = restaurantInfoSchema.shape.address;
+          break;
+        case "phone":
+          fieldSchema = restaurantInfoSchema.shape.phone;
+          break;
+        case "email":
+          fieldSchema = restaurantInfoSchema.shape.email;
+          break;
+        case "state":
+          fieldSchema = restaurantInfoSchema.shape.state;
+          break;
+        case "businessHours":
+          fieldSchema = restaurantInfoSchema.shape.businessHours;
+          break;
+        default:
+          throw new Error("Invalid field");
+      }
+      
+      fieldSchema.parse(value);
       setErrors(prev => ({ ...prev, [field]: "" }));
       return true;
     } catch (error: any) {
