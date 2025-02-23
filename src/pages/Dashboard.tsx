@@ -25,6 +25,9 @@ import { AddStaffForm } from "@/components/dashboard/AddStaffForm";
 import { ScheduleView } from "@/components/dashboard/ScheduleView";
 import type { StaffMember, Shift, InventoryItem, Order, Reservation, SalesData, PaymentTransaction } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Dashboard = () => {
   const { toast } = useToast();
