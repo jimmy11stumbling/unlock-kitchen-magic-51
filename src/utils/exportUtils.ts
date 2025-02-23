@@ -1,25 +1,25 @@
 
 import { saveAs } from 'file-saver';
-import { format } from 'date-fns';
 
-export const exportToCSV = <T extends Record<string, any>>(
-  data: T[],
-  filename: string
-) => {
+export const exportToCSV = (data: any[], filename: string) => {
+  // Convert data to CSV format
   const headers = Object.keys(data[0]);
   const csvContent = [
     headers.join(','),
     ...data.map(row => 
       headers.map(header => {
         const value = row[header];
-        if (value instanceof Date) {
-          return format(value, 'yyyy-MM-dd HH:mm:ss');
-        }
-        return typeof value === 'string' ? `"${value}"` : value;
+        // Handle nested objects and arrays
+        const cellContent = typeof value === 'object' ? 
+          JSON.stringify(value).replace(/,/g, ';') : 
+          value;
+        // Escape commas and quotes
+        return `"${String(cellContent).replace(/"/g, '""')}"`;
       }).join(',')
     )
   ].join('\n');
 
+  // Create and save the file
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-  saveAs(blob, `${filename}-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+  saveAs(blob, `${filename}-${new Date().toISOString().split('T')[0]}.csv`);
 };
