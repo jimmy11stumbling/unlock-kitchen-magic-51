@@ -52,7 +52,7 @@ export const checkAllergenConflicts = (
 export const optimizeCourseOrder = (
   items: Array<{ id: number; quantity: number }>,
   menuItems: any[]
-): string => {
+): KitchenOrder["coursing"] => {
   const hasAppetizers = items.some(item => {
     const menuItem = menuItems.find(m => m.id === item.id);
     return menuItem?.category === "appetizer";
@@ -79,4 +79,5 @@ interface KitchenOrder {
   items: Array<{
     status: string;
   }>;
+  coursing: "standard" | "appetizers first" | "serve together" | "desserts after clearing mains";
 }
