@@ -14,7 +14,11 @@ const initialOrders: Order[] = [
       { id: 6, name: "Signature Martini", quantity: 2, price: 15.99 }
     ],
     total: 98.95,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    serverName: "Sofia Chen",
+    specialInstructions: "Allergy Alert: Guest has dairy sensitivity",
+    guestCount: 4,
+    estimatedPrepTime: 35
   },
   {
     id: 2,
@@ -26,7 +30,11 @@ const initialOrders: Order[] = [
       { id: 5, name: "Crème Brûlée", quantity: 2, price: 12.99 }
     ],
     total: 115.95,
-    timestamp: new Date(Date.now() - 1800000).toISOString()
+    timestamp: new Date(Date.now() - 1800000).toISOString(),
+    serverName: "James Wilson",
+    specialInstructions: "VIP Guest - Owner's family",
+    guestCount: 2,
+    estimatedPrepTime: 45
   },
   {
     id: 3,
@@ -37,7 +45,11 @@ const initialOrders: Order[] = [
       { id: 8, name: "Chocolate Soufflé", quantity: 2, price: 14.99 }
     ],
     total: 48.97,
-    timestamp: new Date(Date.now() - 3600000).toISOString()
+    timestamp: new Date(Date.now() - 3600000).toISOString(),
+    serverName: "Maria Garcia",
+    specialInstructions: "Gluten-free preparation required",
+    guestCount: 3,
+    estimatedPrepTime: 25
   }
 ];
 
@@ -51,16 +63,30 @@ const initialKitchenOrders: KitchenOrder[] = [
         quantity: 2,
         status: "preparing",
         startTime: new Date(Date.now() - 900000).toISOString(),
+        cookingStation: "grill",
+        assignedChef: "Isabella Martinez",
+        modifications: [
+          "1x Medium Rare",
+          "1x Medium Well",
+          "Extra truffle aioli on side"
+        ],
+        allergenAlert: true
       },
       {
         menuItemId: 3,
         quantity: 1,
         status: "pending",
         startTime: new Date(Date.now() - 600000).toISOString(),
+        cookingStation: "soup",
+        assignedChef: "James Wilson",
+        modifications: ["Extra garnish"],
+        allergenAlert: true
       }
     ],
     priority: "high",
-    notes: "Burger temperature: 1 medium-rare, 1 medium well. Extra truffle aioli on the side."
+    notes: "Dairy sensitivity - use dairy-free alternatives where possible",
+    coursing: "appetizers first",
+    estimatedDeliveryTime: new Date(Date.now() + 1200000).toISOString()
   },
   {
     id: 2,
@@ -71,6 +97,10 @@ const initialKitchenOrders: KitchenOrder[] = [
         quantity: 2,
         status: "preparing",
         startTime: new Date(Date.now() - 1200000).toISOString(),
+        cookingStation: "hot-line",
+        assignedChef: "Isabella Martinez",
+        modifications: ["Extra crispy rice"],
+        allergenAlert: true
       },
       {
         menuItemId: 4,
@@ -78,16 +108,26 @@ const initialKitchenOrders: KitchenOrder[] = [
         status: "ready",
         startTime: new Date(Date.now() - 1500000).toISOString(),
         completionTime: new Date(Date.now() - 900000).toISOString(),
+        cookingStation: "cold-line",
+        assignedChef: "James Wilson",
+        modifications: [],
+        allergenAlert: false
       },
       {
         menuItemId: 5,
         quantity: 2,
         status: "pending",
         startTime: new Date(Date.now() - 300000).toISOString(),
+        cookingStation: "pastry",
+        assignedChef: "Maria Garcia",
+        modifications: [],
+        allergenAlert: false
       }
     ],
     priority: "rush",
-    notes: "Seafood allergy at table - ensure no cross-contamination with shellfish. Extra crispy rice on bottom of paella."
+    notes: "VIP - Owner's family. Ensure perfect presentation.",
+    coursing: "serve together",
+    estimatedDeliveryTime: new Date(Date.now() + 900000).toISOString()
   },
   {
     id: 3,
@@ -99,16 +139,26 @@ const initialKitchenOrders: KitchenOrder[] = [
         status: "ready",
         startTime: new Date(Date.now() - 1800000).toISOString(),
         completionTime: new Date(Date.now() - 1200000).toISOString(),
+        cookingStation: "cold-line",
+        assignedChef: "James Wilson",
+        modifications: ["No feta", "Extra vegetables"],
+        allergenAlert: false
       },
       {
         menuItemId: 8,
         quantity: 2,
         status: "preparing",
         startTime: new Date(Date.now() - 900000).toISOString(),
+        cookingStation: "pastry",
+        assignedChef: "Maria Garcia",
+        modifications: ["1x Regular", "1x Gluten-free"],
+        allergenAlert: true
       }
     ],
     priority: "normal",
-    notes: "Quinoa bowl: no feta, extra vegetables. Soufflé: one regular, one gluten-free."
+    notes: "Gluten-free soufflé must be prepared in separate area",
+    coursing: "desserts after clearing mains",
+    estimatedDeliveryTime: new Date(Date.now() + 600000).toISOString()
   }
 ];
 
@@ -123,17 +173,87 @@ export const useOrderState = () => {
       timestamp: new Date().toISOString(),
       ...order,
     };
+    
+    // Calculate estimated prep time based on items
+    const estimatedPrepTime = Math.max(
+      ...order.items.map(item => {
+        const menuItem = menuItems.find(m => m.id === item.id);
+        return (menuItem?.preparationTime || 0) * item.quantity;
+      })
+    );
+    
+    // Create corresponding kitchen order
+    const newKitchenOrder: KitchenOrder = {
+      id: kitchenOrders.length + 1,
+      orderId: newOrder.id,
+      items: order.items.map(item => ({
+        menuItemId: item.id,
+        quantity: item.quantity,
+        status: "pending",
+        startTime: new Date().toISOString(),
+        cookingStation: determineStation(item.id),
+        assignedChef: assignChef(item.id),
+        modifications: [],
+        allergenAlert: false
+      })),
+      priority: determinePriority(order),
+      notes: order.specialInstructions || "",
+      coursing: "standard",
+      estimatedDeliveryTime: new Date(Date.now() + estimatedPrepTime * 60000).toISOString()
+    };
+
     setOrders([...orders, newOrder]);
+    setKitchenOrders([...kitchenOrders, newKitchenOrder]);
+
     toast({
       title: "New order created",
-      description: `Order #${newOrder.id} has been created.`,
+      description: `Order #${newOrder.id} has been sent to kitchen`,
     });
+  };
+
+  const determineStation = (itemId: number) => {
+    const stationMap: Record<number, string> = {
+      1: "grill",
+      2: "cold-line",
+      3: "soup",
+      4: "cold-line",
+      5: "pastry",
+      6: "bar",
+      7: "hot-line",
+      8: "pastry"
+    };
+    return stationMap[itemId] || "misc";
+  };
+
+  const assignChef = (itemId: number) => {
+    const chefMap: Record<string, string> = {
+      "grill": "Isabella Martinez",
+      "hot-line": "Isabella Martinez",
+      "cold-line": "James Wilson",
+      "soup": "James Wilson",
+      "pastry": "Maria Garcia",
+      "bar": "Alex Thompson"
+    };
+    return chefMap[determineStation(itemId)] || "Unassigned";
+  };
+
+  const determinePriority = (order: Omit<Order, "id" | "timestamp">): KitchenOrder["priority"] => {
+    if (order.specialInstructions?.toLowerCase().includes("vip")) return "rush";
+    if (order.items.length > 4) return "high";
+    return "normal";
   };
 
   const updateOrderStatus = (orderId: number, status: Order["status"]) => {
     setOrders(orders.map(order =>
       order.id === orderId ? { ...order, status } : order
     ));
+
+    if (status === "ready") {
+      toast({
+        title: "Order Ready",
+        description: `Order #${orderId} is ready for service`,
+      });
+    }
   };
 
   const updateKitchenOrderStatus = (
@@ -153,7 +273,7 @@ export const useOrderState = () => {
                       status,
                       startTime: status === "preparing" ? new Date().toISOString() : item.startTime,
                       completionTime:
-                        status === "delivered" ? new Date().toISOString() : item.completionTime,
+                        status === "ready" ? new Date().toISOString() : item.completionTime,
                     }
                   : item
               ),
@@ -162,9 +282,16 @@ export const useOrderState = () => {
       )
     );
 
+    // Check if all items are ready and update main order status
+    const updatedOrder = kitchenOrders.find(o => o.id === orderId);
+    if (updatedOrder && updatedOrder.items.every(item => item.status === "ready")) {
+      updateOrderStatus(updatedOrder.orderId, "ready");
+    }
+
     toast({
-      title: "Order status updated",
+      title: "Item status updated",
       description: `Item status updated to ${status}`,
+      variant: status === "ready" ? "default" : "secondary"
     });
   };
 
