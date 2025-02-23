@@ -7,9 +7,23 @@ import {
   Box,
   Settings,
   Calendar,
+  ChefHat,
+  MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
-import type { StaffMember, Shift, InventoryItem, Order, Reservation, SalesData, PaymentTransaction, MenuItem, TableLayout, Promotion, CustomerFeedback, KitchenOrder, DailyReport } from "@/types/staff";
+import type { 
+  StaffMember, 
+  Shift, 
+  InventoryItem, 
+  Order, 
+  Reservation, 
+  SalesData, 
+  PaymentTransaction, 
+  MenuItem,
+  TableLayout,
+  KitchenOrder,
+  CustomerFeedback,
+} from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { OrdersPanel } from "@/components/dashboard/OrdersPanel";
@@ -20,6 +34,8 @@ import { SettingsPanel } from "@/components/dashboard/SettingsPanel";
 import { ReservationsPanel } from "@/components/dashboard/ReservationsPanel";
 import { MenuPanel } from "@/components/dashboard/MenuPanel";
 import { TablePanel } from "@/components/dashboard/TablePanel";
+import { KitchenDisplay } from "@/components/dashboard/KitchenDisplay";
+import { FeedbackPanel } from "@/components/dashboard/FeedbackPanel";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -35,7 +51,6 @@ const Dashboard = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [feedback, setFeedback] = useState<CustomerFeedback[]>([]);
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
-  const [dailyReports, setDailyReports] = useState<DailyReport[]>([]);
 
   const addStaffMember = (data: { name: string; role: string; salary: string }) => {
     const newStaffMember: StaffMember = {
@@ -235,6 +250,51 @@ const Dashboard = () => {
     });
   };
 
+  const updateKitchenOrderStatus = (
+    orderId: number,
+    itemId: number,
+    status: KitchenOrder["items"][0]["status"]
+  ) => {
+    setKitchenOrders(
+      kitchenOrders.map((order) =>
+        order.id === orderId
+          ? {
+              ...order,
+              items: order.items.map((item) =>
+                item.menuItemId === itemId
+                  ? {
+                      ...item,
+                      status,
+                      startTime: status === "preparing" ? new Date().toISOString() : item.startTime,
+                      completionTime:
+                        status === "delivered" ? new Date().toISOString() : item.completionTime,
+                    }
+                  : item
+              ),
+            }
+          : order
+      )
+    );
+
+    toast({
+      title: "Order status updated",
+      description: `Item status updated to ${status}`,
+    });
+  };
+
+  const resolveFeedback = (feedbackId: number) => {
+    setFeedback(
+      feedback.map((item) =>
+        item.id === feedbackId ? { ...item, resolved: true } : item
+      )
+    );
+
+    toast({
+      title: "Feedback resolved",
+      description: "The feedback has been marked as resolved.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="space-y-8">
@@ -278,6 +338,14 @@ const Dashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="tables" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
               Tables
+            </TabsTrigger>
+            <TabsTrigger value="kitchen" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
+              <ChefHat className="h-4 w-4 mr-2" />
+              Kitchen
+            </TabsTrigger>
+            <TabsTrigger value="feedback" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Feedback
             </TabsTrigger>
           </TabsList>
 
@@ -343,6 +411,21 @@ const Dashboard = () => {
               tables={tables}
               onAddTable={addTable}
               onUpdateStatus={updateTableStatus}
+            />
+          </TabsContent>
+
+          <TabsContent value="kitchen">
+            <KitchenDisplay
+              kitchenOrders={kitchenOrders}
+              menuItems={menuItems}
+              onUpdateOrderStatus={updateKitchenOrderStatus}
+            />
+          </TabsContent>
+
+          <TabsContent value="feedback">
+            <FeedbackPanel
+              feedback={feedback}
+              onResolveFeedback={resolveFeedback}
             />
           </TabsContent>
         </Tabs>
