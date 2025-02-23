@@ -1,4 +1,3 @@
-
 export interface StaffMember {
   id: number;
   name: string;
@@ -65,4 +64,23 @@ export interface PaymentTransaction {
   method: "cash" | "credit" | "debit";
   status: "completed" | "pending" | "failed";
   timestamp: string;
+}
+
+export interface MenuItem {
+  id: number;
+  name: string;
+  price: number;
+  category: "appetizer" | "main" | "dessert" | "beverage";
+  description: string;
+  available: boolean;
+}
+
+export interface DailySales {
+  date: string;
+  items: {
+    menuItemId: number;
+    quantity: number;
+    revenue: number;
+  }[];
+  totalRevenue: number;
 }

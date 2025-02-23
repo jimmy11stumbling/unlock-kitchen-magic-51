@@ -27,7 +27,6 @@ const Dashboard = () => {
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
 
-  // Staff Management Functions
   const addStaffMember = (data: { name: string; role: string; salary: string }) => {
     const newStaffMember: StaffMember = {
       id: staff.length + 1,
@@ -55,7 +54,6 @@ const Dashboard = () => {
     });
   };
 
-  // Inventory Management Functions
   const addInventoryItem = (item: Omit<InventoryItem, "id">) => {
     const newItem: InventoryItem = {
       id: inventory.length + 1,
@@ -69,12 +67,31 @@ const Dashboard = () => {
   };
 
   const updateInventoryQuantity = (itemId: number, quantity: number) => {
-    setInventory(inventory.map(item =>
-      item.id === itemId ? { ...item, quantity } : item
-    ));
+    if (quantity < 0) {
+      toast({
+        title: "Error",
+        description: "Quantity cannot be negative.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setInventory(inventory.map(item => {
+      if (item.id === itemId) {
+        const updatedItem = { ...item, quantity };
+        if (updatedItem.quantity <= updatedItem.minQuantity) {
+          toast({
+            title: "Low stock alert",
+            description: `${item.name} is running low on stock.`,
+            variant: "destructive",
+          });
+        }
+        return updatedItem;
+      }
+      return item;
+    }));
   };
 
-  // Order Management Functions
   const addOrder = (order: Omit<Order, "id" | "timestamp">) => {
     const newOrder: Order = {
       id: orders.length + 1,
@@ -94,7 +111,6 @@ const Dashboard = () => {
     ));
   };
 
-  // Reservation Management Functions
   const addReservation = (reservation: Omit<Reservation, "id">) => {
     const newReservation: Reservation = {
       id: reservations.length + 1,
@@ -107,7 +123,6 @@ const Dashboard = () => {
     });
   };
 
-  // Payment Processing Functions
   const processPayment = (payment: Omit<PaymentTransaction, "id" | "timestamp" | "status">) => {
     const newPayment: PaymentTransaction = {
       id: payments.length + 1,
@@ -117,7 +132,6 @@ const Dashboard = () => {
     };
     setPayments([...payments, newPayment]);
     
-    // Update order status when payment is processed
     updateOrderStatus(payment.orderId, "delivered");
     
     toast({
@@ -126,7 +140,6 @@ const Dashboard = () => {
     });
   };
 
-  // Schedule Management Functions
   const addShift = (staffId: number, date: string, time: string) => {
     const newShift: Shift = {
       id: shifts.length + 1,
@@ -134,6 +147,20 @@ const Dashboard = () => {
       date,
       time,
     };
+    
+    const hasOverlap = shifts.some(
+      shift => shift.staffId === staffId && shift.date === date && shift.time === time
+    );
+
+    if (hasOverlap) {
+      toast({
+        title: "Schedule conflict",
+        description: "This staff member already has a shift during this time.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setShifts([...shifts, newShift]);
     const member = staff.find(m => m.id === staffId);
     toast({
@@ -142,7 +169,6 @@ const Dashboard = () => {
     });
   };
 
-  // Sales Analytics Functions
   const addSalesData = (data: Omit<SalesData, "profit">) => {
     const profit = data.revenue - data.costs;
     const newSalesData: SalesData = {
