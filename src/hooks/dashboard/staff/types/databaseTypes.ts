@@ -14,11 +14,16 @@ export interface DatabaseStaffMember {
   certifications: string[] | null;
   performance_rating: number | null;
   notes: string | null;
-  schedule: Record<string, string> | string;
+  schedule: Record<string, string> | null;
   bank_info: {
     accountNumber?: string;
     routingNumber?: string;
     accountType?: "checking" | "savings";
+  } | null;
+  emergency_contact: {
+    name: string;
+    phone: string;
+    relationship: string;
   } | null;
   created_at: string | null;
   updated_at: string | null;
