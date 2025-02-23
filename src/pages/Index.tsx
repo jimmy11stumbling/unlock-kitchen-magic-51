@@ -1,19 +1,10 @@
 
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Menu, ChefHat } from "lucide-react";
-import { useState } from "react";
-import { SetupWizard } from "@/components/setup/SetupWizard";
+import { Menu, ChefHat } from "lucide-react";
 
 const Index = () => {
-  const [showSetup, setShowSetup] = useState(false);
-
-  const handleGetStarted = () => {
-    setShowSetup(true);
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="fixed top-0 w-full z-50 border-b bg-background/80 backdrop-blur-sm">
@@ -31,13 +22,6 @@ const Index = () => {
             <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors">
               About
             </Link>
-            <Button 
-              onClick={handleGetStarted}
-              className="gap-2"
-            >
-              Get Started
-              <ArrowRight className="h-4 w-4" />
-            </Button>
           </nav>
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-6 w-6" />
@@ -63,8 +47,6 @@ const Index = () => {
           </p>
         </div>
       </footer>
-
-      {showSetup && <SetupWizard />}
     </div>
   );
 };
