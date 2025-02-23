@@ -44,7 +44,7 @@ export const initialDailyReports: DailyReport[] = [
     ],
     laborCosts: 1250.25,
     inventoryCosts: 987.50,
-    netProfit: 2475.12,
+    netProfit: 2712.50, // Corrected: totalRevenue - (laborCosts + inventoryCosts)
   },
   {
     date: "2024-03-22",
@@ -88,7 +88,7 @@ export const initialDailyReports: DailyReport[] = [
     ],
     laborCosts: 1337.69,
     inventoryCosts: 1070.15,
-    netProfit: 2675.37,
+    netProfit: 2942.91, // Corrected: totalRevenue - (laborCosts + inventoryCosts)
   },
   {
     date: "2024-03-21",
@@ -132,6 +132,6 @@ export const initialDailyReports: DailyReport[] = [
     ],
     laborCosts: 1222.70,
     inventoryCosts: 978.16,
-    netProfit: 2445.40,
+    netProfit: 2689.94, // Corrected: totalRevenue - (laborCosts + inventoryCosts)
   }
 ];
