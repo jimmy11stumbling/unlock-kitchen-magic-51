@@ -1,23 +1,90 @@
+
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { MenuItem } from "@/types/staff";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+// Add initial menu items for testing
+const initialMenuItems: MenuItem[] = [
+  {
+    id: 1,
+    name: "Classic Burger",
+    price: 14.99,
+    category: "main",
+    description: "Angus beef patty with lettuce, tomato, and special sauce",
+    available: true,
+    allergens: ["gluten", "dairy"],
+    preparationTime: 15,
+    orderCount: 0
+  },
+  {
+    id: 2,
+    name: "Caesar Salad",
+    price: 10.99,
+    category: "appetizer",
+    description: "Crisp romaine lettuce, croutons, parmesan cheese",
+    available: true,
+    allergens: ["gluten", "dairy", "eggs"],
+    preparationTime: 10,
+    orderCount: 0
+  },
+  {
+    id: 3,
+    name: "Chocolate Lava Cake",
+    price: 8.99,
+    category: "dessert",
+    description: "Warm chocolate cake with molten center",
+    available: true,
+    allergens: ["gluten", "dairy", "eggs"],
+    preparationTime: 20,
+    orderCount: 0
+  },
+  {
+    id: 4,
+    name: "Margherita Pizza",
+    price: 16.99,
+    category: "main",
+    description: "Fresh mozzarella, tomatoes, and basil",
+    available: true,
+    allergens: ["gluten", "dairy"],
+    preparationTime: 20,
+    orderCount: 0
+  },
+  {
+    id: 5,
+    name: "Iced Tea",
+    price: 3.99,
+    category: "beverage",
+    description: "Fresh brewed iced tea",
+    available: true,
+    allergens: [],
+    preparationTime: 5,
+    orderCount: 0
+  }
+];
+
 export const useMenuState = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch menu items
-  const { data: menuItems = [], isLoading, error } = useQuery({
+  // Fetch menu items with fallback to initial items
+  const { data: menuItems = initialMenuItems, isLoading, error } = useQuery({
     queryKey: ['menuItems'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('menu_items')
         .select('*');
       
-      if (error) throw error;
-      if (!data) throw new Error("No menu items found");
+      if (error) {
+        console.log('Falling back to initial menu items');
+        return initialMenuItems;
+      }
+      
+      if (!data || data.length === 0) {
+        console.log('No menu items found in database, using initial items');
+        return initialMenuItems;
+      }
       
       return data.map(item => ({
         id: item.id,
