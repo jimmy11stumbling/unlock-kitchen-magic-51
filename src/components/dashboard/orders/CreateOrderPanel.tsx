@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -8,11 +9,11 @@ import { OrderDetails } from "./components/OrderDetails";
 import { OrderSummary } from "./components/OrderSummary";
 
 interface CreateOrderPanelProps {
+  onCreateOrder: (order: Omit<Order, "id" | "timestamp">) => Promise<any>;
   menuItems: MenuItem[];
-  onCreateOrder: (order: Omit<Order, "id" | "timestamp">) => void;
 }
 
-export const CreateOrderPanel = ({ menuItems, onCreateOrder }: CreateOrderPanelProps) => {
+export const CreateOrderPanel = ({ onCreateOrder, menuItems }: CreateOrderPanelProps) => {
   const { toast } = useToast();
   const [tableNumber, setTableNumber] = useState<number>(1);
   const [guestCount, setGuestCount] = useState<number>(1);
@@ -55,6 +56,11 @@ export const CreateOrderPanel = ({ menuItems, onCreateOrder }: CreateOrderPanelP
       } else {
         setSelectedItems(selectedItems.filter(item => item.id !== menuItem.id));
       }
+      
+      toast({
+        title: "Item Removed",
+        description: `Removed ${menuItem.name} from order`,
+      });
     }
   };
 
@@ -62,11 +68,20 @@ export const CreateOrderPanel = ({ menuItems, onCreateOrder }: CreateOrderPanelP
     return selectedItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const handleSubmitOrder = () => {
+  const handleSubmitOrder = async () => {
     if (selectedItems.length === 0) {
       toast({
         title: "Error",
         description: "Please add items to the order",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (tableNumber < 1) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid table number",
         variant: "destructive",
       });
       return;
@@ -86,16 +101,27 @@ export const CreateOrderPanel = ({ menuItems, onCreateOrder }: CreateOrderPanelP
       })),
     };
 
-    onCreateOrder(newOrder);
-    
-    // Reset form
-    setSelectedItems([]);
-    setSpecialInstructions("");
-    
-    toast({
-      title: "Order Created",
-      description: `Order for Table ${tableNumber} has been sent to kitchen`,
-    });
+    try {
+      await onCreateOrder(newOrder);
+      
+      // Reset form
+      setSelectedItems([]);
+      setSpecialInstructions("");
+      setTableNumber(1);
+      setGuestCount(1);
+      setSearchQuery("");
+      
+      toast({
+        title: "Order Created",
+        description: `Order for Table ${tableNumber} has been sent to kitchen`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create order. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
