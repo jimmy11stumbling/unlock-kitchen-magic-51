@@ -740,6 +740,36 @@ export type Database = {
           },
         ]
       }
+      payroll_periods: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          pay_date: string | null
+          start_date: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          pay_date?: string | null
+          start_date: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          pay_date?: string | null
+          start_date?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -971,14 +1001,23 @@ export type Database = {
       }
       staff_members: {
         Row: {
+          address: string | null
           bank_info: Json | null
+          benefits: Json | null
           certifications: string[] | null
           created_at: string | null
           department: string | null
           email: string | null
+          emergency_contact: Json | null
+          employment_status:
+            | Database["public"]["Enums"]["employment_status"]
+            | null
+          hire_date: string | null
+          hourly_rate: number | null
           id: number
           name: string
           notes: string | null
+          overtime_rate: number | null
           performance_rating: number | null
           phone: string | null
           role: Database["public"]["Enums"]["staff_role"]
@@ -986,17 +1025,27 @@ export type Database = {
           schedule: Json | null
           shift: string | null
           status: Database["public"]["Enums"]["staff_status"] | null
+          tax_id: string | null
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           bank_info?: Json | null
+          benefits?: Json | null
           certifications?: string[] | null
           created_at?: string | null
           department?: string | null
           email?: string | null
+          emergency_contact?: Json | null
+          employment_status?:
+            | Database["public"]["Enums"]["employment_status"]
+            | null
+          hire_date?: string | null
+          hourly_rate?: number | null
           id?: number
           name: string
           notes?: string | null
+          overtime_rate?: number | null
           performance_rating?: number | null
           phone?: string | null
           role: Database["public"]["Enums"]["staff_role"]
@@ -1004,17 +1053,27 @@ export type Database = {
           schedule?: Json | null
           shift?: string | null
           status?: Database["public"]["Enums"]["staff_status"] | null
+          tax_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           bank_info?: Json | null
+          benefits?: Json | null
           certifications?: string[] | null
           created_at?: string | null
           department?: string | null
           email?: string | null
+          emergency_contact?: Json | null
+          employment_status?:
+            | Database["public"]["Enums"]["employment_status"]
+            | null
+          hire_date?: string | null
+          hourly_rate?: number | null
           id?: number
           name?: string
           notes?: string | null
+          overtime_rate?: number | null
           performance_rating?: number | null
           phone?: string | null
           role?: Database["public"]["Enums"]["staff_role"]
@@ -1022,6 +1081,7 @@ export type Database = {
           schedule?: Json | null
           shift?: string | null
           status?: Database["public"]["Enums"]["staff_status"] | null
+          tax_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1150,6 +1210,50 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      time_entries: {
+        Row: {
+          break_end: string | null
+          break_start: string | null
+          clock_in: string
+          clock_out: string | null
+          created_at: string | null
+          id: string
+          staff_id: number | null
+          total_hours: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          break_end?: string | null
+          break_start?: string | null
+          clock_in: string
+          clock_out?: string | null
+          created_at?: string | null
+          id?: string
+          staff_id?: number | null
+          total_hours?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          break_end?: string | null
+          break_start?: string | null
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string | null
+          id?: string
+          staff_id?: number | null
+          total_hours?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       training_jobs: {
         Row: {
@@ -1545,6 +1649,7 @@ export type Database = {
     }
     Enums: {
       application_status: "pending" | "approved" | "rejected" | "withdrawn"
+      employment_status: "full_time" | "part_time" | "contract" | "terminated"
       maintenance_priority: "low" | "medium" | "high"
       maintenance_status: "pending" | "in-progress" | "completed"
       model_status: "active" | "training" | "error"
@@ -1558,6 +1663,7 @@ export type Database = {
         | "email"
         | "webhook"
       order_status: "pending" | "preparing" | "ready" | "delivered"
+      pay_frequency: "weekly" | "biweekly" | "monthly"
       payment_method: "cash" | "card" | "bank_transfer" | "check"
       property_status: "active" | "inactive" | "archived"
       staff_role: "manager" | "chef" | "server" | "host" | "bartender"
