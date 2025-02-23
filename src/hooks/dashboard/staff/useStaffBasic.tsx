@@ -12,9 +12,198 @@ import {
   updateStaffMemberInfo 
 } from "./services/staffService";
 
+// Initial staff data for testing
+const initialStaffData: StaffMember[] = [
+  {
+    id: 1,
+    name: "John Smith",
+    role: "manager",
+    status: "active",
+    shift: "Morning",
+    salary: 65000,
+    hourlyRate: 31.25,
+    overtimeRate: 46.88,
+    email: "john.smith@restaurant.com",
+    phone: "555-0101",
+    address: "123 Main St",
+    emergencyContact: {
+      name: "Jane Smith",
+      phone: "555-0102",
+      relationship: "spouse"
+    },
+    startDate: "2023-01-15",
+    department: "management",
+    certifications: ["ServSafe Manager", "Food Handler", "Alcohol Service"],
+    performanceRating: 4.8,
+    notes: "Regional manager for downtown locations",
+    schedule: {
+      monday: "9:00-17:00",
+      tuesday: "9:00-17:00",
+      wednesday: "9:00-17:00",
+      thursday: "9:00-17:00",
+      friday: "9:00-17:00",
+      saturday: "OFF",
+      sunday: "OFF"
+    },
+    bankInfo: {
+      accountNumber: "****1234",
+      routingNumber: "****5678",
+      accountType: "checking"
+    }
+  },
+  {
+    id: 2,
+    name: "Maria Rodriguez",
+    role: "chef",
+    status: "active",
+    shift: "Evening",
+    salary: 55000,
+    hourlyRate: 26.44,
+    overtimeRate: 39.66,
+    email: "maria.r@restaurant.com",
+    phone: "555-0103",
+    address: "456 Oak Ave",
+    emergencyContact: {
+      name: "Carlos Rodriguez",
+      phone: "555-0104",
+      relationship: "brother"
+    },
+    startDate: "2023-02-01",
+    department: "kitchen",
+    certifications: ["Culinary Arts Degree", "Food Safety", "Kitchen Management"],
+    performanceRating: 4.9,
+    notes: "Head chef for fine dining section",
+    schedule: {
+      monday: "14:00-22:00",
+      tuesday: "14:00-22:00",
+      wednesday: "14:00-22:00",
+      thursday: "OFF",
+      friday: "14:00-22:00",
+      saturday: "14:00-22:00",
+      sunday: "OFF"
+    },
+    bankInfo: {
+      accountNumber: "****5678",
+      routingNumber: "****9012",
+      accountType: "checking"
+    }
+  },
+  {
+    id: 3,
+    name: "David Chen",
+    role: "server",
+    status: "active",
+    shift: "Evening",
+    salary: 35000,
+    hourlyRate: 16.83,
+    overtimeRate: 25.25,
+    email: "david.c@restaurant.com",
+    phone: "555-0105",
+    address: "789 Pine St",
+    emergencyContact: {
+      name: "Lisa Chen",
+      phone: "555-0106",
+      relationship: "sister"
+    },
+    startDate: "2023-03-15",
+    department: "service",
+    certifications: ["Food Handler", "Wine Service", "Customer Service"],
+    performanceRating: 4.7,
+    notes: "Senior server with wine expertise",
+    schedule: {
+      monday: "16:00-24:00",
+      tuesday: "16:00-24:00",
+      wednesday: "OFF",
+      thursday: "16:00-24:00",
+      friday: "16:00-24:00",
+      saturday: "16:00-24:00",
+      sunday: "OFF"
+    },
+    bankInfo: {
+      accountNumber: "****9012",
+      routingNumber: "****3456",
+      accountType: "savings"
+    }
+  },
+  {
+    id: 4,
+    name: "Sarah Johnson",
+    role: "bartender",
+    status: "active",
+    shift: "Evening",
+    salary: 40000,
+    hourlyRate: 19.23,
+    overtimeRate: 28.85,
+    email: "sarah.j@restaurant.com",
+    phone: "555-0107",
+    address: "321 Elm St",
+    emergencyContact: {
+      name: "Mike Johnson",
+      phone: "555-0108",
+      relationship: "father"
+    },
+    startDate: "2023-04-01",
+    department: "bar",
+    certifications: ["Mixology", "Alcohol Service", "Food Handler"],
+    performanceRating: 4.6,
+    notes: "Specialty cocktail expert",
+    schedule: {
+      monday: "OFF",
+      tuesday: "16:00-24:00",
+      wednesday: "16:00-24:00",
+      thursday: "16:00-24:00",
+      friday: "16:00-24:00",
+      saturday: "16:00-24:00",
+      sunday: "OFF"
+    },
+    bankInfo: {
+      accountNumber: "****3456",
+      routingNumber: "****7890",
+      accountType: "checking"
+    }
+  },
+  {
+    id: 5,
+    name: "Michael Brown",
+    role: "host",
+    status: "active",
+    shift: "Morning",
+    salary: 32000,
+    hourlyRate: 15.38,
+    overtimeRate: 23.07,
+    email: "michael.b@restaurant.com",
+    phone: "555-0109",
+    address: "654 Maple Dr",
+    emergencyContact: {
+      name: "Emily Brown",
+      phone: "555-0110",
+      relationship: "spouse"
+    },
+    startDate: "2023-05-01",
+    department: "service",
+    certifications: ["Customer Service", "Reservation Management"],
+    performanceRating: 4.5,
+    notes: "Excellent at handling large party reservations",
+    schedule: {
+      monday: "10:00-18:00",
+      tuesday: "10:00-18:00",
+      wednesday: "10:00-18:00",
+      thursday: "10:00-18:00",
+      friday: "OFF",
+      saturday: "10:00-18:00",
+      sunday: "OFF"
+    },
+    bankInfo: {
+      accountNumber: "****7890",
+      routingNumber: "****1234",
+      accountType: "checking"
+    }
+  }
+];
+
 export const useStaffBasic = () => {
   const { toast } = useToast();
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>(initialStaffData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

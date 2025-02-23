@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { MenuItem } from "@/types/staff";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-// Add initial menu items for testing
 const initialMenuItems: MenuItem[] = [
   {
     id: 1,
@@ -16,7 +15,7 @@ const initialMenuItems: MenuItem[] = [
     available: true,
     allergens: ["gluten", "dairy"],
     preparationTime: 15,
-    orderCount: 0
+    orderCount: 1250
   },
   {
     id: 2,
@@ -27,7 +26,7 @@ const initialMenuItems: MenuItem[] = [
     available: true,
     allergens: ["gluten", "dairy", "eggs"],
     preparationTime: 10,
-    orderCount: 0
+    orderCount: 980
   },
   {
     id: 3,
@@ -38,7 +37,7 @@ const initialMenuItems: MenuItem[] = [
     available: true,
     allergens: ["gluten", "dairy", "eggs"],
     preparationTime: 20,
-    orderCount: 0
+    orderCount: 750
   },
   {
     id: 4,
@@ -49,18 +48,73 @@ const initialMenuItems: MenuItem[] = [
     available: true,
     allergens: ["gluten", "dairy"],
     preparationTime: 20,
-    orderCount: 0
+    orderCount: 1100
   },
   {
     id: 5,
-    name: "Iced Tea",
-    price: 3.99,
+    name: "Craft Beer",
+    price: 8.99,
     category: "beverage",
-    description: "Fresh brewed iced tea",
+    description: "Selection of local craft beers",
+    available: true,
+    allergens: ["gluten"],
+    preparationTime: 2,
+    orderCount: 2200
+  },
+  {
+    id: 6,
+    name: "Seafood Pasta",
+    price: 22.99,
+    category: "main",
+    description: "Fresh seafood in white wine sauce",
+    available: true,
+    allergens: ["shellfish", "gluten"],
+    preparationTime: 25,
+    orderCount: 680
+  },
+  {
+    id: 7,
+    name: "Asian Stir-Fry",
+    price: 18.99,
+    category: "main",
+    description: "Seasonal vegetables with choice of protein in house sauce",
+    available: true,
+    allergens: ["soy", "gluten"],
+    preparationTime: 18,
+    orderCount: 890
+  },
+  {
+    id: 8,
+    name: "Truffle Fries",
+    price: 9.99,
+    category: "appetizer",
+    description: "Hand-cut fries with truffle oil and parmesan",
+    available: true,
+    allergens: ["dairy"],
+    preparationTime: 12,
+    orderCount: 1500
+  },
+  {
+    id: 9,
+    name: "Signature Cocktails",
+    price: 12.99,
+    category: "beverage",
+    description: "Seasonal craft cocktails",
     available: true,
     allergens: [],
     preparationTime: 5,
-    orderCount: 0
+    orderCount: 1800
+  },
+  {
+    id: 10,
+    name: "New York Cheesecake",
+    price: 9.99,
+    category: "dessert",
+    description: "Classic cheesecake with berry compote",
+    available: true,
+    allergens: ["dairy", "eggs", "gluten"],
+    preparationTime: 5,
+    orderCount: 920
   }
 ];
 
