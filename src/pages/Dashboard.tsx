@@ -14,43 +14,123 @@ import {
   Calendar,
   CheckCircle2,
   XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-interface StaffMember {
-  id: number;
-  name: string;
-  role: string;
-  status: "active" | "on_break" | "off_duty";
-  shift: string;
-}
-
-interface Shift {
-  id: number;
-  staffId: number;
-  date: string;
-  time: string;
-}
+import { StaffTable } from "@/components/dashboard/StaffTable";
+import { AddStaffForm } from "@/components/dashboard/AddStaffForm";
+import { ScheduleView } from "@/components/dashboard/ScheduleView";
+import type { StaffMember, Shift, InventoryItem, Order, Reservation, SalesData, PaymentTransaction } from "@/types/staff";
+import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
-  const [staff] = useState<StaffMember[]>([
-    { id: 1, name: "John Smith", role: "Chef", status: "active", shift: "Morning" },
-    { id: 2, name: "Sarah Johnson", role: "Server", status: "on_break", shift: "Evening" },
-    { id: 3, name: "Mike Wilson", role: "Bartender", status: "active", shift: "Night" },
-    { id: 4, name: "Emily Brown", role: "Host", status: "off_duty", shift: "Morning" },
+  const { toast } = useToast();
+  const [staff, setStaff] = useState<StaffMember[]>([
+    { id: 1, name: "John Smith", role: "Chef", status: "active", shift: "Morning", salary: "45000" },
+    { id: 2, name: "Sarah Johnson", role: "Server", status: "on_break", shift: "Evening", salary: "35000" },
+    { id: 3, name: "Mike Wilson", role: "Bartender", status: "active", shift: "Night", salary: "40000" },
+    { id: 4, name: "Emily Brown", role: "Host", status: "off_duty", shift: "Morning", salary: "32000" },
   ]);
 
-  const [shifts] = useState<Shift[]>([
+  const [inventory] = useState<InventoryItem[]>([
+    { id: 1, name: "Tomatoes", quantity: 50, unit: "kg", minQuantity: 20, price: 2.5 },
+    { id: 2, name: "Chicken", quantity: 15, unit: "kg", minQuantity: 25, price: 8.0 },
+    { id: 3, name: "Wine", quantity: 10, unit: "bottles", minQuantity: 15, price: 25.0 },
+  ]);
+
+  const [orders] = useState<Order[]>([
+    {
+      id: 1,
+      tableNumber: 5,
+      items: [{ id: 1, name: "Pasta", quantity: 2, price: 15.99 }],
+      status: "pending",
+      total: 31.98,
+      timestamp: new Date().toISOString(),
+    },
+  ]);
+
+  const [reservations] = useState<Reservation[]>([
+    {
+      id: 1,
+      customerName: "John Doe",
+      date: "2024-02-21",
+      time: "19:00",
+      partySize: 4,
+      tableNumber: 7,
+      status: "confirmed",
+    },
+  ]);
+
+  const [salesData] = useState<SalesData[]>([
+    {
+      date: "2024-02-20",
+      revenue: 2456.50,
+      costs: 1234.25,
+      profit: 1222.25,
+    },
+  ]);
+
+  const [payments] = useState<PaymentTransaction[]>([
+    {
+      id: 1,
+      orderId: 1,
+      amount: 31.98,
+      method: "credit",
+      status: "completed",
+      timestamp: new Date().toISOString(),
+    },
+  ]);
+
+  const [shifts, setShifts] = useState<Shift[]>([
     { id: 1, staffId: 1, date: "2024-02-20", time: "6:00 AM - 2:00 PM" },
     { id: 2, staffId: 2, date: "2024-02-20", time: "2:00 PM - 10:00 PM" },
     { id: 3, staffId: 3, date: "2024-02-20", time: "5:00 PM - 1:00 AM" },
   ]);
+
+  const onSubmit = (data: { name: string; role: string; salary: string }) => {
+    const newStaffMember: StaffMember = {
+      id: staff.length + 1,
+      name: data.name,
+      role: data.role,
+      status: "off_duty",
+      shift: "Morning",
+      salary: data.salary,
+    };
+    setStaff([...staff, newStaffMember]);
+    toast({
+      title: "Staff member added",
+      description: `${data.name} has been added to the staff list.`,
+    });
+  };
+
+  const updateStaffStatus = (staffId: number, newStatus: StaffMember["status"]) => {
+    setStaff(staff.map(member => 
+      member.id === staffId ? { ...member, status: newStatus } : member
+    ));
+    const member = staff.find(m => m.id === staffId);
+    toast({
+      title: "Status updated",
+      description: `${member?.name}'s status has been updated to ${newStatus.replace("_", " ")}.`,
+    });
+  };
+
+  const addShift = (staffId: number, date: string, time: string) => {
+    const newShift: Shift = {
+      id: shifts.length + 1,
+      staffId,
+      date,
+      time,
+    };
+    setShifts([...shifts, newShift]);
+    const member = staff.find(m => m.id === staffId);
+    toast({
+      title: "Shift added",
+      description: `New shift added for ${member?.name} on ${date}.`,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -161,7 +241,30 @@ const Dashboard = () => {
           <TabsContent value="orders">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4 dark:text-white">Orders Management</h3>
-              <p className="text-muted-foreground">Orders management content coming soon...</p>
+              <div className="space-y-4">
+                {orders.map(order => (
+                  <div key={order.id} className="border p-4 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <h4>Order #{order.id} - Table {order.tableNumber}</h4>
+                      <span className="px-2 py-1 rounded bg-yellow-100 text-yellow-700">
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="mt-2">
+                      {order.items.map(item => (
+                        <div key={item.id} className="flex justify-between text-sm">
+                          <span>{item.quantity}x {item.name}</span>
+                          <span>${item.price.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-2 pt-2 border-t flex justify-between font-semibold">
+                      <span>Total</span>
+                      <span>${order.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Card>
           </TabsContent>
 
@@ -297,21 +400,69 @@ const Dashboard = () => {
           <TabsContent value="inventory">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4 dark:text-white">Inventory Control</h3>
-              <p className="text-muted-foreground">Inventory control content coming soon...</p>
+              <div className="space-y-4">
+                {inventory.map(item => (
+                  <div key={item.id} className="border p-4 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <h4>{item.name}</h4>
+                      {item.quantity < item.minQuantity && (
+                        <span className="flex items-center text-red-500">
+                          <AlertTriangle className="w-4 h-4 mr-1" />
+                          Low Stock
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Quantity:</span>
+                        <p>{item.quantity} {item.unit}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Min. Quantity:</span>
+                        <p>{item.minQuantity} {item.unit}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Price:</span>
+                        <p>${item.price}/{item.unit}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Card>
           </TabsContent>
 
           <TabsContent value="analytics">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">Analytics</h3>
-              <p className="text-muted-foreground">Analytics content coming soon...</p>
+              <h3 className="text-lg font-semibold mb-4 dark:text-white">Sales Analytics</h3>
+              <div className="space-y-4">
+                {salesData.map((data, index) => (
+                  <div key={index} className="border p-4 rounded-lg">
+                    <h4 className="font-medium">{data.date}</h4>
+                    <div className="mt-2 grid grid-cols-3 gap-4">
+                      <div>
+                        <span className="text-sm text-muted-foreground">Revenue</span>
+                        <p className="text-green-600 font-semibold">${data.revenue.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Costs</span>
+                        <p className="text-red-600 font-semibold">${data.costs.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-muted-foreground">Profit</span>
+                        <p className="text-blue-600 font-semibold">${data.profit.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Card>
           </TabsContent>
 
           <TabsContent value="settings">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4 dark:text-white">Settings</h3>
-              <p className="text-muted-foreground">Settings content coming soon...</p>
+              <p className="text-muted-foreground">Configure your restaurant settings here.</p>
             </Card>
           </TabsContent>
         </Tabs>
