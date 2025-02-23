@@ -604,6 +604,54 @@ export type Database = {
         }
         Relationships: []
       }
+      order_items: {
+        Row: {
+          created_at: string | null
+          id: number
+          menu_item_id: number | null
+          notes: string | null
+          order_id: number | null
+          price_at_time: number
+          quantity: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          menu_item_id?: number | null
+          notes?: string | null
+          order_id?: number | null
+          price_at_time: number
+          quantity: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          menu_item_id?: number | null
+          notes?: string | null
+          order_id?: number | null
+          price_at_time?: number
+          quantity?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string | null
@@ -611,11 +659,17 @@ export type Database = {
           guest_count: number
           id: number
           items: Json
+          payment_method: string | null
+          payment_status: string | null
           server_name: string
           special_instructions: string | null
           status: string
+          subtotal: number
+          table_id: number | null
           table_number: number
+          tax: number
           timestamp: string | null
+          tip: number | null
           total: number
           updated_at: string | null
         }
@@ -625,11 +679,17 @@ export type Database = {
           guest_count: number
           id?: number
           items: Json
+          payment_method?: string | null
+          payment_status?: string | null
           server_name: string
           special_instructions?: string | null
           status: string
+          subtotal?: number
+          table_id?: number | null
           table_number: number
+          tax?: number
           timestamp?: string | null
+          tip?: number | null
           total: number
           updated_at?: string | null
         }
@@ -639,15 +699,29 @@ export type Database = {
           guest_count?: number
           id?: number
           items?: Json
+          payment_method?: string | null
+          payment_status?: string | null
           server_name?: string
           special_instructions?: string | null
           status?: string
+          subtotal?: number
+          table_id?: number | null
           table_number?: number
+          tax?: number
           timestamp?: string | null
+          tip?: number | null
           total?: number
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "tables"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pay_stubs: {
         Row: {
@@ -867,6 +941,41 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      receipts: {
+        Row: {
+          generated_at: string | null
+          id: number
+          order_id: number | null
+          printed_at: string | null
+          receipt_data: Json
+          voided_at: string | null
+        }
+        Insert: {
+          generated_at?: string | null
+          id?: number
+          order_id?: number | null
+          printed_at?: string | null
+          receipt_data: Json
+          voided_at?: string | null
+        }
+        Update: {
+          generated_at?: string | null
+          id?: number
+          order_id?: number | null
+          printed_at?: string | null
+          receipt_data?: Json
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -1122,6 +1231,36 @@ export type Database = {
           tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      tables: {
+        Row: {
+          capacity: number
+          created_at: string | null
+          id: number
+          number: number
+          section: string
+          status: Database["public"]["Enums"]["table_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          capacity: number
+          created_at?: string | null
+          id?: number
+          number: number
+          section: string
+          status?: Database["public"]["Enums"]["table_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number
+          created_at?: string | null
+          id?: number
+          number?: number
+          section?: string
+          status?: Database["public"]["Enums"]["table_status"] | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1669,6 +1808,7 @@ export type Database = {
       staff_role: "manager" | "chef" | "server" | "host" | "bartender"
       staff_status: "active" | "on_break" | "off_duty"
       subscription_tier: "free" | "starter" | "professional" | "enterprise"
+      table_status: "available" | "occupied" | "reserved" | "cleaning"
       tenant_status: "active" | "inactive" | "pending"
       transaction_type: "income" | "expense"
       unit_status: "vacant" | "occupied" | "maintenance" | "reserved"

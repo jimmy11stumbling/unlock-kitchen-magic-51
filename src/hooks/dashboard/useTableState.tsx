@@ -1,37 +1,148 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { TableLayout } from "@/types/staff";
 
-const initialTables: TableLayout[] = [
-  { id: 1, number: 1, capacity: 4, status: "occupied", section: "indoor" },
-  { id: 2, number: 2, capacity: 2, status: "available", section: "indoor" },
-  { id: 3, number: 3, capacity: 6, status: "reserved", section: "outdoor" },
-  { id: 4, number: 4, capacity: 4, status: "available", section: "outdoor" },
-  { id: 5, number: 5, capacity: 8, status: "occupied", section: "indoor" },
-  { id: 6, number: 6, capacity: 2, status: "available", section: "bar" },
-  { id: 7, number: 7, capacity: 4, status: "occupied", section: "bar" },
-  { id: 8, number: 8, capacity: 6, status: "available", section: "outdoor" }
-];
-
 export const useTableState = () => {
-  const [tables, setTables] = useState<TableLayout[]>(initialTables);
+  const { toast } = useToast();
+  const [tables, setTables] = useState<TableLayout[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const addTable = (table: Omit<TableLayout, "id">) => {
-    const newTable: TableLayout = {
-      ...table,
-      id: tables.length + 1,
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const { data, error: supabaseError } = await supabase
+          .from('tables')
+          .select('*')
+          .order('number', { ascending: true });
+
+        if (supabaseError) throw supabaseError;
+
+        const mappedTables: TableLayout[] = data.map(table => ({
+          id: table.id,
+          number: table.number,
+          capacity: table.capacity,
+          status: table.status,
+          section: table.section,
+        }));
+
+        setTables(mappedTables);
+        setError(null);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Could not load tables";
+        setError(message);
+        console.error('Error fetching tables:', error);
+        toast({
+          title: "Error fetching tables",
+          description: message,
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setTables([...tables, newTable]);
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('table-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tables'
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setTables(prev => [...prev, {
+              id: payload.new.id,
+              number: payload.new.number,
+              capacity: payload.new.capacity,
+              status: payload.new.status,
+              section: payload.new.section,
+            }]);
+          } else if (payload.eventType === 'UPDATE') {
+            setTables(prev => prev.map(table =>
+              table.id === payload.new.id
+                ? {
+                    id: payload.new.id,
+                    number: payload.new.number,
+                    capacity: payload.new.capacity,
+                    status: payload.new.status,
+                    section: payload.new.section,
+                  }
+                : table
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setTables(prev => prev.filter(table => table.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    fetchTables();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
+
+  const addTable = async (table: Omit<TableLayout, "id">) => {
+    try {
+      const { error } = await supabase
+        .from('tables')
+        .insert([{
+          number: table.number,
+          capacity: table.capacity,
+          status: table.status,
+          section: table.section,
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Table Added",
+        description: `Table ${table.number} has been added successfully.`,
+      });
+    } catch (error) {
+      console.error('Error adding table:', error);
+      toast({
+        title: "Error adding table",
+        description: error instanceof Error ? error.message : "Could not add table",
+        variant: "destructive"
+      });
+    }
   };
 
-  const updateTableStatus = (tableId: number, status: TableLayout["status"]) => {
-    setTables(tables.map(table => 
-      table.id === tableId ? { ...table, status } : table
-    ));
+  const updateTableStatus = async (tableId: number, status: TableLayout["status"]) => {
+    try {
+      const { error } = await supabase
+        .from('tables')
+        .update({ status })
+        .eq('id', tableId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Table Status Updated",
+        description: `Table status has been updated to ${status}.`,
+      });
+    } catch (error) {
+      console.error('Error updating table status:', error);
+      toast({
+        title: "Error updating table",
+        description: error instanceof Error ? error.message : "Could not update table status",
+        variant: "destructive"
+      });
+    }
   };
 
   return {
     tables,
+    isLoading,
+    error,
     addTable,
     updateTableStatus,
   };
