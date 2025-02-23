@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -11,13 +10,51 @@ import {
   LayoutDashboard,
   Box,
   Settings,
+  UserPlus,
+  Calendar,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface StaffMember {
+  id: number;
+  name: string;
+  role: string;
+  status: "active" | "on_break" | "off_duty";
+  shift: string;
+}
+
+interface Shift {
+  id: number;
+  staffId: number;
+  date: string;
+  time: string;
+}
 
 const Dashboard = () => {
+  const [staff] = useState<StaffMember[]>([
+    { id: 1, name: "John Smith", role: "Chef", status: "active", shift: "Morning" },
+    { id: 2, name: "Sarah Johnson", role: "Server", status: "on_break", shift: "Evening" },
+    { id: 3, name: "Mike Wilson", role: "Bartender", status: "active", shift: "Night" },
+    { id: 4, name: "Emily Brown", role: "Host", status: "off_duty", shift: "Morning" },
+  ]);
+
+  const [shifts] = useState<Shift[]>([
+    { id: 1, staffId: 1, date: "2024-02-20", time: "6:00 AM - 2:00 PM" },
+    { id: 2, staffId: 2, date: "2024-02-20", time: "2:00 PM - 10:00 PM" },
+    { id: 3, staffId: 3, date: "2024-02-20", time: "5:00 PM - 1:00 AM" },
+  ]);
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="space-y-8">
-        {/* Header */}
         <div>
           <h1 className="text-3xl font-bold dark:text-white">Dashboard</h1>
           <p className="text-muted-foreground">Welcome to your restaurant dashboard</p>
@@ -52,7 +89,6 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
-            {/* Stats Overview */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Card className="p-6 space-y-2 hover:shadow-lg transition-all duration-200">
                 <div className="flex items-center space-x-2">
@@ -91,7 +127,6 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            {/* Recent Activity */}
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4 dark:text-white">Recent Activity</h3>
               <div className="space-y-4">
@@ -131,10 +166,132 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="staff">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">Staff Management</h3>
-              <p className="text-muted-foreground">Staff management content coming soon...</p>
-            </Card>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold dark:text-white">Staff Management</h2>
+                <div className="space-x-4">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        View Schedule
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl">
+                      <DialogHeader>
+                        <DialogTitle>Staff Schedule</DialogTitle>
+                      </DialogHeader>
+                      <div className="mt-4">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Staff Member</TableHead>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Shift Time</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {shifts.map((shift) => {
+                              const staffMember = staff.find((s) => s.id === shift.staffId);
+                              return (
+                                <TableRow key={shift.id}>
+                                  <TableCell>{staffMember?.name}</TableCell>
+                                  <TableCell>{shift.date}</TableCell>
+                                  <TableCell>{shift.time}</TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Staff
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>Add New Staff Member</SheetTitle>
+                      </SheetHeader>
+                      <div className="mt-4 space-y-4">
+                        <Form>
+                          <FormField
+                            name="role"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Role</FormLabel>
+                                <Select>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select role" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="chef">Chef</SelectItem>
+                                    <SelectItem value="server">Server</SelectItem>
+                                    <SelectItem value="bartender">Bartender</SelectItem>
+                                    <SelectItem value="host">Host</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+                        </Form>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                </div>
+              </div>
+
+              <Card className="p-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Current Shift</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {staff.map((member) => (
+                      <TableRow key={member.id}>
+                        <TableCell>{member.name}</TableCell>
+                        <TableCell>{member.role}</TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            member.status === "active" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                            member.status === "on_break" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
+                            "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+                          }`}>
+                            {member.status === "active" ? (
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                            ) : member.status === "on_break" ? (
+                              <Clock className="w-3 h-3 mr-1" />
+                            ) : (
+                              <XCircle className="w-3 h-3 mr-1" />
+                            )}
+                            {member.status.replace("_", " ")}
+                          </span>
+                        </TableCell>
+                        <TableCell>{member.shift}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="outline" size="sm">
+                            Manage
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="inventory">
