@@ -28,18 +28,22 @@ serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        system: "You are a helpful AI assistant that helps users with their restaurant management system. Be concise but friendly in your responses.",
         messages: messages.map(msg => ({
           role: msg.role === 'user' ? 'user' : 'assistant',
           content: msg.content
         })),
         model: "claude-3-opus-20240229",
-        max_tokens: 1000
+        max_tokens: 1000,
+        system: "You are a helpful AI assistant that helps users with their restaurant management system. Be concise but friendly in your responses."
       }),
     });
 
     const data = await response.json();
     console.log('Claude API response:', data);
+    
+    if (data.error) {
+      throw new Error(data.error.message || 'Unknown error from Claude API');
+    }
     
     return new Response(
       JSON.stringify({ 
