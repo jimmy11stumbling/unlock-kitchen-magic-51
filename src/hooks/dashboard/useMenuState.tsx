@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,27 +9,21 @@ export const useMenuState = () => {
   const queryClient = useQueryClient();
 
   // Fetch menu items
-  const { data: menuItems = [], isLoading } = useQuery({
+  const { data: menuItems = [], isLoading, error } = useQuery({
     queryKey: ['menuItems'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('menu_items')
         .select('*');
       
-      if (error) {
-        toast({
-          title: "Error fetching menu items",
-          description: error.message,
-          variant: "destructive",
-        });
-        return [];
-      }
+      if (error) throw error;
+      if (!data) throw new Error("No menu items found");
       
       return data.map(item => ({
         id: item.id,
         name: item.name,
         price: item.price,
-        category: item.category as MenuItem["category"], // Explicitly cast to the correct type
+        category: item.category as MenuItem["category"],
         description: item.description || "",
         available: item.available ?? true,
         image: item.image_url || "/placeholder.svg",
@@ -167,6 +160,7 @@ export const useMenuState = () => {
   return {
     menuItems,
     isLoading,
+    error: error instanceof Error ? error.message : null,
     addMenuItem: (item: Omit<MenuItem, "id">) => addMenuItemMutation.mutate(item),
     updateMenuItem: (id: number, updates: Partial<MenuItem>) => 
       updateMenuItemMutation.mutate({ id, ...updates }),
