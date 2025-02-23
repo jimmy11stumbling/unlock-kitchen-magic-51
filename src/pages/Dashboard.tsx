@@ -48,14 +48,14 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const Dashboard = () => {
-  const [staff] = useState<StaffMember[]>([
+  const [staff, setStaff] = useState<StaffMember[]>([
     { id: 1, name: "John Smith", role: "Chef", status: "active", shift: "Morning" },
     { id: 2, name: "Sarah Johnson", role: "Server", status: "on_break", shift: "Evening" },
     { id: 3, name: "Mike Wilson", role: "Bartender", status: "active", shift: "Night" },
     { id: 4, name: "Emily Brown", role: "Host", status: "off_duty", shift: "Morning" },
   ]);
 
-  const [shifts] = useState<Shift[]>([
+  const [shifts, setShifts] = useState<Shift[]>([
     { id: 1, staffId: 1, date: "2024-02-20", time: "6:00 AM - 2:00 PM" },
     { id: 2, staffId: 2, date: "2024-02-20", time: "2:00 PM - 10:00 PM" },
     { id: 3, staffId: 3, date: "2024-02-20", time: "5:00 PM - 1:00 AM" },
@@ -69,8 +69,31 @@ const Dashboard = () => {
   });
 
   const onSubmit = (data: FormValues) => {
-    console.log(data);
-    // Handle form submission
+    const newStaffMember: StaffMember = {
+      id: staff.length + 1,
+      name: `New Staff ${staff.length + 1}`,
+      role: data.role,
+      status: "off_duty",
+      shift: "Morning",
+    };
+    setStaff([...staff, newStaffMember]);
+    form.reset();
+  };
+
+  const updateStaffStatus = (staffId: number, newStatus: StaffMember["status"]) => {
+    setStaff(staff.map(member => 
+      member.id === staffId ? { ...member, status: newStatus } : member
+    ));
+  };
+
+  const addShift = (staffId: number, date: string, time: string) => {
+    const newShift: Shift = {
+      id: shifts.length + 1,
+      staffId,
+      date,
+      time,
+    };
+    setShifts([...shifts, newShift]);
   };
 
   return (
@@ -307,9 +330,22 @@ const Dashboard = () => {
                         </TableCell>
                         <TableCell>{member.shift}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="outline" size="sm">
-                            Manage
-                          </Button>
+                          <div className="space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => updateStaffStatus(member.id, member.status === "active" ? "on_break" : "active")}
+                            >
+                              {member.status === "active" ? "Set Break" : "Set Active"}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => addShift(member.id, "2024-02-21", "9:00 AM - 5:00 PM")}
+                            >
+                              Add Shift
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
