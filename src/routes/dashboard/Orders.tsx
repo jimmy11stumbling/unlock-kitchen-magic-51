@@ -13,11 +13,23 @@ import {
   RotateCcw, 
   ShoppingCart, 
   History, 
-  PlusCircle 
+  PlusCircle,
+  ChevronDown,
+  DollarSign,
+  BarChart
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Orders() {
   const [activeTab, setActiveTab] = useState("current");
@@ -25,11 +37,24 @@ export default function Orders() {
   const { kitchenOrders, isLoading: kitchenLoading, error: kitchenError } = useKitchenOrders();
   const { addOrder, updateOrderStatus, updateKitchenOrderStatus } = useOrderActions(kitchenOrders);
   const { menuItems, isLoading: menuLoading, error: menuError } = useMenuState();
+  const { toast } = useToast();
 
   useInstantOrderProcessing();
 
   const handleRetry = () => {
     window.location.reload();
+  };
+
+  const calculateOrderMetrics = () => {
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    return {
+      totalOrders,
+      totalRevenue,
+      avgOrderValue
+    };
   };
 
   if (ordersLoading || kitchenLoading || menuLoading) {
@@ -84,8 +109,71 @@ export default function Orders() {
     order.status === "delivered"
   );
 
+  const metrics = calculateOrderMetrics();
+
   return (
     <div className="container p-6 mx-auto">
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+            Restaurant Manager Pro
+          </h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                Quick Actions
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setActiveTab("new")}>
+                <PlusCircle className="w-4 h-4 mr-2" />
+                New Order
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast({ title: "Generating report..." })}>
+                <BarChart className="w-4 h-4 mr-2" />
+                Generate Report
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setActiveTab("history")}>
+                <History className="w-4 h-4 mr-2" />
+                View History
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Orders</p>
+                <h3 className="text-2xl font-bold">{metrics.totalOrders}</h3>
+              </div>
+              <ShoppingCart className="h-8 w-8 text-primary/20" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Revenue</p>
+                <h3 className="text-2xl font-bold">${metrics.totalRevenue.toFixed(2)}</h3>
+              </div>
+              <DollarSign className="h-8 w-8 text-primary/20" />
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Average Order Value</p>
+                <h3 className="text-2xl font-bold">${metrics.avgOrderValue.toFixed(2)}</h3>
+              </div>
+              <BarChart className="h-8 w-8 text-primary/20" />
+            </div>
+          </Card>
+        </div>
+      </div>
+
       <Tabs defaultValue="current" value={activeTab} onValueChange={setActiveTab}>
         <div className="flex justify-between items-center mb-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-auto">
