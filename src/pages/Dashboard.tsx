@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BarChart,
@@ -23,6 +24,7 @@ import type {
   TableLayout,
   KitchenOrder,
   CustomerFeedback,
+  Promotion,
 } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
