@@ -2,35 +2,44 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MessageSquare, Star, CheckCircle2 } from "lucide-react";
 import type { CustomerFeedback } from "@/types/staff";
-import { Star, CheckCircle2, XCircle } from "lucide-react";
 
 interface FeedbackPanelProps {
   feedback: CustomerFeedback[];
-  onResolveFeedback: (id: number) => void;
+  onResolveFeedback: (feedbackId: number) => void;
 }
 
-export const FeedbackPanel = ({
-  feedback,
-  onResolveFeedback,
-}: FeedbackPanelProps) => {
+export const FeedbackPanel = ({ feedback, onResolveFeedback }: FeedbackPanelProps) => {
+  const renderStars = (rating: number) => {
+    return [...Array(5)].map((_, index) => (
+      <Star
+        key={index}
+        className={`w-4 h-4 ${
+          index < rating ? "text-yellow-400 fill-current" : "text-gray-300"
+        }`}
+      />
+    ));
+  };
+
   return (
     <Card className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold">Customer Feedback</h2>
-        <div className="flex gap-2">
-          <Button variant="outline">Export Report</Button>
-          <Button variant="outline">Analytics</Button>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-muted-foreground">
+            Total: {feedback.length} | Resolved: {feedback.filter(f => f.resolved).length}
+          </span>
         </div>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Order #</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Order ID</TableHead>
             <TableHead>Rating</TableHead>
             <TableHead>Comment</TableHead>
-            <TableHead>Date</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -38,44 +47,34 @@ export const FeedbackPanel = ({
         <TableBody>
           {feedback.map((item) => (
             <TableRow key={item.id}>
+              <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
               <TableCell>#{item.orderId}</TableCell>
               <TableCell>
                 <div className="flex items-center">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Star
-                      key={index}
-                      className={`w-4 h-4 ${
-                        index < item.rating
-                          ? "text-yellow-400 fill-current"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  ))}
+                  {renderStars(item.rating)}
                 </div>
               </TableCell>
               <TableCell className="max-w-md truncate">{item.comment}</TableCell>
-              <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
               <TableCell>
-                {item.resolved ? (
-                  <span className="flex items-center text-green-600">
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    Resolved
-                  </span>
-                ) : (
-                  <span className="flex items-center text-red-600">
-                    <XCircle className="w-4 h-4 mr-1" />
-                    Pending
-                  </span>
-                )}
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    item.resolved
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {item.resolved ? "Resolved" : "Pending"}
+                </span>
               </TableCell>
               <TableCell>
                 <Button
                   size="sm"
-                  variant={item.resolved ? "outline" : "default"}
+                  variant="outline"
                   onClick={() => onResolveFeedback(item.id)}
                   disabled={item.resolved}
                 >
-                  {item.resolved ? "Resolved" : "Mark as Resolved"}
+                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                  Mark Resolved
                 </Button>
               </TableCell>
             </TableRow>

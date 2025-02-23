@@ -1,74 +1,129 @@
 
 import { Card } from "@/components/ui/card";
-import { Bell, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { Bell, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import type { TableLayout, InventoryItem, Order } from "@/types/staff";
 
-interface Notification {
-  id: number;
-  message: string;
-  type: 'info' | 'warning' | 'success' | 'error';
-  timestamp: Date;
-  read: boolean;
+interface NotificationsPanelProps {
+  tables?: TableLayout[];
+  inventory?: InventoryItem[];
+  orders?: Order[];
 }
 
-export const NotificationsPanel = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      message: "New order received #123",
-      type: "info",
-      timestamp: new Date(),
-      read: false
-    },
-    {
-      id: 2,
-      message: "Low inventory alert: Tomatoes",
-      type: "warning",
-      timestamp: new Date(),
-      read: false
-    }
-  ]);
+export const NotificationsPanel = ({ tables, inventory, orders }: NotificationsPanelProps) => {
+  const [notifications, setNotifications] = useState<Array<{
+    id: number;
+    type: "warning" | "info" | "success";
+    message: string;
+    time: Date;
+  }>>([]);
 
-  const markAsRead = (id: number) => {
-    setNotifications(notifications.map(notif => 
-      notif.id === id ? { ...notif, read: true } : notif
-    ));
+  useEffect(() => {
+    const newNotifications = [];
+
+    // Check low inventory
+    inventory?.forEach(item => {
+      if (item.quantity <= item.minQuantity) {
+        newNotifications.push({
+          id: Date.now() + Math.random(),
+          type: "warning",
+          message: `Low stock alert: ${item.name}`,
+          time: new Date(),
+        });
+      }
+    });
+
+    // Check table status
+    tables?.forEach(table => {
+      if (table.status === "cleaning") {
+        newNotifications.push({
+          id: Date.now() + Math.random(),
+          type: "info",
+          message: `Table ${table.number} needs cleaning`,
+          time: new Date(),
+        });
+      }
+    });
+
+    // Check orders
+    orders?.forEach(order => {
+      if (order.status === "ready") {
+        newNotifications.push({
+          id: Date.now() + Math.random(),
+          type: "success",
+          message: `Order #${order.id} is ready for delivery`,
+          time: new Date(),
+        });
+      }
+    });
+
+    setNotifications(prev => [...prev, ...newNotifications]);
+  }, [tables, inventory, orders]);
+
+  const getNotificationIcon = (type: "warning" | "info" | "success") => {
+    switch (type) {
+      case "warning":
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case "success":
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      default:
+        return <Bell className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  const getNotificationColor = (type: "warning" | "info" | "success") => {
+    switch (type) {
+      case "warning":
+        return "bg-yellow-50 border-yellow-100";
+      case "success":
+        return "bg-green-50 border-green-100";
+      default:
+        return "bg-blue-50 border-blue-100";
+    }
   };
 
   return (
     <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Notifications</h3>
-        <Bell className="h-5 w-5" />
-      </div>
-      <div className="space-y-2">
-        {notifications.map((notification) => (
-          <div
-            key={notification.id}
-            className={`p-3 rounded-lg border ${
-              notification.read ? 'bg-muted' : 'bg-background'
-            }`}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-medium flex items-center">
+          <Bell className="h-4 w-4 mr-2" />
+          Notifications
+        </h3>
+        {notifications.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setNotifications([])}
           >
-            <div className="flex justify-between items-start">
-              <div>
+            Clear All
+          </Button>
+        )}
+      </div>
+
+      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+        {notifications.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No new notifications
+          </p>
+        ) : (
+          notifications.map(notification => (
+            <div
+              key={notification.id}
+              className={`p-3 rounded-lg border ${getNotificationColor(
+                notification.type
+              )} flex items-start space-x-3`}
+            >
+              {getNotificationIcon(notification.type)}
+              <div className="flex-1">
                 <p className="text-sm">{notification.message}</p>
                 <p className="text-xs text-muted-foreground">
-                  {notification.timestamp.toLocaleTimeString()}
+                  {notification.time.toLocaleTimeString()}
                 </p>
               </div>
-              {!notification.read && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => markAsRead(notification.id)}
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
-              )}
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </Card>
   );
