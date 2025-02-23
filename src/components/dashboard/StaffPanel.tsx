@@ -23,9 +23,10 @@ import {
 
 interface StaffPanelProps {
   staff: StaffMember[];
-  onAddStaff: (data: { name: string; role: string; salary: string }) => void;
+  onAddStaff: (data: Omit<StaffMember, "id" | "status">) => void;
   onUpdateStatus: (staffId: number, status: StaffMember["status"]) => void;
   onAddShift: (staffId: number, date: string, time: string) => void;
+  onUpdateInfo: (staffId: number, updates: Partial<StaffMember>) => void;
 }
 
 export const StaffPanel = ({
@@ -33,6 +34,7 @@ export const StaffPanel = ({
   onAddStaff,
   onUpdateStatus,
   onAddShift,
+  onUpdateInfo,
 }: StaffPanelProps) => {
   const [newStaff, setNewStaff] = useState({ name: "", role: "", salary: "" });
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
