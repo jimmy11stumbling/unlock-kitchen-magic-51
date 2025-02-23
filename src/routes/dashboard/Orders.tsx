@@ -18,7 +18,7 @@ export default function Orders() {
   const { orders, isLoading: ordersLoading, error: ordersError } = useOrders();
   const { kitchenOrders, isLoading: kitchenLoading, error: kitchenError } = useKitchenOrders();
   const { addOrder, updateOrderStatus, updateKitchenOrderStatus } = useOrderActions(kitchenOrders);
-  const { menuItems, isLoading: menuLoading, error: menuError } = useMenuState();
+  const { menuItems, isLoading: menuLoading } = useMenuState();
 
   useInstantOrderProcessing();
 
@@ -35,7 +35,7 @@ export default function Orders() {
     );
   }
 
-  const error = ordersError || kitchenError || menuError;
+  const error = ordersError || kitchenError;
   if (error) {
     return (
       <div className="p-8">

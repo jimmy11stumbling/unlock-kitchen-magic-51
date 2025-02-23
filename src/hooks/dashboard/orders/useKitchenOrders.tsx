@@ -30,22 +30,29 @@ export const useKitchenOrders = () => {
   const { toast } = useToast();
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchKitchenOrders = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error: supabaseError } = await supabase
           .from('kitchen_orders')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (supabaseError) {
+          setError(supabaseError.message);
+          throw supabaseError;
+        }
         setKitchenOrders(data.map(mapSupabaseKitchenOrderToKitchenOrder));
+        setError(null);
       } catch (error) {
+        const message = error instanceof Error ? error.message : "Could not load kitchen orders";
+        setError(message);
         console.error('Error fetching kitchen orders:', error);
         toast({
           title: "Error fetching kitchen orders",
-          description: "Could not load kitchen orders. Please try again.",
+          description: message,
           variant: "destructive"
         });
       } finally {
@@ -56,5 +63,5 @@ export const useKitchenOrders = () => {
     fetchKitchenOrders();
   }, [toast]);
 
-  return { kitchenOrders, isLoading };
+  return { kitchenOrders, isLoading, error };
 };
