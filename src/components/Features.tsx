@@ -58,16 +58,16 @@ export const Features = ({ showViewAllButton = false }: { showViewAllButton?: bo
 
   if (!showViewAllButton) {
     return (
-      <section className="py-24 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      <section className="py-24 bg-background">
         <div className="container px-4 mx-auto">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4 dark:text-white transition-colors animate-in">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white transition-colors animate-in">
               Everything You Need to Succeed
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 transition-colors animate-in stagger-1 mb-8">
+            <p className="text-lg text-gray-300 transition-colors animate-in stagger-1 mb-8">
               Discover how MaestroAI revolutionizes restaurant management with cutting-edge features
             </p>
-            <Button asChild className="mt-6">
+            <Button asChild variant="secondary" className="mt-6">
               <Link to="/features">Learn More</Link>
             </Button>
           </div>
@@ -76,14 +76,14 @@ export const Features = ({ showViewAllButton = false }: { showViewAllButton?: bo
             {features.slice(0, 4).map((feature, index) => (
               <div 
                 key={feature.title}
-                className="p-6 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 animate-in stagger-2"
+                className="p-6 rounded-lg glass-card hover:bg-black/50 transition-all duration-300 animate-in stagger-2"
                 style={{ animationDelay: `${(index + 2) * 0.1}s` }}
               >
-                <div className="mb-4 p-2 rounded-lg bg-primary/10 w-fit">
+                <div className="mb-4 p-2 rounded-lg bg-white/10 w-fit">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold mb-2 dark:text-white">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
+                <h3 className="text-xl font-bold mb-2 text-white">{feature.title}</h3>
+                <p className="text-gray-300">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -93,13 +93,13 @@ export const Features = ({ showViewAllButton = false }: { showViewAllButton?: bo
   }
 
   return (
-    <section className="py-24 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <section className="py-24 bg-background">
       <div className="container px-4 mx-auto">
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 dark:text-white transition-colors animate-in">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white transition-colors animate-in">
             Comprehensive Restaurant Management
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 transition-colors animate-in stagger-1 mb-8">
+          <p className="text-lg text-gray-300 transition-colors animate-in stagger-1 mb-8">
             Experience the future of restaurant management with our all-in-one platform
           </p>
           <div className="relative w-full h-64 mb-12 rounded-xl overflow-hidden">
@@ -108,9 +108,13 @@ export const Features = ({ showViewAllButton = false }: { showViewAllButton?: bo
               alt="Modern Restaurant Management"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
           </div>
-          <Button asChild size="lg" className="text-lg px-8 py-6 animate-in stagger-2">
+          <Button 
+            asChild 
+            size="lg" 
+            className="text-lg px-8 py-6 animate-in stagger-2 bg-primary hover:bg-primary/90 shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300"
+          >
             <Link to="/dashboard" className="flex items-center gap-2">
               Get Started <ArrowRight className="h-5 w-5" />
             </Link>
@@ -121,7 +125,7 @@ export const Features = ({ showViewAllButton = false }: { showViewAllButton?: bo
           {features.map((feature, index) => (
             <Card
               key={feature.title}
-              className="overflow-hidden group hover:shadow-xl transition-all duration-300 animate-in dark:bg-gray-800/50"
+              className="overflow-hidden group hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all duration-300 animate-in glass-card"
               style={{ animationDelay: `${(index + 2) * 0.1}s` }}
             >
               <div className="relative h-48 overflow-hidden">
@@ -130,7 +134,7 @@ export const Features = ({ showViewAllButton = false }: { showViewAllButton?: bo
                   alt={feature.title}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
                 <div className="absolute bottom-4 left-4 flex items-center gap-2">
                   <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
                     {feature.icon}
@@ -139,7 +143,7 @@ export const Features = ({ showViewAllButton = false }: { showViewAllButton?: bo
                 </div>
               </div>
               <div className="p-6">
-                <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
+                <p className="text-gray-300">{feature.description}</p>
               </div>
             </Card>
           ))}
