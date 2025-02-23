@@ -1,5 +1,5 @@
 
-import type { StaffRole, StaffStatus } from "@/types/employee/base";
+import type { StaffRole, StaffStatus } from "@/types/staff";
 
 export interface DatabaseStaffMember {
   id: number;
