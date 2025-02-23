@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DailyReportsPanel } from "@/components/dashboard/DailyReportsPanel";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
@@ -5,68 +6,41 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAnalyticsState } from "@/hooks/dashboard/useAnalyticsState";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function DailyReports() {
-  const [reports, setReports] = useState([]);
+  const { toast } = useToast();
   const { hasAccess, isLoading } = useFeatureAccess('advanced_reports');
   const navigate = useNavigate();
+  const { 
+    dailyReports, 
+    salesData, 
+    addSalesData, 
+    error: analyticsError 
+  } = useAnalyticsState();
 
   useEffect(() => {
-    const fetchReports = async () => {
-      // Mock data for demonstration
-      const mockReports = [
-        {
-          date: '2024-01-01',
-          totalRevenue: 1500,
-          laborCosts: 500,
-          inventoryCosts: 300,
-          netProfit: 700,
-          totalOrders: 150,
-          averageOrderValue: 10,
-          topSellingItems: [
-            { id: 1, name: 'Burger', category: 'Main Course', orderCount: 50 },
-            { id: 2, name: 'Fries', category: 'Side Dish', orderCount: 45 },
-            { id: 3, name: 'Coke', category: 'Beverage', orderCount: 40 },
-          ],
-        },
-        {
-          date: '2024-01-02',
-          totalRevenue: 1600,
-          laborCosts: 520,
-          inventoryCosts: 320,
-          netProfit: 760,
-          totalOrders: 160,
-          averageOrderValue: 10,
-          topSellingItems: [
-            { id: 1, name: 'Burger', category: 'Main Course', orderCount: 55 },
-            { id: 2, name: 'Fries', category: 'Side Dish', orderCount: 50 },
-            { id: 3, name: 'Coke', category: 'Beverage', orderCount: 45 },
-          ],
-        },
-        {
-          date: '2024-01-03',
-          totalRevenue: 1700,
-          laborCosts: 540,
-          inventoryCosts: 340,
-          netProfit: 820,
-          totalOrders: 170,
-          averageOrderValue: 10,
-          topSellingItems: [
-            { id: 1, name: 'Burger', category: 'Main Course', orderCount: 60 },
-            { id: 2, name: 'Fries', category: 'Side Dish', orderCount: 55 },
-            { id: 3, name: 'Coke', category: 'Beverage', orderCount: 50 },
-          ],
-        },
-      ];
-
-      setReports(mockReports);
-    };
-
-    fetchReports();
-  }, []);
+    if (analyticsError) {
+      toast({
+        title: "Error loading reports",
+        description: "There was a problem loading the reports data. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [analyticsError, toast]);
 
   if (isLoading) {
-    return <div className="p-8">Loading...</div>;
+    return (
+      <div className="p-8 animate-pulse">
+        <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-4 bg-muted rounded w-3/4"></div>
+          <div className="h-4 bg-muted rounded w-2/3"></div>
+          <div className="h-4 bg-muted rounded w-1/2"></div>
+        </div>
+      </div>
+    );
   }
 
   if (!hasAccess) {
@@ -76,7 +50,7 @@ export default function DailyReports() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Access Restricted</AlertTitle>
           <AlertDescription>
-            This feature requires a Professional subscription and appropriate role permissions.
+            This feature requires appropriate subscription and role permissions.
             Please upgrade your subscription or contact your administrator.
           </AlertDescription>
           <Button 
@@ -91,5 +65,14 @@ export default function DailyReports() {
     );
   }
 
-  return <DailyReportsPanel reports={reports} />;
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold tracking-tight">Analytics Dashboard</h1>
+      <DailyReportsPanel 
+        reports={dailyReports} 
+        salesData={salesData}
+        onAddSalesData={addSalesData}
+      />
+    </div>
+  );
 }
