@@ -1,9 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Order, KitchenOrder } from "@/types/staff";
-import { menuItems } from "@/data/menuItems";
-import { initialOrders, initialKitchenOrders } from "@/data/initialOrders";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   determineStation, 
   assignChef, 
@@ -15,175 +14,175 @@ import {
 
 export const useOrderState = () => {
   const { toast } = useToast();
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>(initialKitchenOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const determinePriority = (order: Omit<Order, "id" | "timestamp">): KitchenOrder["priority"] => {
-    if (order.specialInstructions?.toLowerCase().includes("vip")) return "rush";
-    if (order.items.length > 4) return "high";
-    return "normal";
-  };
+  // Fetch initial orders
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const { data: ordersData, error: ordersError } = await supabase
+          .from('orders')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-  const addOrder = (order: Omit<Order, "id" | "timestamp">) => {
+        if (ordersError) throw ordersError;
+
+        const { data: kitchenData, error: kitchenError } = await supabase
+          .from('kitchen_orders')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (kitchenError) throw kitchenError;
+
+        setOrders(ordersData);
+        setKitchenOrders(kitchenData);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        toast({
+          title: "Error fetching orders",
+          description: "Could not load orders. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Subscribe to real-time changes
+    const ordersSubscription = supabase
+      .channel('orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setOrders(prev => [payload.new, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setOrders(prev => prev.map(order => 
+              order.id === payload.new.id ? payload.new : order
+            ));
+          }
+        }
+      )
+      .subscribe();
+
+    fetchOrders();
+
+    return () => {
+      ordersSubscription.unsubscribe();
+    };
+  }, [toast]);
+
+  const addOrder = async (order: Omit<Order, "id" | "timestamp">) => {
     try {
-      const newOrder: Order = {
-        id: orders.length + 1,
-        timestamp: new Date().toISOString(),
-        ...order,
-      };
-      
-      const estimatedPrepTime = calculateEstimatedPrepTime(order.items, menuItems);
-      const coursing = optimizeCourseOrder(order.items, menuItems);
-      
-      // Extract allergies from special instructions
-      const allergyMatch = order.specialInstructions?.match(/allergy[:\s]+(\w+)/i);
-      const customerAllergies = allergyMatch ? [allergyMatch[1].toLowerCase()] : [];
-      
-      const newKitchenOrder: KitchenOrder = {
-        id: kitchenOrders.length + 1,
-        orderId: newOrder.id,
-        items: order.items.map(item => ({
-          menuItemId: item.id,
-          quantity: item.quantity,
-          status: "pending",
-          startTime: new Date().toISOString(),
-          cookingStation: determineStation(item.id),
-          assignedChef: assignChef(item.id),
-          modifications: [],
-          allergenAlert: checkAllergenConflicts(item.id, customerAllergies, menuItems)
-        })),
-        priority: determinePriority(order),
-        notes: order.specialInstructions || "",
-        coursing,
-        estimatedDeliveryTime: new Date(Date.now() + estimatedPrepTime * 60000).toISOString()
-      };
-
-      setOrders(prevOrders => [...prevOrders, newOrder]);
-      setKitchenOrders(prevKitchenOrders => [...prevKitchenOrders, newKitchenOrder]);
-
-      toast({
-        title: "New order created",
-        description: `Order #${newOrder.id} has been sent to kitchen`,
-        variant: "default"
+      const response = await fetch('/api/process-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: order }),
       });
 
-      return newOrder;
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      toast({
+        title: "Order Created",
+        description: `Order #${result.data.id} has been sent to kitchen`,
+      });
+
+      return result.data;
     } catch (error) {
       console.error("Error adding order:", error);
       toast({
         title: "Error creating order",
-        description: "Something went wrong while creating the order",
+        description: error.message,
         variant: "destructive"
       });
       return null;
     }
   };
 
-  const updateOrderStatus = (orderId: number, status: Order["status"]) => {
+  const updateOrderStatus = async (orderId: number, status: Order["status"]) => {
     try {
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order.id === orderId ? { ...order, status } : order
-        )
-      );
+      const { error } = await supabase
+        .from('orders')
+        .update({ status })
+        .eq('id', orderId);
 
-      // Update kitchen order status if needed
+      if (error) throw error;
+
+      // If order is delivered, update kitchen order status
       if (status === "delivered") {
-        setKitchenOrders(prevKitchenOrders =>
-          prevKitchenOrders.map(order =>
-            order.orderId === orderId
-              ? {
-                  ...order,
-                  items: order.items.map(item => ({
-                    ...item,
-                    status: "delivered",
-                    completionTime: new Date().toISOString()
-                  }))
-                }
-              : order
-          )
-        );
+        const { error: kitchenError } = await supabase
+          .from('kitchen_orders')
+          .update({ 
+            items: kitchenOrders
+              .find(order => order.orderId === orderId)?.items
+              .map(item => ({ ...item, status: "delivered" }))
+          })
+          .eq('order_id', orderId);
+
+        if (kitchenError) throw kitchenError;
       }
 
       toast({
         title: "Order Updated",
         description: `Order #${orderId} status changed to ${status}`,
-        variant: "default"
       });
     } catch (error) {
       console.error("Error updating order status:", error);
       toast({
         title: "Error updating order",
-        description: "Something went wrong while updating the order status",
+        description: "Failed to update order status",
         variant: "destructive"
       });
     }
   };
 
-  const updateKitchenOrderStatus = (
+  const updateKitchenOrderStatus = async (
     orderId: number,
     itemId: number,
     status: KitchenOrder["items"][0]["status"]
   ) => {
     try {
-      setKitchenOrders(prevKitchenOrders =>
-        prevKitchenOrders.map((order) =>
-          order.id === orderId
-            ? {
-                ...order,
-                items: order.items.map((item) =>
-                  item.menuItemId === itemId
-                    ? {
-                        ...item,
-                        status,
-                        startTime: status === "preparing" ? new Date().toISOString() : item.startTime,
-                        completionTime:
-                          status === "ready" ? new Date().toISOString() : item.completionTime,
-                      }
-                    : item
-                ),
-              }
-            : order
-        )
+      const kitchenOrder = kitchenOrders.find(o => o.orderId === orderId);
+      if (!kitchenOrder) throw new Error("Kitchen order not found");
+
+      const updatedItems = kitchenOrder.items.map(item =>
+        item.menuItemId === itemId ? { ...item, status } : item
       );
 
-      const updatedOrder = kitchenOrders.find(o => o.id === orderId);
-      if (updatedOrder && validateOrderCompletion(updatedOrder.items)) {
-        updateOrderStatus(updatedOrder.orderId, "ready");
+      const { error } = await supabase
+        .from('kitchen_orders')
+        .update({ items: updatedItems })
+        .eq('order_id', orderId);
+
+      if (error) throw error;
+
+      // Check if all items are ready and update order status accordingly
+      if (validateOrderCompletion(updatedItems)) {
+        await updateOrderStatus(orderId, "ready");
       }
 
       toast({
         title: "Item Status Updated",
         description: `Item status updated to ${status}`,
-        variant: "default"
       });
     } catch (error) {
       console.error("Error updating kitchen order status:", error);
       toast({
         title: "Error updating item",
-        description: "Something went wrong while updating the item status",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const deleteOrder = (orderId: number) => {
-    try {
-      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
-      setKitchenOrders(prevKitchenOrders => 
-        prevKitchenOrders.filter(order => order.orderId !== orderId)
-      );
-
-      toast({
-        title: "Order Deleted",
-        description: `Order #${orderId} has been deleted`,
-        variant: "default"
-      });
-    } catch (error) {
-      console.error("Error deleting order:", error);
-      toast({
-        title: "Error deleting order",
-        description: "Something went wrong while deleting the order",
+        description: "Failed to update item status",
         variant: "destructive"
       });
     }
@@ -192,9 +191,9 @@ export const useOrderState = () => {
   return {
     orders,
     kitchenOrders,
+    isLoading,
     addOrder,
     updateOrderStatus,
     updateKitchenOrderStatus,
-    deleteOrder,
   };
 };

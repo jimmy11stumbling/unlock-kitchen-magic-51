@@ -319,6 +319,50 @@ export type Database = {
           },
         ]
       }
+      kitchen_orders: {
+        Row: {
+          coursing: string
+          created_at: string
+          estimated_delivery_time: string
+          id: number
+          items: Json
+          notes: string | null
+          order_id: number | null
+          priority: string
+          updated_at: string
+        }
+        Insert: {
+          coursing: string
+          created_at?: string
+          estimated_delivery_time: string
+          id?: number
+          items: Json
+          notes?: string | null
+          order_id?: number | null
+          priority: string
+          updated_at?: string
+        }
+        Update: {
+          coursing?: string
+          created_at?: string
+          estimated_delivery_time?: string
+          id?: number
+          items?: Json
+          notes?: string | null
+          order_id?: number | null
+          priority?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kitchen_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leases: {
         Row: {
           created_at: string
@@ -485,6 +529,51 @@ export type Database = {
           created_at?: string | null
           id?: string
           sender_id?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string
+          estimated_prep_time: number
+          guest_count: number
+          id: number
+          items: Json
+          server_name: string
+          special_instructions: string | null
+          status: string
+          table_number: number
+          timestamp: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_prep_time: number
+          guest_count: number
+          id?: number
+          items: Json
+          server_name: string
+          special_instructions?: string | null
+          status: string
+          table_number: number
+          timestamp?: string
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estimated_prep_time?: number
+          guest_count?: number
+          id?: number
+          items?: Json
+          server_name?: string
+          special_instructions?: string | null
+          status?: string
+          table_number?: number
+          timestamp?: string
+          total?: number
+          updated_at?: string
         }
         Relationships: []
       }
