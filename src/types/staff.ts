@@ -1,10 +1,14 @@
+
+export type StaffRole = 'manager' | 'chef' | 'server' | 'host' | 'bartender';
+export type StaffStatus = 'active' | 'on_break' | 'off_duty';
+
 export interface StaffMember {
   id: number;
   name: string;
-  role: string;
-  status: "active" | "on_break" | "off_duty";
+  role: StaffRole;
+  status: StaffStatus;
   shift: string;
-  salary: string;
+  salary: number;
   email: string;
   phone: string;
   address: string;

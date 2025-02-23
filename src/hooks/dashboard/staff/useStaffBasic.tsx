@@ -2,17 +2,73 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { StaffMember } from "@/types/staff";
+import type { StaffMember, StaffRole } from "@/types/staff";
+
+interface DatabaseStaffMember {
+  id: number;
+  name: string;
+  role: StaffRole;
+  email: string | null;
+  phone: string | null;
+  status: 'active' | 'on_break' | 'off_duty';
+  salary: number | null;
+  shift: string | null;
+  department: string | null;
+  certifications: string[] | null;
+  performance_rating: number | null;
+  notes: string | null;
+  schedule: Record<string, string>;
+  bank_info: Record<string, any> | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 export const useStaffBasic = () => {
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMember => {
+    return {
+      id: dbStaff.id,
+      name: dbStaff.name,
+      role: dbStaff.role,
+      status: dbStaff.status,
+      shift: dbStaff.shift || '',
+      salary: dbStaff.salary || 0,
+      email: dbStaff.email || '',
+      phone: dbStaff.phone || '',
+      address: '', // Default empty as it's not in DB
+      emergencyContact: {
+        name: '',
+        phone: '',
+        relationship: ''
+      },
+      startDate: dbStaff.created_at || new Date().toISOString(),
+      department: dbStaff.department || '',
+      certifications: dbStaff.certifications || [],
+      performanceRating: dbStaff.performance_rating || 0,
+      notes: dbStaff.notes || '',
+      schedule: {
+        monday: dbStaff.schedule?.monday || 'OFF',
+        tuesday: dbStaff.schedule?.tuesday || 'OFF',
+        wednesday: dbStaff.schedule?.wednesday || 'OFF',
+        thursday: dbStaff.schedule?.thursday || 'OFF',
+        friday: dbStaff.schedule?.friday || 'OFF',
+        saturday: dbStaff.schedule?.saturday || 'OFF',
+        sunday: dbStaff.schedule?.sunday || 'OFF'
+      },
+      bankInfo: {
+        accountNumber: dbStaff.bank_info?.accountNumber || '',
+        routingNumber: dbStaff.bank_info?.routingNumber || '',
+        accountType: dbStaff.bank_info?.accountType || 'checking'
+      }
+    };
+  };
+
   useEffect(() => {
     fetchStaff();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel('staff-changes')
       .on('postgres_changes', 
@@ -35,7 +91,9 @@ export const useStaffBasic = () => {
         .select('*');
 
       if (error) throw error;
-      setStaff(data || []);
+      
+      const mappedStaff = (data || []).map(mapDatabaseToStaffMember);
+      setStaff(mappedStaff);
     } catch (error) {
       console.error('Error fetching staff:', error);
       toast({
@@ -52,17 +110,17 @@ export const useStaffBasic = () => {
     try {
       const { data: newStaff, error } = await supabase
         .from('staff_members')
-        .insert([{
+        .insert({
           name: data.name,
-          role: data.role,
+          role: data.role as StaffRole,
           email: data.email,
           phone: data.phone,
           salary: data.salary,
-          department: data.role,
-          certifications: data.certifications || [],
+          department: data.department,
+          certifications: data.certifications,
           schedule: data.schedule,
           bank_info: data.bankInfo
-        }])
+        })
         .select()
         .single();
 
@@ -73,7 +131,7 @@ export const useStaffBasic = () => {
         description: `${data.name} has been added to the staff list.`,
       });
 
-      return newStaff;
+      return mapDatabaseToStaffMember(newStaff);
     } catch (error) {
       console.error('Error adding staff member:', error);
       toast({
@@ -108,7 +166,7 @@ export const useStaffBasic = () => {
     }
   };
 
-  const updateStaffInfo = async (staffId: number, updates: Partial<StaffMember>) => {
+  const updateStaffInfo = async (staffId: number, updates: Partial<DatabaseStaffMember>) => {
     try {
       const { error } = await supabase
         .from('staff_members')
