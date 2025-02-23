@@ -1,6 +1,8 @@
-
 import { Card } from "@/components/ui/card";
-import { DollarSign, Users, ShoppingCart } from "lucide-react";
+import { SearchBar } from "./SearchBar";
+import { DateRangeSelector } from "./DateRangeSelector";
+import { useState } from "react";
+import { useSearch } from "@/hooks/useSearch";
 import type { StaffMember, Order, SalesData } from "@/types/staff";
 
 interface DashboardOverviewProps {
@@ -9,36 +11,61 @@ interface DashboardOverviewProps {
   orders: Order[];
 }
 
-export const DashboardOverview = ({ salesData, staff, orders }: DashboardOverviewProps) => {
+export const DashboardOverview = ({
+  salesData,
+  staff,
+  orders,
+}: DashboardOverviewProps) => {
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  
+  const { searchQuery, setSearchQuery, filteredItems: filteredStaff } = useSearch(staff, ['name', 'role']);
+
+  const filteredSalesData = salesData.filter((data) => {
+    const date = new Date(data.date);
+    if (startDate && date < startDate) return false;
+    if (endDate && date > endDate) return false;
+    return true;
+  });
+
+  const totalRevenue = filteredSalesData.reduce((sum, data) => sum + data.revenue, 0);
+  const totalOrders = orders.length;
+  const activeStaff = filteredStaff.filter(member => member.status === 'active').length;
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="p-6">
-        <div className="flex items-center space-x-2">
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-medium">Total Revenue</h3>
-        </div>
-        <div className="text-2xl font-bold">
-          ${salesData.reduce((acc, curr) => acc + curr.revenue, 0).toFixed(2)}
-        </div>
-      </Card>
-      <Card className="p-6">
-        <div className="flex items-center space-x-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-medium">Active Staff</h3>
-        </div>
-        <div className="text-2xl font-bold">
-          {staff.filter(s => s.status === "active").length}
-        </div>
-      </Card>
-      <Card className="p-6">
-        <div className="flex items-center space-x-2">
-          <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-medium">Pending Orders</h3>
-        </div>
-        <div className="text-2xl font-bold">
-          {orders.filter(o => o.status === "pending").length}
-        </div>
-      </Card>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <SearchBar 
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search staff..."
+        />
+        <DateRangeSelector
+          startDate={startDate}
+          endDate={endDate}
+          onRangeChange={(start, end) => {
+            setStartDate(start);
+            setEndDate(end);
+          }}
+        />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold">Revenue</h3>
+          <p className="text-3xl font-bold">${totalRevenue.toFixed(2)}</p>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold">Total Orders</h3>
+          <p className="text-3xl font-bold">{totalOrders}</p>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold">Active Staff</h3>
+          <p className="text-3xl font-bold">{activeStaff}</p>
+        </Card>
+      </div>
     </div>
   );
 };
