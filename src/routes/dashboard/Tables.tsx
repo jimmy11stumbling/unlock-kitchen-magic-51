@@ -8,7 +8,7 @@ const Tables = () => {
   const { 
     tables, 
     orders,
-    menuItems, 
+    menuItems, // This comes from useMenuState via useDashboardState
     addTable, 
     updateTableStatus, 
     startOrder,
@@ -39,7 +39,7 @@ const Tables = () => {
           {selectedOrder && (
             <OrderDetails
               order={selectedOrder}
-              menuItems={menuItems || []}
+              menuItems={menuItems || []} // Pass menu items to OrderDetails
               onUpdateOrder={updateOrder}
               onSendToKitchen={sendToKitchen}
             />
