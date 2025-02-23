@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import type { Order, KitchenOrder } from "@/types/staff";
@@ -41,18 +42,17 @@ const initialOrders: Order[] = [
 const initialKitchenOrders: KitchenOrder[] = [
   {
     id: 1,
+    orderId: 1,
     items: [
       {
         menuItemId: 1,
-        name: "Classic Burger",
         quantity: 2,
         status: "preparing",
-        startTime: new Date(Date.now() - 900000).toISOString(), // 15 minutes ago
-        notes: "Medium well"
+        startTime: new Date(Date.now() - 900000).toISOString(),
       }
     ],
-    tableNumber: 5,
-    priority: "high"
+    priority: "high",
+    notes: "Medium well"
   }
 ];
 

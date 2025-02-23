@@ -7,29 +7,25 @@ const initialSalesData: SalesData[] = [
     date: "2024-03-01",
     revenue: 2450.75,
     costs: 1225.38,
-    profit: 1225.37,
-    orders: 82
+    profit: 1225.37
   },
   {
     date: "2024-03-02",
     revenue: 3150.25,
     costs: 1575.13,
-    profit: 1575.12,
-    orders: 105
+    profit: 1575.12
   },
   {
     date: "2024-03-03",
     revenue: 2875.50,
     costs: 1437.75,
-    profit: 1437.75,
-    orders: 96
+    profit: 1437.75
   },
   {
     date: "2024-03-04",
     revenue: 2690.80,
     costs: 1345.40,
-    profit: 1345.40,
-    orders: 90
+    profit: 1345.40
   }
 ];
 
@@ -39,9 +35,39 @@ const initialDailyReports: DailyReport[] = [{
   totalOrders: 96,
   averageOrderValue: 29.95,
   topSellingItems: [
-    { id: 1, name: "Classic Burger", orderCount: 32 },
-    { id: 4, name: "House Wine", orderCount: 28 },
-    { id: 3, name: "Chocolate Lava Cake", orderCount: 24 }
+    { 
+      id: 1,
+      name: "Classic Burger",
+      price: 14.99,
+      category: "main",
+      description: "Angus beef patty with lettuce, tomato, and special sauce",
+      available: true,
+      allergens: ["dairy", "gluten"],
+      preparationTime: 15,
+      orderCount: 32
+    },
+    {
+      id: 4,
+      name: "House Wine",
+      price: 7.99,
+      category: "beverage",
+      description: "Glass of house red or white wine",
+      available: true,
+      allergens: ["sulfites"],
+      preparationTime: 2,
+      orderCount: 28
+    },
+    {
+      id: 3,
+      name: "Chocolate Lava Cake",
+      price: 8.99,
+      category: "dessert",
+      description: "Warm chocolate cake with molten center",
+      available: true,
+      allergens: ["dairy", "eggs", "gluten"],
+      preparationTime: 20,
+      orderCount: 24
+    }
   ],
   laborCosts: 850.25,
   inventoryCosts: 587.50,
