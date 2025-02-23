@@ -73,6 +73,64 @@ export interface MenuItem {
   category: "appetizer" | "main" | "dessert" | "beverage";
   description: string;
   available: boolean;
+  image?: string;
+  allergens: string[];
+  preparationTime: number;
+}
+
+export interface TableLayout {
+  id: number;
+  number: number;
+  capacity: number;
+  status: "available" | "occupied" | "reserved" | "cleaning";
+  section: "indoor" | "outdoor" | "bar";
+  reservationId?: number;
+}
+
+export interface DailyReport {
+  date: string;
+  totalRevenue: number;
+  totalOrders: number;
+  averageOrderValue: number;
+  topSellingItems: MenuItem[];
+  laborCosts: number;
+  inventoryCosts: number;
+  netProfit: number;
+}
+
+export interface KitchenOrder {
+  id: number;
+  orderId: number;
+  items: {
+    menuItemId: number;
+    quantity: number;
+    status: "pending" | "preparing" | "ready" | "delivered";
+    startTime?: string;
+    completionTime?: string;
+  }[];
+  priority: "normal" | "high" | "rush";
+  notes: string;
+}
+
+export interface CustomerFeedback {
+  id: number;
+  orderId: number;
+  rating: 1 | 2 | 3 | 4 | 5;
+  comment: string;
+  date: string;
+  resolved: boolean;
+}
+
+export interface Promotion {
+  id: number;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  applicableItems: number[]; // menuItemIds
+  active: boolean;
 }
 
 export interface DailySales {

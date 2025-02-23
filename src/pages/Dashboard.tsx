@@ -9,7 +9,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useState } from "react";
-import type { StaffMember, Shift, InventoryItem, Order, Reservation, SalesData, PaymentTransaction, MenuItem } from "@/types/staff";
+import type { StaffMember, Shift, InventoryItem, Order, Reservation, SalesData, PaymentTransaction, MenuItem, TableLayout, Promotion, CustomerFeedback, KitchenOrder, DailyReport } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { OrdersPanel } from "@/components/dashboard/OrdersPanel";
@@ -18,6 +18,8 @@ import { InventoryPanel } from "@/components/dashboard/InventoryPanel";
 import { AnalyticsPanel } from "@/components/dashboard/AnalyticsPanel";
 import { SettingsPanel } from "@/components/dashboard/SettingsPanel";
 import { ReservationsPanel } from "@/components/dashboard/ReservationsPanel";
+import { MenuPanel } from "@/components/dashboard/MenuPanel";
+import { TablePanel } from "@/components/dashboard/TablePanel";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -29,6 +31,11 @@ const Dashboard = () => {
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [tables, setTables] = useState<TableLayout[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [feedback, setFeedback] = useState<CustomerFeedback[]>([]);
+  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
+  const [dailyReports, setDailyReports] = useState<DailyReport[]>([]);
 
   const addStaffMember = (data: { name: string; role: string; salary: string }) => {
     const newStaffMember: StaffMember = {
@@ -174,6 +181,60 @@ const Dashboard = () => {
     setSalesData([...salesData, newSalesData]);
   };
 
+  const addMenuItem = (item: Omit<MenuItem, "id">) => {
+    const newItem: MenuItem = {
+      id: menuItems.length + 1,
+      ...item,
+    };
+    setMenuItems([...menuItems, newItem]);
+    toast({
+      title: "Menu updated",
+      description: `${item.name} has been added to the menu.`,
+    });
+  };
+
+  const updateMenuItemAvailability = (itemId: number, available: boolean) => {
+    setMenuItems(menuItems.map(item =>
+      item.id === itemId ? { ...item, available } : item
+    ));
+    toast({
+      title: "Menu item updated",
+      description: `Item availability has been updated.`,
+    });
+  };
+
+  const updateMenuItemPrice = (itemId: number, price: number) => {
+    setMenuItems(menuItems.map(item =>
+      item.id === itemId ? { ...item, price } : item
+    ));
+    toast({
+      title: "Price updated",
+      description: `Item price has been updated.`,
+    });
+  };
+
+  const addTable = (table: Omit<TableLayout, "id">) => {
+    const newTable: TableLayout = {
+      id: tables.length + 1,
+      ...table,
+    };
+    setTables([...tables, newTable]);
+    toast({
+      title: "Table added",
+      description: `Table ${table.number} has been added.`,
+    });
+  };
+
+  const updateTableStatus = (tableId: number, status: TableLayout["status"]) => {
+    setTables(tables.map(table =>
+      table.id === tableId ? { ...table, status } : table
+    ));
+    toast({
+      title: "Table status updated",
+      description: `Table status has been updated to ${status}.`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="space-y-8">
@@ -211,6 +272,12 @@ const Dashboard = () => {
             <TabsTrigger value="settings" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
               <Settings className="h-4 w-4 mr-2" />
               Settings
+            </TabsTrigger>
+            <TabsTrigger value="menu" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
+              Menu
+            </TabsTrigger>
+            <TabsTrigger value="tables" className="data-[state=active]:bg-background dark:data-[state=active]:bg-muted">
+              Tables
             </TabsTrigger>
           </TabsList>
 
@@ -260,6 +327,23 @@ const Dashboard = () => {
 
           <TabsContent value="settings">
             <SettingsPanel />
+          </TabsContent>
+
+          <TabsContent value="menu">
+            <MenuPanel
+              menuItems={menuItems}
+              onAddMenuItem={addMenuItem}
+              onUpdateAvailability={updateMenuItemAvailability}
+              onUpdatePrice={updateMenuItemPrice}
+            />
+          </TabsContent>
+
+          <TabsContent value="tables">
+            <TablePanel
+              tables={tables}
+              onAddTable={addTable}
+              onUpdateStatus={updateTableStatus}
+            />
           </TabsContent>
         </Tabs>
       </div>
