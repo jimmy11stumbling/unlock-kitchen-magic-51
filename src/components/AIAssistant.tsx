@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Message {
   role: "user" | "assistant";
@@ -18,10 +19,32 @@ export const AIAssistant = () => {
   const [input, setInput] = useState("");
   const { sendMessage, isLoading, error } = useAIAssistant();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      // Send welcome message when chat is opened
+      const welcomeMessage = {
+        role: "assistant" as const,
+        content: "Hello! I'm Luna, your restaurant's AI assistant. I can help you with menu information, reservations, current availability, and any other questions you might have about our restaurant. How can I assist you today?"
+      };
+      setMessages([welcomeMessage]);
+    }
+  }, [isOpen]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -30,10 +53,19 @@ export const AIAssistant = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput("");
 
-    const response = await sendMessage(input);
-    if (response) {
-      const assistantMessage = { role: "assistant" as const, content: response };
-      setMessages(prev => [...prev, assistantMessage]);
+    try {
+      const response = await sendMessage(input);
+      if (response) {
+        const assistantMessage = { role: "assistant" as const, content: response };
+        setMessages(prev => [...prev, assistantMessage]);
+      }
+    } catch (err) {
+      console.error("Error sending message:", err);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -54,9 +86,12 @@ export const AIAssistant = () => {
       </Button>
 
       {isOpen && (
-        <Card className="fixed bottom-20 right-4 w-[400px] h-[600px] shadow-xl flex flex-col">
+        <Card className="fixed bottom-20 right-4 w-[400px] h-[600px] shadow-xl flex flex-col z-50">
           <div className="p-4 border-b flex justify-between items-center">
-            <h3 className="font-semibold">Restaurant Assistant</h3>
+            <div>
+              <h3 className="font-semibold">Luna - Restaurant Assistant</h3>
+              <p className="text-sm text-muted-foreground">Ask me anything about the restaurant</p>
+            </div>
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
               <X className="h-4 w-4" />
             </Button>
@@ -89,11 +124,6 @@ export const AIAssistant = () => {
                   </div>
                 </div>
               )}
-              {error && (
-                <div className="text-sm text-destructive text-center">
-                  {error}
-                </div>
-              )}
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
@@ -106,6 +136,7 @@ export const AIAssistant = () => {
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me anything..."
                 className="flex-1"
+                disabled={isLoading}
               />
               <Button onClick={handleSend} disabled={isLoading}>
                 <Send className="h-4 w-4" />
