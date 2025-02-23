@@ -38,3 +38,45 @@ export const calculateEstimatedPrepTime = (
     })
   );
 };
+
+export const checkAllergenConflicts = (
+  itemId: number,
+  customerAllergies: string[],
+  menuItems: any[]
+): boolean => {
+  const menuItem = menuItems.find(item => item.id === itemId);
+  if (!menuItem) return false;
+  return menuItem.allergens.some(allergen => customerAllergies.includes(allergen));
+};
+
+export const optimizeCourseOrder = (
+  items: Array<{ id: number; quantity: number }>,
+  menuItems: any[]
+): string => {
+  const hasAppetizers = items.some(item => {
+    const menuItem = menuItems.find(m => m.id === item.id);
+    return menuItem?.category === "appetizer";
+  });
+
+  const hasDesserts = items.some(item => {
+    const menuItem = menuItems.find(m => m.id === item.id);
+    return menuItem?.category === "dessert";
+  });
+
+  if (hasAppetizers && hasDesserts) {
+    return "appetizers first";
+  } else if (hasDesserts) {
+    return "desserts after clearing mains";
+  }
+  return "standard";
+};
+
+export const validateOrderCompletion = (items: KitchenOrder["items"]): boolean => {
+  return items.every(item => item.status === "ready");
+};
+
+interface KitchenOrder {
+  items: Array<{
+    status: string;
+  }>;
+}

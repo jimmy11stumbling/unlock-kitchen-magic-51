@@ -4,7 +4,14 @@ import { useToast } from "@/components/ui/use-toast";
 import type { Order, KitchenOrder } from "@/types/staff";
 import { menuItems } from "@/data/menuItems";
 import { initialOrders, initialKitchenOrders } from "@/data/initialOrders";
-import { determineStation, assignChef, calculateEstimatedPrepTime } from "@/utils/kitchenUtils";
+import { 
+  determineStation, 
+  assignChef, 
+  calculateEstimatedPrepTime,
+  checkAllergenConflicts,
+  optimizeCourseOrder,
+  validateOrderCompletion
+} from "@/utils/kitchenUtils";
 
 export const useOrderState = () => {
   const { toast } = useToast();
@@ -25,6 +32,11 @@ export const useOrderState = () => {
     };
     
     const estimatedPrepTime = calculateEstimatedPrepTime(order.items, menuItems);
+    const coursing = optimizeCourseOrder(order.items, menuItems);
+    
+    // Extract allergies from special instructions
+    const allergyMatch = order.specialInstructions?.match(/allergy[:\s]+(\w+)/i);
+    const customerAllergies = allergyMatch ? [allergyMatch[1].toLowerCase()] : [];
     
     const newKitchenOrder: KitchenOrder = {
       id: kitchenOrders.length + 1,
@@ -37,11 +49,11 @@ export const useOrderState = () => {
         cookingStation: determineStation(item.id),
         assignedChef: assignChef(item.id),
         modifications: [],
-        allergenAlert: false
+        allergenAlert: checkAllergenConflicts(item.id, customerAllergies, menuItems)
       })),
       priority: determinePriority(order),
       notes: order.specialInstructions || "",
-      coursing: "standard",
+      coursing,
       estimatedDeliveryTime: new Date(Date.now() + estimatedPrepTime * 60000).toISOString()
     };
 
@@ -94,7 +106,7 @@ export const useOrderState = () => {
     );
 
     const updatedOrder = kitchenOrders.find(o => o.id === orderId);
-    if (updatedOrder && updatedOrder.items.every(item => item.status === "ready")) {
+    if (updatedOrder && validateOrderCompletion(updatedOrder.items)) {
       updateOrderStatus(updatedOrder.orderId, "ready");
     }
 
