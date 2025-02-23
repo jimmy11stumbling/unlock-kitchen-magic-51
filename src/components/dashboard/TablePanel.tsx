@@ -59,85 +59,85 @@ export const TablePanel = ({
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">Table Layout</h2>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>Add Table</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Table</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div>
-                  <label className="text-sm font-medium">Table Number</label>
-                  <Input
-                    type="number"
-                    value={newTable.number}
-                    onChange={(e) => setNewTable({ ...newTable, number: Number(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Capacity</label>
-                  <Input
-                    type="number"
-                    value={newTable.capacity}
-                    onChange={(e) => setNewTable({ ...newTable, capacity: Number(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Section</label>
-                  <Select
-                    value={newTable.section}
-                    onValueChange={(value: TableLayout["section"]) =>
-                      setNewTable({ ...newTable, section: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="indoor">Indoor</SelectItem>
-                      <SelectItem value="outdoor">Outdoor</SelectItem>
-                      <SelectItem value="bar">Bar</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    onAddTable(newTable);
-                    setNewTable({
-                      number: tables.length + 1,
-                      capacity: 4,
-                      status: "available",
-                      section: "indoor",
-                      activeOrder: null,
-                    });
-                  }}
-                >
-                  Add Table
-                </Button>
+    <Card className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Table Layout</h2>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button size="sm">Add Table</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Table</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <label className="text-sm font-medium">Table Number</label>
+                <Input
+                  type="number"
+                  value={newTable.number}
+                  onChange={(e) => setNewTable({ ...newTable, number: Number(e.target.value) })}
+                />
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              <div>
+                <label className="text-sm font-medium">Capacity</label>
+                <Input
+                  type="number"
+                  value={newTable.capacity}
+                  onChange={(e) => setNewTable({ ...newTable, capacity: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Section</label>
+                <Select
+                  value={newTable.section}
+                  onValueChange={(value: TableLayout["section"]) =>
+                    setNewTable({ ...newTable, section: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="indoor">Indoor</SelectItem>
+                    <SelectItem value="outdoor">Outdoor</SelectItem>
+                    <SelectItem value="bar">Bar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  onAddTable(newTable);
+                  setNewTable({
+                    number: tables.length + 1,
+                    capacity: 4,
+                    status: "available",
+                    section: "indoor",
+                    activeOrder: null,
+                  });
+                }}
+              >
+                Add Table
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-        <div className="space-y-8">
-          {Object.entries(sections).map(([section, sectionTables]) => (
-            <div key={section}>
-              <h3 className="text-md font-medium mb-4 capitalize">{section} Section</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {sectionTables.map((table) => (
-                  <Card key={table.id} className="p-4">
+      <div className="space-y-6">
+        {Object.entries(sections).map(([section, sectionTables]) => (
+          <div key={section} className="space-y-3">
+            <h3 className="text-sm font-medium capitalize">{section} Section</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+              {sectionTables.map((table) => (
+                <Card key={table.id} className="p-3">
+                  <div className="flex flex-col space-y-2">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium">Table {table.number}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Capacity: {table.capacity}
+                        <p className="font-medium">Table {table.number}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Seats: {table.capacity}
                         </p>
                       </div>
                       <Select
@@ -146,7 +146,7 @@ export const TablePanel = ({
                           onUpdateStatus(table.id, value)
                         }
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="h-7 w-24">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -157,13 +157,15 @@ export const TablePanel = ({
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="mt-2 flex justify-between items-center">
-                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(table.status)}`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(table.status)}`}>
                         {table.status}
                       </span>
                       {table.status === "occupied" && !table.activeOrder && (
                         <Button
                           size="sm"
+                          variant="outline"
+                          className="h-7"
                           onClick={() => handleStartOrder(table.id)}
                         >
                           Start Order
@@ -175,13 +177,13 @@ export const TablePanel = ({
                         </span>
                       )}
                     </div>
-                  </Card>
-                ))}
-              </div>
+                  </div>
+                </Card>
+              ))}
             </div>
-          ))}
-        </div>
-      </Card>
-    </div>
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 };

@@ -8,7 +8,7 @@ const Tables = () => {
   const { 
     tables, 
     orders,
-    menuItems, // This comes from useMenuState via useDashboardState
+    menuItems,
     addTable, 
     updateTableStatus, 
     startOrder,
@@ -20,10 +20,10 @@ const Tables = () => {
   const selectedOrder = selectedOrderId ? orders.find(o => o.id === selectedOrderId) : null;
 
   return (
-    <div className="p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Table Management</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+    <div className="container mx-auto p-4 max-w-[1920px]">
+      <h1 className="text-2xl font-bold mb-6">Table Management</h1>
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="lg:w-3/4">
           <TablePanel
             tables={tables}
             onAddTable={addTable}
@@ -35,14 +35,16 @@ const Tables = () => {
             }}
           />
         </div>
-        <div>
+        <div className="lg:w-1/4">
           {selectedOrder && (
-            <OrderDetails
-              order={selectedOrder}
-              menuItems={menuItems || []} // Pass menu items to OrderDetails
-              onUpdateOrder={updateOrder}
-              onSendToKitchen={sendToKitchen}
-            />
+            <div className="sticky top-4">
+              <OrderDetails
+                order={selectedOrder}
+                menuItems={menuItems || []}
+                onUpdateOrder={updateOrder}
+                onSendToKitchen={sendToKitchen}
+              />
+            </div>
           )}
         </div>
       </div>
