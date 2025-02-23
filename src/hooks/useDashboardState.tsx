@@ -5,6 +5,7 @@ import { useOrderState } from "./dashboard/useOrderState";
 import { useMenuState } from "./dashboard/useMenuState";
 import { useReservationState } from "./dashboard/useReservationState";
 import { useAnalyticsState } from "./dashboard/useAnalyticsState";
+import { useLoyaltyState } from "./dashboard/useLoyaltyState";
 
 export const useDashboardState = () => {
   const staffState = useStaffState();
@@ -13,6 +14,7 @@ export const useDashboardState = () => {
   const menuState = useMenuState();
   const reservationState = useReservationState();
   const analyticsState = useAnalyticsState();
+  const loyaltyState = useLoyaltyState();
 
   return {
     ...staffState,
@@ -21,5 +23,6 @@ export const useDashboardState = () => {
     ...menuState,
     ...reservationState,
     ...analyticsState,
+    ...loyaltyState,
   };
 };

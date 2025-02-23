@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useDashboardState } from "@/hooks/useDashboardState";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
@@ -15,6 +16,7 @@ import { FeedbackPanel } from "@/components/dashboard/FeedbackPanel";
 import { PromotionsPanel } from "@/components/dashboard/PromotionsPanel";
 import { DailyReportsPanel } from "@/components/dashboard/DailyReportsPanel";
 import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
+import { LoyaltyPanel } from "@/components/dashboard/LoyaltyPanel";
 
 const Dashboard = () => {
   const {
@@ -29,6 +31,7 @@ const Dashboard = () => {
     feedback,
     kitchenOrders,
     dailyReports,
+    members,
     addStaffMember,
     updateStaffStatus,
     addInventoryItem,
@@ -46,6 +49,8 @@ const Dashboard = () => {
     addPromotion,
     togglePromotion,
     addShift,
+    addMember,
+    addPoints,
   } = useDashboardState();
 
   return (
@@ -110,6 +115,14 @@ const Dashboard = () => {
 
           <TabsContent value="analytics">
             <AnalyticsPanel salesData={salesData} />
+          </TabsContent>
+
+          <TabsContent value="loyalty">
+            <LoyaltyPanel
+              members={members}
+              onAddMember={addMember}
+              onAddPoints={addPoints}
+            />
           </TabsContent>
 
           <TabsContent value="settings">
