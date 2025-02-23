@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import type { TableLayout, Order } from "@/types/staff";
+import type { TableLayout, Order, MenuItem, KitchenOrder } from "@/types/staff";
 
 const initialTables: TableLayout[] = [
   { id: 1, number: 1, capacity: 4, status: "occupied", section: "indoor", activeOrder: null },
@@ -16,6 +16,7 @@ const initialTables: TableLayout[] = [
 export const useTableState = () => {
   const [tables, setTables] = useState<TableLayout[]>(initialTables);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
 
   const addTable = (table: Omit<TableLayout, "id">) => {
     const newTable: TableLayout = {
@@ -56,6 +57,44 @@ export const useTableState = () => {
     return newOrder.id;
   };
 
+  const updateOrder = (orderId: number, items: Order['items']) => {
+    setOrders(orders.map(order => {
+      if (order.id === orderId) {
+        const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        return { ...order, items, total };
+      }
+      return order;
+    }));
+  };
+
+  const sendToKitchen = (orderId: number) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const kitchenOrder: KitchenOrder = {
+      id: kitchenOrders.length + 1,
+      orderId: order.id,
+      items: order.items.map(item => ({
+        menuItemId: item.id,
+        quantity: item.quantity,
+        status: "pending",
+        cookingStation: "main",
+        assignedChef: "",
+        modifications: [],
+        allergenAlert: false,
+      })),
+      priority: "normal",
+      notes: "",
+      coursing: "standard",
+      estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString(), // 30 minutes from now
+    };
+
+    setKitchenOrders([...kitchenOrders, kitchenOrder]);
+    setOrders(orders.map(o => 
+      o.id === orderId ? { ...o, status: "preparing" } : o
+    ));
+  };
+
   const getTableOrders = () => {
     return tables
       .filter(table => table.activeOrder !== null)
@@ -73,9 +112,12 @@ export const useTableState = () => {
   return {
     tables,
     orders,
+    kitchenOrders,
     addTable,
     updateTableStatus,
     startOrder,
+    updateOrder,
+    sendToKitchen,
     getTableOrders,
   };
 };
