@@ -20,11 +20,13 @@ serve(async (req) => {
       throw new Error('Claude API key not configured');
     }
 
+    console.log('Making request to Claude API with messages:', messages);
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'anthropic-api-key': claudeApiKey,  // Changed from x-api-key to anthropic-api-key
-        'anthropic-version': '2023-06-01',
+        'anthropic-api-key': claudeApiKey,
+        'anthropic-version': '2024-02-15-preview',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -43,6 +45,10 @@ serve(async (req) => {
     
     if (data.error) {
       throw new Error(data.error.message || 'Unknown error from Claude API');
+    }
+    
+    if (!data.content || !data.content[0] || !data.content[0].text) {
+      throw new Error('Unexpected response format from Claude API');
     }
     
     return new Response(
