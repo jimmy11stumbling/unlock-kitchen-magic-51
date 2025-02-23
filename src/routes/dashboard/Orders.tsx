@@ -4,10 +4,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrdersPanel } from "@/components/dashboard/OrdersPanel";
 import { CreateOrderPanel } from "@/components/dashboard/orders/CreateOrderPanel";
 import { useDashboardState } from "@/hooks/useDashboardState";
+import { useInstantOrderProcessing } from "@/hooks/dashboard/orders/useInstantOrderProcessing";
 
 const Orders = () => {
   const { orders, menuItems, addOrder, updateOrderStatus } = useDashboardState();
   const [activeTab, setActiveTab] = useState<"create" | "manage">("create");
+  
+  // Initialize instant order processing
+  useInstantOrderProcessing();
 
   return (
     <div className="p-8 space-y-8">
