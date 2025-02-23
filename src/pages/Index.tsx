@@ -4,8 +4,12 @@ import { Features } from "@/components/Features";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Menu, ChefHat } from "lucide-react";
+import { useState } from "react";
+import { SetupWizard } from "@/components/setup/SetupWizard";
 
 const Index = () => {
+  const [showSetup, setShowSetup] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="fixed top-0 w-full z-50 border-b bg-background/80 backdrop-blur-sm">
@@ -26,11 +30,12 @@ const Index = () => {
             <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors">
               About
             </Link>
-            <Button asChild variant="default" className="gap-2">
-              <Link to="/dashboard">
-                Open Dashboard
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+            <Button 
+              onClick={() => setShowSetup(true)}
+              className="gap-2"
+            >
+              Get Started
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </nav>
           <Button variant="ghost" size="icon" className="md:hidden">
@@ -57,6 +62,8 @@ const Index = () => {
           </p>
         </div>
       </footer>
+
+      {showSetup && <SetupWizard />}
     </div>
   );
 };
