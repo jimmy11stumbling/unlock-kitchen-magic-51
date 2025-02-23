@@ -9,10 +9,11 @@ const initialOrders: Order[] = [
     tableNumber: 5,
     status: "pending",
     items: [
-      { id: 1, name: "Classic Burger", quantity: 2, price: 14.99 },
-      { id: 2, name: "Caesar Salad", quantity: 1, price: 10.99 }
+      { id: 1, name: "Truffle Wagyu Burger", quantity: 2, price: 24.99 },
+      { id: 3, name: "Lobster Bisque", quantity: 1, price: 16.99 },
+      { id: 6, name: "Signature Martini", quantity: 2, price: 15.99 }
     ],
-    total: 40.97,
+    total: 98.95,
     timestamp: new Date().toISOString()
   },
   {
@@ -20,22 +21,23 @@ const initialOrders: Order[] = [
     tableNumber: 3,
     status: "preparing",
     items: [
-      { id: 3, name: "Chocolate Lava Cake", quantity: 2, price: 8.99 },
-      { id: 4, name: "House Wine", quantity: 2, price: 7.99 }
+      { id: 7, name: "Seafood Paella", quantity: 2, price: 34.99 },
+      { id: 4, name: "Tuna Tartare", quantity: 1, price: 19.99 },
+      { id: 5, name: "Crème Brûlée", quantity: 2, price: 12.99 }
     ],
-    total: 33.96,
-    timestamp: new Date(Date.now() - 1800000).toISOString() // 30 minutes ago
+    total: 115.95,
+    timestamp: new Date(Date.now() - 1800000).toISOString()
   },
   {
     id: 3,
     tableNumber: 7,
     status: "ready",
     items: [
-      { id: 1, name: "Classic Burger", quantity: 1, price: 14.99 },
-      { id: 4, name: "House Wine", quantity: 1, price: 7.99 }
+      { id: 2, name: "Mediterranean Quinoa Bowl", quantity: 1, price: 18.99 },
+      { id: 8, name: "Chocolate Soufflé", quantity: 2, price: 14.99 }
     ],
-    total: 22.98,
-    timestamp: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
+    total: 48.97,
+    timestamp: new Date(Date.now() - 3600000).toISOString()
   }
 ];
 
@@ -49,10 +51,64 @@ const initialKitchenOrders: KitchenOrder[] = [
         quantity: 2,
         status: "preparing",
         startTime: new Date(Date.now() - 900000).toISOString(),
+      },
+      {
+        menuItemId: 3,
+        quantity: 1,
+        status: "pending",
+        startTime: new Date(Date.now() - 600000).toISOString(),
       }
     ],
     priority: "high",
-    notes: "Medium well"
+    notes: "Burger temperature: 1 medium-rare, 1 medium well. Extra truffle aioli on the side."
+  },
+  {
+    id: 2,
+    orderId: 2,
+    items: [
+      {
+        menuItemId: 7,
+        quantity: 2,
+        status: "preparing",
+        startTime: new Date(Date.now() - 1200000).toISOString(),
+      },
+      {
+        menuItemId: 4,
+        quantity: 1,
+        status: "ready",
+        startTime: new Date(Date.now() - 1500000).toISOString(),
+        completionTime: new Date(Date.now() - 900000).toISOString(),
+      },
+      {
+        menuItemId: 5,
+        quantity: 2,
+        status: "pending",
+        startTime: new Date(Date.now() - 300000).toISOString(),
+      }
+    ],
+    priority: "rush",
+    notes: "Seafood allergy at table - ensure no cross-contamination with shellfish. Extra crispy rice on bottom of paella."
+  },
+  {
+    id: 3,
+    orderId: 3,
+    items: [
+      {
+        menuItemId: 2,
+        quantity: 1,
+        status: "ready",
+        startTime: new Date(Date.now() - 1800000).toISOString(),
+        completionTime: new Date(Date.now() - 1200000).toISOString(),
+      },
+      {
+        menuItemId: 8,
+        quantity: 2,
+        status: "preparing",
+        startTime: new Date(Date.now() - 900000).toISOString(),
+      }
+    ],
+    priority: "normal",
+    notes: "Quinoa bowl: no feta, extra vegetables. Soufflé: one regular, one gluten-free."
   }
 ];
 
