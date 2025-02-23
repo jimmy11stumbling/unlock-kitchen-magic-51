@@ -1,7 +1,6 @@
 
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
-import Orders from "@/routes/dashboard/Orders";
 import Menu from "@/routes/dashboard/Menu";
 import Overview from "@/routes/dashboard/Overview";
 import Kitchen from "@/routes/dashboard/Kitchen";
@@ -28,9 +27,6 @@ const Dashboard = () => {
             <DashboardTabs />
             <TabsContent value="overview" className="m-0">
               <Overview />
-            </TabsContent>
-            <TabsContent value="orders" className="m-0">
-              <Orders />
             </TabsContent>
             <TabsContent value="menu" className="m-0">
               <Menu />
