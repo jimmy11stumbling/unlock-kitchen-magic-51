@@ -40,6 +40,10 @@ export default function Orders() {
 
   useInstantOrderProcessing();
 
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
   const calculateOrderMetrics = () => {
     if (!orders || orders.length === 0) {
       return {
