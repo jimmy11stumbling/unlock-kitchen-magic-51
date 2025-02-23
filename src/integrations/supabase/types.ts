@@ -269,6 +269,33 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_access: {
+        Row: {
+          allowed_roles: Database["public"]["Enums"]["user_role"][]
+          created_at: string
+          feature_name: string
+          id: string
+          subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+        }
+        Insert: {
+          allowed_roles: Database["public"]["Enums"]["user_role"][]
+          created_at?: string
+          feature_name: string
+          id?: string
+          subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+        }
+        Update: {
+          allowed_roles?: Database["public"]["Enums"]["user_role"][]
+          created_at?: string
+          feature_name?: string
+          id?: string
+          subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       financial_transactions: {
         Row: {
           amount: number
@@ -854,6 +881,45 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          active: boolean
+          created_at: string
+          end_date: string | null
+          id: string
+          payment_status: string | null
+          start_date: string
+          subscription_data: Json | null
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          payment_status?: string | null
+          start_date?: string
+          subscription_data?: Json | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          payment_status?: string | null
+          start_date?: string
+          subscription_data?: Json | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -1108,6 +1174,30 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       workflow_connections: {
         Row: {
           config: Json | null
@@ -1296,6 +1386,13 @@ export type Database = {
       }
     }
     Functions: {
+      has_feature_access: {
+        Args: {
+          user_id: string
+          feature_name: string
+        }
+        Returns: boolean
+      }
       refresh_financial_summaries: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1317,9 +1414,11 @@ export type Database = {
         | "webhook"
       payment_method: "cash" | "card" | "bank_transfer" | "check"
       property_status: "active" | "inactive" | "archived"
+      subscription_tier: "free" | "starter" | "professional" | "enterprise"
       tenant_status: "active" | "inactive" | "pending"
       transaction_type: "income" | "expense"
       unit_status: "vacant" | "occupied" | "maintenance" | "reserved"
+      user_role: "admin" | "manager" | "staff" | "kitchen"
       workflow_node_type: "trigger" | "action" | "condition" | "transformer"
       workflow_status: "draft" | "active" | "archived"
     }
