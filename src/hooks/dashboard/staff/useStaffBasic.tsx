@@ -16,6 +16,7 @@ export const useStaffBasic = () => {
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStaff();
@@ -37,11 +38,14 @@ export const useStaffBasic = () => {
 
   const fetchStaff = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const data = await fetchStaffMembers();
       const mappedStaff = data.map((item) => mapDatabaseToStaffMember(item));
       setStaff(mappedStaff);
     } catch (error) {
       console.error('Error fetching staff:', error);
+      setError('Failed to fetch staff members');
       toast({
         title: "Error fetching staff",
         description: "There was a problem loading the staff list.",
@@ -55,11 +59,13 @@ export const useStaffBasic = () => {
   const addStaffMember = async (data: Omit<StaffMember, "id" | "status">) => {
     try {
       const newStaff = await createStaffMember(data);
+      const mappedStaffMember = mapDatabaseToStaffMember(newStaff);
+      setStaff(prev => [...prev, mappedStaffMember]);
       toast({
         title: "Staff member added",
         description: `${data.name} has been added to the staff list.`,
       });
-      return mapDatabaseToStaffMember(newStaff);
+      return mappedStaffMember;
     } catch (error) {
       console.error('Error adding staff member:', error);
       toast({
@@ -67,12 +73,18 @@ export const useStaffBasic = () => {
         description: "There was a problem adding the staff member.",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
   const updateStaffStatus = async (staffId: number, newStatus: StaffMember["status"]) => {
     try {
       await updateStaffMemberStatus(staffId, newStatus);
+      setStaff(prev => prev.map(member => 
+        member.id === staffId 
+          ? { ...member, status: newStatus }
+          : member
+      ));
       const member = staff.find(m => m.id === staffId);
       toast({
         title: "Status updated",
@@ -85,12 +97,18 @@ export const useStaffBasic = () => {
         description: "There was a problem updating the staff member's status.",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
   const updateStaffInfo = async (staffId: number, updates: Partial<DatabaseStaffMember>) => {
     try {
       await updateStaffMemberInfo(staffId, updates);
+      setStaff(prev => prev.map(member => 
+        member.id === staffId 
+          ? { ...member, ...updates }
+          : member
+      ));
       toast({
         title: "Staff info updated",
         description: "Staff member information has been updated successfully.",
@@ -102,15 +120,22 @@ export const useStaffBasic = () => {
         description: "There was a problem updating the staff member's information.",
         variant: "destructive",
       });
+      throw error;
     }
+  };
+
+  const refreshStaffList = () => {
+    fetchStaff();
   };
 
   return {
     staff,
     loading,
+    error,
     setStaff,
     addStaffMember,
     updateStaffStatus,
     updateStaffInfo,
+    refreshStaffList,
   };
 };

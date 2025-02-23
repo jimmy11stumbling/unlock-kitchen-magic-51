@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon, UserCog } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember } from "@/types/staff";
 
 interface StaffListProps {
@@ -20,6 +21,52 @@ export const StaffList = ({
   onSelectStaff,
   calculateAttendance,
 }: StaffListProps) => {
+  const { toast } = useToast();
+
+  const handleStatusUpdate = async (staffId: number, status: StaffMember["status"]) => {
+    try {
+      await onUpdateStatus(staffId, status);
+      const member = staff.find(m => m.id === staffId);
+      toast({
+        title: "Status Updated",
+        description: `${member?.name}'s status has been updated to ${status.replace('_', ' ')}`,
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update staff member's status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStaffSelect = (staffId: number, action: 'schedule' | 'details') => {
+    try {
+      onSelectStaff(staffId);
+      const member = staff.find(m => m.id === staffId);
+      toast({
+        title: `Viewing ${action === 'schedule' ? 'Schedule' : 'Details'}`,
+        description: `Now viewing ${member?.name}'s ${action === 'schedule' ? 'schedule' : 'details'}`,
+      });
+    } catch (error) {
+      console.error('Error selecting staff member:', error);
+      toast({
+        title: "Error",
+        description: `Failed to view staff member's ${action}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (!staff || staff.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">No staff members found</p>
+      </div>
+    );
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -42,7 +89,7 @@ export const StaffList = ({
               <Select
                 value={member.status}
                 onValueChange={(value: StaffMember["status"]) =>
-                  onUpdateStatus(member.id, value)
+                  handleStatusUpdate(member.id, value)
                 }
               >
                 <SelectTrigger className="w-[140px]">
@@ -57,7 +104,11 @@ export const StaffList = ({
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
-                <Progress value={calculateAttendance(member.id)} className="w-[60px]" />
+                <Progress 
+                  value={calculateAttendance(member.id)} 
+                  className="w-[60px]"
+                  max={100}
+                />
                 <span className="text-sm">{calculateAttendance(member.id)}%</span>
               </div>
             </TableCell>
@@ -66,7 +117,7 @@ export const StaffList = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onSelectStaff(member.id)}
+                  onClick={() => handleStaffSelect(member.id, 'schedule')}
                   className="flex items-center gap-2"
                 >
                   <CalendarIcon className="h-4 w-4" />
@@ -75,7 +126,7 @@ export const StaffList = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onSelectStaff(member.id)}
+                  onClick={() => handleStaffSelect(member.id, 'details')}
                   className="flex items-center gap-2"
                 >
                   <UserCog className="h-4 w-4" />
