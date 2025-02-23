@@ -27,24 +27,27 @@ const Staff = () => {
     <div className="p-8 space-y-8">
       <div className="flex flex-col items-start gap-4 mb-8">
         <div className="flex items-center gap-2">
-          <h1 className="font-playfair text-4xl font-bold bg-gradient-to-r from-sage-500 to-sage-700 bg-clip-text text-transparent animate-fade-in">
+          <h1 className="font-playfair text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent animate-fade-in">
             MaestroAI
           </h1>
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <DropdownMenuTrigger className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none">
               <ChevronDown className="h-4 w-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[200px] p-2">
-              <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuContent 
+              align="start" 
+              className="w-[200px] p-2 bg-popover border border-border shadow-lg"
+            >
+              <DropdownMenuItem className="cursor-pointer hover:bg-muted">
                 Staff Management System
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer hover:bg-muted">
                 Performance Tracking
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer hover:bg-muted">
                 Schedule Optimization
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer hover:bg-muted">
                 Attendance Monitoring
               </DropdownMenuItem>
             </DropdownMenuContent>
