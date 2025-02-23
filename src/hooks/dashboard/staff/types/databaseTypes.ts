@@ -1,5 +1,6 @@
 
 import type { StaffRole, StaffStatus } from "@/types/staff";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface DatabaseStaffMember {
   id: number;
