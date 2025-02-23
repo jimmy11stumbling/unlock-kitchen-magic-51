@@ -14,18 +14,21 @@ export const Hero = () => {
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-7 animate-in stagger-2 dark:text-white transition-colors">
                 Unlock Your Restaurant's{" "}
-                <span className="text-sage-500 dark:text-sage-400">Full Potential</span>
+                <span className="text-sage-500 dark:text-sage-400 relative">
+                  Full Potential
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sage-500 dark:bg-sage-400 origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
+                </span>
               </h1>
               <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 animate-in stagger-3 transition-colors">
                 Streamline operations, boost efficiency, and grow your business with
                 our all-in-one restaurant management solution.
               </p>
               <div className="flex flex-wrap gap-4 animate-in stagger-4">
-                <Button className="bg-sage-500 hover:bg-sage-600 dark:bg-sage-600 dark:hover:bg-sage-700">
+                <Button className="bg-sage-500 hover:bg-sage-600 dark:bg-sage-600 dark:hover:bg-sage-700 transform transition-all duration-300 hover:scale-105">
                   Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </Button>
-                <Button variant="outline" className="dark:border-gray-700 dark:text-white dark:hover:bg-gray-800">
+                <Button variant="outline" className="dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 transform transition-all duration-300 hover:scale-105">
                   Watch Demo
                 </Button>
               </div>
@@ -34,8 +37,10 @@ export const Hero = () => {
           <div className="w-full lg:w-1/2 px-4">
             <div className="flex flex-wrap lg:ml-10">
               <div className="w-full md:w-1/2 p-4">
-                <div className="feature-card animate-in stagger-2">
-                  <ChefHat className="h-8 w-8 text-sage-500 dark:text-sage-400 mb-4" />
+                <div className="hero-card animate-in stagger-2">
+                  <div className="icon-container animate-float">
+                    <ChefHat className="h-8 w-8 text-sage-500 dark:text-sage-400 mb-4" />
+                  </div>
                   <h3 className="text-xl font-semibold mb-2 dark:text-white transition-colors">
                     Kitchen Management
                   </h3>
@@ -43,8 +48,10 @@ export const Hero = () => {
                     Optimize your kitchen operations and inventory in real-time
                   </p>
                 </div>
-                <div className="feature-card mt-8 animate-in stagger-3">
-                  <BarChart className="h-8 w-8 text-sage-500 dark:text-sage-400 mb-4" />
+                <div className="hero-card mt-8 animate-in stagger-3">
+                  <div className="icon-container animate-float">
+                    <BarChart className="h-8 w-8 text-sage-500 dark:text-sage-400 mb-4" />
+                  </div>
                   <h3 className="text-xl font-semibold mb-2 dark:text-white transition-colors">
                     Smart Analytics
                   </h3>
@@ -54,8 +61,10 @@ export const Hero = () => {
                 </div>
               </div>
               <div className="w-full md:w-1/2 p-4 md:mt-10">
-                <div className="feature-card animate-in stagger-4">
-                  <Clock className="h-8 w-8 text-sage-500 dark:text-sage-400 mb-4" />
+                <div className="hero-card animate-in stagger-4">
+                  <div className="icon-container animate-float">
+                    <Clock className="h-8 w-8 text-sage-500 dark:text-sage-400 mb-4" />
+                  </div>
                   <h3 className="text-xl font-semibold mb-2 dark:text-white transition-colors">
                     Real-time Updates
                   </h3>
