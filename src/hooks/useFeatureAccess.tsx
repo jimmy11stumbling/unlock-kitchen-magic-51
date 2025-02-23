@@ -1,18 +1,17 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 
-export const useFeatureAccess = (featureName: string) => {
+export function useFeatureAccess(featureName: string) {
   const [hasAccess, setHasAccess] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const checkFeatureAccess = async () => {
+    async function checkAccess() {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setHasAccess(false);
           return;
@@ -24,17 +23,22 @@ export const useFeatureAccess = (featureName: string) => {
         });
 
         if (error) throw error;
-        setHasAccess(data || false);
+        setHasAccess(!!data);
       } catch (error) {
         console.error('Error checking feature access:', error);
+        toast({
+          title: "Error",
+          description: "Could not verify feature access",
+          variant: "destructive",
+        });
         setHasAccess(false);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
-    };
+    }
 
-    checkFeatureAccess();
-  }, [featureName]);
+    checkAccess();
+  }, [featureName, toast]);
 
-  return { hasAccess, loading };
-};
+  return { hasAccess, isLoading };
+}
