@@ -20,6 +20,8 @@ serve(async (req) => {
       throw new Error('Claude API key not configured');
     }
 
+    console.log('Sending request to Claude API with messages:', messages);
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -28,7 +30,10 @@ serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        messages,
+        messages: messages.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
         model: "claude-3-opus-20240229",
         max_tokens: 1000,
         system: "You are a helpful AI assistant that helps users with their restaurant management system. Be concise but friendly in your responses."
@@ -36,14 +41,25 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    
+    console.log('Claude API response:', data);
+
     if (data.error) {
+      console.error('Claude API error:', data.error);
       throw new Error(data.error.message || 'Unknown error from Claude API');
     }
+
+    // Check if we have the expected response structure
+    if (!data.content || !data.content[0] || !data.content[0].text) {
+      console.error('Unexpected response structure:', data);
+      throw new Error('Unexpected response format from Claude API');
+    }
+
+    const responseMessage = data.content[0].text;
+    console.log('Sending response message:', responseMessage);
     
     return new Response(
       JSON.stringify({ 
-        message: data.content[0].text
+        message: responseMessage 
       }),
       { 
         headers: { 
@@ -53,9 +69,11 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in generate-response function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred' 
+      }),
       { 
         status: 500,
         headers: { 
