@@ -43,6 +43,7 @@ export const useStaffBasic = (initialStaff: StaffMember[]) => {
 
   return {
     staff,
+    setStaff,
     addStaffMember,
     updateStaffStatus,
     updateStaffInfo,

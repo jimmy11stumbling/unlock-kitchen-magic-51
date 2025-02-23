@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, UserCog } from "lucide-react";
 import type { StaffMember } from "@/types/staff";
 
 interface StaffListProps {
@@ -24,11 +24,11 @@ export const StaffList = ({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
+          <TableHead className="w-[200px]">Name</TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Attendance</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -45,8 +45,8 @@ export const StaffList = ({
                   onUpdateStatus(member.id, value)
                 }
               >
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue />
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
@@ -61,15 +61,25 @@ export const StaffList = ({
                 <span className="text-sm">{calculateAttendance(member.id)}%</span>
               </div>
             </TableCell>
-            <TableCell>
-              <div className="flex gap-2">
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onSelectStaff(member.id)}
+                  className="flex items-center gap-2"
                 >
-                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  <CalendarIcon className="h-4 w-4" />
                   Schedule
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onSelectStaff(member.id)}
+                  className="flex items-center gap-2"
+                >
+                  <UserCog className="h-4 w-4" />
+                  Details
                 </Button>
               </div>
             </TableCell>

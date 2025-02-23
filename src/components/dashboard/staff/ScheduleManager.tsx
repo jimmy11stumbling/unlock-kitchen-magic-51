@@ -46,7 +46,7 @@ export const ScheduleManager = ({
             value={selectedStaffId?.toString() || ""}
             onValueChange={(value) => setSelectedStaffId(Number(value))}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select staff member" />
             </SelectTrigger>
             <SelectContent>
@@ -69,8 +69,8 @@ export const ScheduleManager = ({
             value={selectedShiftTime}
             onValueChange={setSelectedShiftTime}
           >
-            <SelectTrigger>
-              <SelectValue />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select shift time" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Morning">Morning Shift (6AM - 2PM)</SelectItem>
@@ -80,8 +80,8 @@ export const ScheduleManager = ({
           </Select>
 
           <Button
-            className="w-full"
             onClick={handleAddShift}
+            className="w-full"
             disabled={!selectedStaffId || !selectedDate}
           >
             Add Shift

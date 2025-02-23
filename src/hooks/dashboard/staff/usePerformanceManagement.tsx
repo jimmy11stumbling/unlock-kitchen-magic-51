@@ -26,8 +26,19 @@ export const usePerformanceManagement = (staff: StaffMember[], setStaff: (staff:
     });
   };
 
+  const updateCertifications = (staffId: number, certifications: string[]) => {
+    setStaff(staff.map(member =>
+      member.id === staffId ? { ...member, certifications } : member
+    ));
+    toast({
+      title: "Certifications updated",
+      description: "Staff member's certifications have been updated.",
+    });
+  };
+
   return {
     updateStaffPerformance,
     updateStaffSchedule,
+    updateCertifications
   };
 };
