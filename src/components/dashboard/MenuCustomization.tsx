@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit2, Toggle } from "lucide-react";
+import { Plus, Edit2, CircleDot } from "lucide-react";
 import { useState } from "react";
 import type { MenuItem } from "@/types/staff";
 
@@ -196,7 +196,7 @@ export const MenuCustomization = ({
                   variant={item.available ? "default" : "secondary"}
                   onClick={() => onUpdateMenuItemAvailability(item.id, !item.available)}
                 >
-                  <Toggle className="w-4 h-4 mr-2" />
+                  <CircleDot className="w-4 h-4 mr-2" />
                   {item.available ? "Available" : "Unavailable"}
                 </Button>
               </TableCell>
