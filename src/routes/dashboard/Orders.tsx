@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { OrdersPanel } from "@/components/dashboard/OrdersPanel";
 import { CreateOrderPanel } from "@/components/dashboard/orders/CreateOrderPanel";
@@ -41,13 +40,20 @@ export default function Orders() {
 
   useInstantOrderProcessing();
 
-  const handleRetry = () => {
-    window.location.reload();
-  };
-
   const calculateOrderMetrics = () => {
+    if (!orders || orders.length === 0) {
+      return {
+        totalOrders: 0,
+        totalRevenue: 0,
+        avgOrderValue: 0
+      };
+    }
+
     const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+    const totalRevenue = orders.reduce((sum, order) => {
+      const total = typeof order.total === 'string' ? parseFloat(order.total) : order.total;
+      return sum + (isNaN(total) ? 0 : total);
+    }, 0);
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     return {
@@ -101,13 +107,13 @@ export default function Orders() {
     );
   }
 
-  const currentOrders = orders.filter(order => 
-    ["pending", "preparing", "ready"].includes(order.status)
-  );
+  const currentOrders = orders?.filter(order => 
+    ["pending", "preparing", "ready"].includes(order?.status || '')
+  ) || [];
 
-  const historyOrders = orders.filter(order => 
-    order.status === "delivered"
-  );
+  const historyOrders = orders?.filter(order => 
+    order?.status === "delivered"
+  ) || [];
 
   const metrics = calculateOrderMetrics();
 
@@ -115,9 +121,16 @@ export default function Orders() {
     <div className="container p-6 mx-auto">
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-            Restaurant Manager Pro
-          </h1>
+          <div className="flex items-center gap-4">
+            <img 
+              src="/placeholder.svg" 
+              alt="Logo" 
+              className="h-10 w-10"
+            />
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              OrderFlow Pro
+            </h1>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
@@ -130,7 +143,10 @@ export default function Orders() {
                 <PlusCircle className="w-4 h-4 mr-2" />
                 New Order
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast({ title: "Generating report..." })}>
+              <DropdownMenuItem onClick={() => toast({ 
+                title: "Generating report...",
+                description: "Your report will be ready in a few moments."
+              })}>
                 <BarChart className="w-4 h-4 mr-2" />
                 Generate Report
               </DropdownMenuItem>
