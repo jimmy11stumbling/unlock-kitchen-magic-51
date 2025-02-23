@@ -1,6 +1,50 @@
-
 export type StaffRole = 'manager' | 'chef' | 'server' | 'host' | 'bartender';
 export type StaffStatus = 'active' | 'on_break' | 'off_duty';
+
+export interface PayrollEntry {
+  id: number;
+  staffId: number;
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  regularHours: number;
+  overtimeHours: number;
+  regularRate: number;
+  overtimeRate: number;
+  grossPay: number;
+  deductions: {
+    tax: number;
+    insurance: number;
+    retirement: number;
+    other: number;
+  };
+  netPay: number;
+  status: 'pending' | 'processed' | 'paid';
+  paymentDate: string;
+  paymentMethod: 'direct_deposit' | 'check';
+  checkNumber?: string;
+}
+
+export interface PayStub {
+  id: number;
+  payrollEntryId: number;
+  staffId: number;
+  generatedDate: string;
+  documentUrl: string;
+}
+
+export interface PayrollSettings {
+  payPeriod: 'weekly' | 'biweekly' | 'monthly';
+  paymentMethod: 'direct_deposit' | 'check';
+  taxWithholding: {
+    federal: number;
+    state: number;
+    local: number;
+  };
+  benefits: {
+    insurance: number;
+    retirement: number;
+  };
+}
 
 export interface StaffMember {
   id: number;
@@ -9,6 +53,8 @@ export interface StaffMember {
   status: StaffStatus;
   shift: string;
   salary: number;
+  hourlyRate?: number;
+  overtimeRate?: number;
   email: string;
   phone: string;
   address: string;
@@ -35,6 +81,13 @@ export interface StaffMember {
     accountNumber: string;
     routingNumber: string;
     accountType: "checking" | "savings";
+  };
+  payrollSettings?: PayrollSettings;
+  taxInfo?: {
+    ssn: string;
+    w4Status: string;
+    allowances: number;
+    additionalWithholding: number;
   };
 }
 

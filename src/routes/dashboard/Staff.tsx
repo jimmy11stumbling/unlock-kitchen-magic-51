@@ -1,4 +1,3 @@
-
 import { StaffPanel } from "@/components/dashboard/StaffPanel";
 import { useDashboardState } from "@/hooks/useDashboardState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { 
   User, Clock, FileText, BookOpen, Star,
   ChevronDown, BarChart, Award, Target,
-  Calendar, BookMarked, GraduationCap
+  Calendar, BookMarked, GraduationCap, DollarSign
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -15,6 +14,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { PayrollPanel } from "@/components/dashboard/staff/PayrollPanel";
 
 const Staff = () => {
   const { 
@@ -66,7 +66,7 @@ const Staff = () => {
       </div>
 
       <Tabs defaultValue="list" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 gap-4 mb-4">
+        <TabsList className="grid w-full grid-cols-5 gap-4 mb-4">
           <TabsTrigger value="list" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Staff List
@@ -74,6 +74,10 @@ const Staff = () => {
           <TabsTrigger value="schedule" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             Schedules
+          </TabsTrigger>
+          <TabsTrigger value="payroll" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Payroll
           </TabsTrigger>
           <TabsTrigger value="performance" className="flex items-center gap-2">
             <Award className="h-4 w-4" />
@@ -105,6 +109,25 @@ const Staff = () => {
             </div>
             {/* Schedule content will be implemented in the next iteration */}
           </Card>
+        </TabsContent>
+
+        <TabsContent value="payroll">
+          <PayrollPanel
+            staff={staff}
+            onGeneratePayroll={async (staffId, startDate, endDate) => {
+              // Implement payroll generation
+              console.log('Generating payroll:', { staffId, startDate, endDate });
+            }}
+            onGeneratePayStub={async (payrollEntryId) => {
+              // Implement pay stub generation
+              console.log('Generating pay stub:', payrollEntryId);
+              return '#'; // Return document URL
+            }}
+            onUpdatePayrollSettings={async (staffId, settings) => {
+              // Implement settings update
+              console.log('Updating settings:', { staffId, settings });
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="performance">
