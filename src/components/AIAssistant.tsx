@@ -31,13 +31,43 @@ export const AIAssistant = () => {
     setIsLoading(true);
 
     try {
+      // Log request details for debugging
+      console.log('Sending request to AI assistant with messages:', [...messages, userMessage]);
+
       const { data, error } = await supabase.functions.invoke('generate-response', {
         body: { 
           messages: [...messages, userMessage]
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase Function Error:', {
+          error,
+          statusCode: error.status,
+          statusText: error.message,
+          context: error.context
+        });
+        
+        // Provide specific error messages based on error type
+        let errorMessage = "Failed to get a response. Please try again.";
+        if (error.status === 429) {
+          errorMessage = "Too many requests. Please wait a moment and try again.";
+        } else if (error.status === 401 || error.status === 403) {
+          errorMessage = "Authentication error. Please try refreshing the page.";
+        } else if (error.status === 500) {
+          errorMessage = "Server error. Our team has been notified.";
+        }
+
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        throw error;
+      }
+
+      // Log successful response
+      console.log('AI assistant response:', data);
 
       if (data?.message) {
         const assistantMessage = {
@@ -46,13 +76,26 @@ export const AIAssistant = () => {
         };
         setMessages(prev => [...prev, assistantMessage]);
       } else {
-        throw new Error('No response from assistant');
+        console.error('Unexpected response format:', data);
+        throw new Error('Unexpected response format from AI assistant');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('AI Assistant Error:', {
+        error,
+        timestamp: new Date().toISOString(),
+        lastMessage: userMessage,
+        errorType: error instanceof Error ? error.constructor.name : typeof error
+      });
+
+      // Add error message to chat for transparency
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "I encountered an error processing your request. Please try again or rephrase your question."
+      }]);
+
       toast({
         title: "Error",
-        description: "Failed to get a response. Please try again.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
     } finally {
