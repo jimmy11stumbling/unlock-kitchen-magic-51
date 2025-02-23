@@ -45,13 +45,12 @@ const Dashboard = () => {
     resolveFeedback,
     addPromotion,
     togglePromotion,
+    addShift,
   } = useDashboardState();
 
   return (
     <div className="min-h-screen bg-background p-8">
-      <div className="space
-
--y-8">
+      <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold dark:text-white">Dashboard</h1>
           <p className="text-muted-foreground">Welcome to your restaurant dashboard</p>
@@ -92,6 +91,7 @@ const Dashboard = () => {
               staff={staff}
               onAddStaff={addStaffMember}
               onUpdateStatus={updateStaffStatus}
+              onAddShift={addShift}
             />
           </TabsContent>
 
