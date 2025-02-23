@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,7 +18,19 @@ serve(async (req) => {
     const claudeApiKey = Deno.env.get('CLAUDE_API_KEY');
 
     if (!claudeApiKey) {
-      throw new Error('Claude API key not configured');
+      console.error('Claude API key not configured');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Claude API key not configured' 
+        }), 
+        { 
+          status: 500,
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
     }
 
     console.log('Sending request to Claude API with messages:', messages);
@@ -40,15 +53,20 @@ serve(async (req) => {
       }),
     });
 
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Claude API error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
+      
+      throw new Error(`Claude API error: ${response.statusText}`);
+    }
+
     const data = await response.json();
     console.log('Claude API response:', data);
 
-    if (data.error) {
-      console.error('Claude API error:', data.error);
-      throw new Error(data.error.message || 'Unknown error from Claude API');
-    }
-
-    // Check if we have the expected response structure
     if (!data.content || !data.content[0] || !data.content[0].text) {
       console.error('Unexpected response structure:', data);
       throw new Error('Unexpected response format from Claude API');
@@ -70,9 +88,12 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in generate-response function:', error);
+    
+    // Return a properly formatted error response
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'An unexpected error occurred' 
+        error: error.message || 'An unexpected error occurred',
+        details: error instanceof Error ? error.stack : undefined
       }),
       { 
         status: 500,
