@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ChefHat, Check } from "lucide-react";
 import { useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SetupWizard } from "@/components/setup/SetupWizard";
 
 const Pricing = () => {
@@ -105,7 +106,11 @@ const Pricing = () => {
         </div>
       </footer>
 
-      {showSetup && <SetupWizard />}
+      <Dialog open={showSetup} onOpenChange={setShowSetup}>
+        <DialogContent className="max-w-4xl">
+          <SetupWizard />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
