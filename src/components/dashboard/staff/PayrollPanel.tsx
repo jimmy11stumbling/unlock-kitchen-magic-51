@@ -19,8 +19,10 @@ import {
   Download,
   FileText,
   Settings,
-  Users
+  Users,
+  Calculator
 } from "lucide-react";
+import { calculateTax } from "@/utils/taxCalculator";
 import type { StaffMember, PayrollEntry } from "@/types/staff";
 import { format } from "date-fns";
 
@@ -30,6 +32,51 @@ interface PayrollPanelProps {
   onGeneratePayStub: (payrollEntryId: number) => Promise<string>;
   onUpdatePayrollSettings: (staffId: number, settings: StaffMember['payrollSettings']) => Promise<void>;
 }
+
+const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
+  {
+    id: 1,
+    staffId: 1,
+    payPeriodStart: "2024-03-01",
+    payPeriodEnd: "2024-03-15",
+    regularHours: 80,
+    overtimeHours: 5,
+    regularRate: 25,
+    overtimeRate: 37.5,
+    grossPay: 2187.50,
+    deductions: {
+      tax: 437.50,
+      insurance: 150,
+      retirement: 175,
+      other: 50
+    },
+    netPay: 1375,
+    status: "paid",
+    paymentDate: "2024-03-20",
+    paymentMethod: "direct_deposit"
+  },
+  {
+    id: 2,
+    staffId: 2,
+    payPeriodStart: "2024-03-01",
+    payPeriodEnd: "2024-03-15",
+    regularHours: 75,
+    overtimeHours: 0,
+    regularRate: 22,
+    overtimeRate: 33,
+    grossPay: 1650,
+    deductions: {
+      tax: 330,
+      insurance: 125,
+      retirement: 132,
+      other: 0
+    },
+    netPay: 1063,
+    status: "paid",
+    paymentDate: "2024-03-20",
+    paymentMethod: "direct_deposit"
+  }
+];
 
 export const PayrollPanel = ({
   staff,
@@ -41,6 +88,26 @@ export const PayrollPanel = ({
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [payPeriodStart, setPayPeriodStart] = useState("");
   const [payPeriodEnd, setPayPeriodEnd] = useState("");
+  const [regularHours, setRegularHours] = useState<number>(0);
+  const [overtimeHours, setOvertimeHours] = useState<number>(0);
+
+  const selectedStaff = staff.find(s => s.id === selectedStaffId);
+
+  const calculateGrossPay = () => {
+    if (!selectedStaff) return 0;
+    const regularPay = regularHours * (selectedStaff.hourlyRate || selectedStaff.salary / 2080); // 2080 = 40 hours * 52 weeks
+    const overtimePay = overtimeHours * (selectedStaff.overtimeRate || (selectedStaff.hourlyRate || selectedStaff.salary / 2080) * 1.5);
+    return regularPay + overtimePay;
+  };
+
+  const calculateNetPay = (grossPay: number) => {
+    const taxInfo = calculateTax(grossPay, "California"); // Using California as default state
+    const standardDeductions = {
+      insurance: grossPay * 0.05,
+      retirement: grossPay * 0.06,
+    };
+    return grossPay - taxInfo.tax - standardDeductions.insurance - standardDeductions.retirement;
+  };
 
   const handleGeneratePayroll = async () => {
     if (!selectedStaffId || !payPeriodStart || !payPeriodEnd) {
@@ -52,11 +119,14 @@ export const PayrollPanel = ({
       return;
     }
 
+    const grossPay = calculateGrossPay();
+    const netPay = calculateNetPay(grossPay);
+
     try {
       await onGeneratePayroll(selectedStaffId, payPeriodStart, payPeriodEnd);
       toast({
         title: "Success",
-        description: "Payroll generated successfully",
+        description: `Payroll generated: Gross Pay $${grossPay.toFixed(2)}, Net Pay $${netPay.toFixed(2)}`,
       });
     } catch (error) {
       toast({
@@ -100,7 +170,7 @@ export const PayrollPanel = ({
 
         <TabsContent value="process">
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium">Select Staff Member</label>
                 <select
@@ -133,7 +203,44 @@ export const PayrollPanel = ({
                 />
               </div>
             </div>
-            <Button onClick={handleGeneratePayroll}>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Regular Hours</label>
+                <Input
+                  type="number"
+                  value={regularHours}
+                  onChange={(e) => setRegularHours(Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Overtime Hours</label>
+                <Input
+                  type="number"
+                  value={overtimeHours}
+                  onChange={(e) => setOvertimeHours(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            {selectedStaff && (
+              <Card className="p-4 bg-muted">
+                <h3 className="text-lg font-semibold mb-4">Pay Summary</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Gross Pay:</span>
+                    <span>${calculateGrossPay().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Net Pay:</span>
+                    <span>${calculateNetPay(calculateGrossPay()).toFixed(2)}</span>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            <Button onClick={handleGeneratePayroll} className="w-full">
+              <Calculator className="w-4 h-4 mr-2" />
               Generate Payroll
             </Button>
           </div>
@@ -152,7 +259,36 @@ export const PayrollPanel = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* Add payroll history entries here */}
+              {MOCK_PAYROLL_HISTORY.map((entry) => {
+                const staffMember = staff.find(s => s.id === entry.staffId);
+                return (
+                  <TableRow key={entry.id}>
+                    <TableCell>{staffMember?.name || 'Unknown'}</TableCell>
+                    <TableCell>
+                      {format(new Date(entry.payPeriodStart), 'MMM d')} - {format(new Date(entry.payPeriodEnd), 'MMM d, yyyy')}
+                    </TableCell>
+                    <TableCell>${entry.grossPay.toFixed(2)}</TableCell>
+                    <TableCell>${entry.netPay.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        entry.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleGeneratePayStub(entry.id)}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Pay Stub
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TabsContent>
@@ -177,7 +313,20 @@ export const PayrollPanel = ({
                     <option value="check">Check</option>
                   </select>
                 </div>
-                {/* Add more payroll settings fields */}
+                <div>
+                  <label className="text-sm font-medium">Tax Withholding</label>
+                  <div className="grid grid-cols-2 gap-4 mt-1">
+                    <Input type="number" placeholder="Federal %" />
+                    <Input type="number" placeholder="State %" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Benefits</label>
+                  <div className="grid grid-cols-2 gap-4 mt-1">
+                    <Input type="number" placeholder="Insurance %" />
+                    <Input type="number" placeholder="Retirement %" />
+                  </div>
+                </div>
               </div>
             )}
           </div>
