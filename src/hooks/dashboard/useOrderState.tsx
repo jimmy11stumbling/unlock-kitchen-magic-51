@@ -25,56 +25,97 @@ export const useOrderState = () => {
   };
 
   const addOrder = (order: Omit<Order, "id" | "timestamp">) => {
-    const newOrder: Order = {
-      id: orders.length + 1,
-      timestamp: new Date().toISOString(),
-      ...order,
-    };
-    
-    const estimatedPrepTime = calculateEstimatedPrepTime(order.items, menuItems);
-    const coursing = optimizeCourseOrder(order.items, menuItems);
-    
-    // Extract allergies from special instructions
-    const allergyMatch = order.specialInstructions?.match(/allergy[:\s]+(\w+)/i);
-    const customerAllergies = allergyMatch ? [allergyMatch[1].toLowerCase()] : [];
-    
-    const newKitchenOrder: KitchenOrder = {
-      id: kitchenOrders.length + 1,
-      orderId: newOrder.id,
-      items: order.items.map(item => ({
-        menuItemId: item.id,
-        quantity: item.quantity,
-        status: "pending",
-        startTime: new Date().toISOString(),
-        cookingStation: determineStation(item.id),
-        assignedChef: assignChef(item.id),
-        modifications: [],
-        allergenAlert: checkAllergenConflicts(item.id, customerAllergies, menuItems)
-      })),
-      priority: determinePriority(order),
-      notes: order.specialInstructions || "",
-      coursing,
-      estimatedDeliveryTime: new Date(Date.now() + estimatedPrepTime * 60000).toISOString()
-    };
+    try {
+      const newOrder: Order = {
+        id: orders.length + 1,
+        timestamp: new Date().toISOString(),
+        ...order,
+      };
+      
+      const estimatedPrepTime = calculateEstimatedPrepTime(order.items, menuItems);
+      const coursing = optimizeCourseOrder(order.items, menuItems);
+      
+      // Extract allergies from special instructions
+      const allergyMatch = order.specialInstructions?.match(/allergy[:\s]+(\w+)/i);
+      const customerAllergies = allergyMatch ? [allergyMatch[1].toLowerCase()] : [];
+      
+      const newKitchenOrder: KitchenOrder = {
+        id: kitchenOrders.length + 1,
+        orderId: newOrder.id,
+        items: order.items.map(item => ({
+          menuItemId: item.id,
+          quantity: item.quantity,
+          status: "pending",
+          startTime: new Date().toISOString(),
+          cookingStation: determineStation(item.id),
+          assignedChef: assignChef(item.id),
+          modifications: [],
+          allergenAlert: checkAllergenConflicts(item.id, customerAllergies, menuItems)
+        })),
+        priority: determinePriority(order),
+        notes: order.specialInstructions || "",
+        coursing,
+        estimatedDeliveryTime: new Date(Date.now() + estimatedPrepTime * 60000).toISOString()
+      };
 
-    setOrders([...orders, newOrder]);
-    setKitchenOrders([...kitchenOrders, newKitchenOrder]);
+      setOrders(prevOrders => [...prevOrders, newOrder]);
+      setKitchenOrders(prevKitchenOrders => [...prevKitchenOrders, newKitchenOrder]);
 
-    toast({
-      title: "New order created",
-      description: `Order #${newOrder.id} has been sent to kitchen`,
-    });
+      toast({
+        title: "New order created",
+        description: `Order #${newOrder.id} has been sent to kitchen`,
+        variant: "default"
+      });
+
+      return newOrder;
+    } catch (error) {
+      console.error("Error adding order:", error);
+      toast({
+        title: "Error creating order",
+        description: "Something went wrong while creating the order",
+        variant: "destructive"
+      });
+      return null;
+    }
   };
 
   const updateOrderStatus = (orderId: number, status: Order["status"]) => {
-    setOrders(orders.map(order =>
-      order.id === orderId ? { ...order, status } : order
-    ));
+    try {
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === orderId ? { ...order, status } : order
+        )
+      );
 
-    if (status === "ready") {
+      // Update kitchen order status if needed
+      if (status === "delivered") {
+        setKitchenOrders(prevKitchenOrders =>
+          prevKitchenOrders.map(order =>
+            order.orderId === orderId
+              ? {
+                  ...order,
+                  items: order.items.map(item => ({
+                    ...item,
+                    status: "delivered",
+                    completionTime: new Date().toISOString()
+                  }))
+                }
+              : order
+          )
+        );
+      }
+
       toast({
-        title: "Order Ready",
-        description: `Order #${orderId} is ready for service`,
+        title: "Order Updated",
+        description: `Order #${orderId} status changed to ${status}`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      toast({
+        title: "Error updating order",
+        description: "Something went wrong while updating the order status",
+        variant: "destructive"
       });
     }
   };
@@ -84,37 +125,68 @@ export const useOrderState = () => {
     itemId: number,
     status: KitchenOrder["items"][0]["status"]
   ) => {
-    setKitchenOrders(
-      kitchenOrders.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              items: order.items.map((item) =>
-                item.menuItemId === itemId
-                  ? {
-                      ...item,
-                      status,
-                      startTime: status === "preparing" ? new Date().toISOString() : item.startTime,
-                      completionTime:
-                        status === "ready" ? new Date().toISOString() : item.completionTime,
-                    }
-                  : item
-              ),
-            }
-          : order
-      )
-    );
+    try {
+      setKitchenOrders(prevKitchenOrders =>
+        prevKitchenOrders.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                items: order.items.map((item) =>
+                  item.menuItemId === itemId
+                    ? {
+                        ...item,
+                        status,
+                        startTime: status === "preparing" ? new Date().toISOString() : item.startTime,
+                        completionTime:
+                          status === "ready" ? new Date().toISOString() : item.completionTime,
+                      }
+                    : item
+                ),
+              }
+            : order
+        )
+      );
 
-    const updatedOrder = kitchenOrders.find(o => o.id === orderId);
-    if (updatedOrder && validateOrderCompletion(updatedOrder.items)) {
-      updateOrderStatus(updatedOrder.orderId, "ready");
+      const updatedOrder = kitchenOrders.find(o => o.id === orderId);
+      if (updatedOrder && validateOrderCompletion(updatedOrder.items)) {
+        updateOrderStatus(updatedOrder.orderId, "ready");
+      }
+
+      toast({
+        title: "Item Status Updated",
+        description: `Item status updated to ${status}`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error updating kitchen order status:", error);
+      toast({
+        title: "Error updating item",
+        description: "Something went wrong while updating the item status",
+        variant: "destructive"
+      });
     }
+  };
 
-    toast({
-      title: "Item status updated",
-      description: `Item status updated to ${status}`,
-      variant: "default"
-    });
+  const deleteOrder = (orderId: number) => {
+    try {
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+      setKitchenOrders(prevKitchenOrders => 
+        prevKitchenOrders.filter(order => order.orderId !== orderId)
+      );
+
+      toast({
+        title: "Order Deleted",
+        description: `Order #${orderId} has been deleted`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      toast({
+        title: "Error deleting order",
+        description: "Something went wrong while deleting the order",
+        variant: "destructive"
+      });
+    }
   };
 
   return {
@@ -123,5 +195,6 @@ export const useOrderState = () => {
     addOrder,
     updateOrderStatus,
     updateKitchenOrderStatus,
+    deleteOrder,
   };
 };
