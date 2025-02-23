@@ -54,12 +54,12 @@ export const StaffPanel = ({
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 gap-4 mb-4">
-          <TabsTrigger value="list">
-            <User className="h-4 w-4 mr-2" />
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
             Staff List
           </TabsTrigger>
-          <TabsTrigger value="schedule">
-            <Clock className="h-4 w-4 mr-2" />
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
             Schedule
           </TabsTrigger>
         </TabsList>
