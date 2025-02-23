@@ -5,14 +5,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DollarSign, UserPlus } from "lucide-react";
-import type { StaffMember } from "@/types/staff";
+import type { StaffMember, StaffRole } from "@/types/staff";
 
 interface AddStaffDialogProps {
   onAddStaff: (data: Omit<StaffMember, "id" | "status">) => void;
 }
 
 export const AddStaffDialog = ({ onAddStaff }: AddStaffDialogProps) => {
-  const [newStaff, setNewStaff] = useState({ name: "", role: "", salary: "" });
+  const [newStaff, setNewStaff] = useState<{
+    name: string;
+    role: StaffRole;
+    salary: number;
+  }>({ 
+    name: "", 
+    role: "server", // Default role
+    salary: 0 
+  });
 
   const handleAddStaff = () => {
     const currentDate = new Date().toISOString().split('T')[0];
@@ -52,7 +60,7 @@ export const AddStaffDialog = ({ onAddStaff }: AddStaffDialogProps) => {
     };
 
     onAddStaff(completeStaffData);
-    setNewStaff({ name: "", role: "", salary: "" });
+    setNewStaff({ name: "", role: "server", salary: 0 });
   };
 
   return (
@@ -80,7 +88,7 @@ export const AddStaffDialog = ({ onAddStaff }: AddStaffDialogProps) => {
             <label className="text-sm font-medium">Role</label>
             <Select
               value={newStaff.role}
-              onValueChange={(value) => setNewStaff({ ...newStaff, role: value })}
+              onValueChange={(value: StaffRole) => setNewStaff({ ...newStaff, role: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select role" />
@@ -100,7 +108,7 @@ export const AddStaffDialog = ({ onAddStaff }: AddStaffDialogProps) => {
               <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
               <Input
                 value={newStaff.salary}
-                onChange={(e) => setNewStaff({ ...newStaff, salary: e.target.value })}
+                onChange={(e) => setNewStaff({ ...newStaff, salary: Number(e.target.value) })}
                 placeholder="Annual salary"
                 className="pl-10"
                 type="number"

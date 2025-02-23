@@ -29,6 +29,10 @@ export const useStaffBasic = () => {
   const [loading, setLoading] = useState(true);
 
   const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMember => {
+    let schedule = typeof dbStaff.schedule === 'string' 
+      ? JSON.parse(dbStaff.schedule)
+      : dbStaff.schedule || {};
+
     return {
       id: dbStaff.id,
       name: dbStaff.name,
@@ -50,13 +54,13 @@ export const useStaffBasic = () => {
       performanceRating: dbStaff.performance_rating || 0,
       notes: dbStaff.notes || '',
       schedule: {
-        monday: dbStaff.schedule?.monday || 'OFF',
-        tuesday: dbStaff.schedule?.tuesday || 'OFF',
-        wednesday: dbStaff.schedule?.wednesday || 'OFF',
-        thursday: dbStaff.schedule?.thursday || 'OFF',
-        friday: dbStaff.schedule?.friday || 'OFF',
-        saturday: dbStaff.schedule?.saturday || 'OFF',
-        sunday: dbStaff.schedule?.sunday || 'OFF'
+        monday: schedule.monday || 'OFF',
+        tuesday: schedule.tuesday || 'OFF',
+        wednesday: schedule.wednesday || 'OFF',
+        thursday: schedule.thursday || 'OFF',
+        friday: schedule.friday || 'OFF',
+        saturday: schedule.saturday || 'OFF',
+        sunday: schedule.sunday || 'OFF'
       },
       bankInfo: {
         accountNumber: dbStaff.bank_info?.accountNumber || '',
@@ -112,7 +116,7 @@ export const useStaffBasic = () => {
         .from('staff_members')
         .insert({
           name: data.name,
-          role: data.role as StaffRole,
+          role: data.role,
           email: data.email,
           phone: data.phone,
           salary: data.salary,
@@ -131,7 +135,7 @@ export const useStaffBasic = () => {
         description: `${data.name} has been added to the staff list.`,
       });
 
-      return mapDatabaseToStaffMember(newStaff);
+      return mapDatabaseToStaffMember(newStaff as DatabaseStaffMember);
     } catch (error) {
       console.error('Error adding staff member:', error);
       toast({
