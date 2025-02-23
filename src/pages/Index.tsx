@@ -29,7 +29,7 @@ const Index = () => {
         </Button>
       </div>
       <Hero />
-      <Features />
+      <Features showViewAllButton />
     </main>
   );
 };

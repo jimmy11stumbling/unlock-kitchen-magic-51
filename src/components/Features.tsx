@@ -1,3 +1,4 @@
+
 import {
   Wallet,
   LayoutDashboard,
@@ -7,6 +8,7 @@ import {
   PieChart,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const features = [
   {
@@ -44,7 +46,7 @@ const features = [
   },
 ];
 
-export const Features = () => {
+export const Features = ({ showViewAllButton = false }: { showViewAllButton?: boolean }) => {
   return (
     <section className="py-24 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <div className="container px-4 mx-auto">
@@ -56,6 +58,11 @@ export const Features = () => {
             Powerful features designed to help you manage and grow your restaurant
             business efficiently
           </p>
+          {showViewAllButton && (
+            <Button asChild className="mt-6">
+              <Link to="/features">View All Features</Link>
+            </Button>
+          )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
