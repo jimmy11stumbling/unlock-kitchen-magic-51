@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember, Shift } from "@/types/staff";
@@ -9,32 +10,36 @@ const initialStaff: StaffMember[] = [
     role: "Server",
     status: "active",
     shift: "Morning",
-    salary: "15.00/hr"
+    salary: "15.00/hr",
+    email: "john.smith@restaurant.com",
+    phone: "(555) 123-4567",
+    address: "123 Server Lane, Restaurant City, RC 12345",
+    emergencyContact: {
+      name: "Jane Smith",
+      phone: "(555) 987-6543",
+      relationship: "Spouse"
+    },
+    startDate: "2023-01-15",
+    department: "Service",
+    certifications: ["Food Handler", "Wine Service"],
+    performanceRating: 4.5,
+    notes: "Excellent customer service skills",
+    schedule: {
+      monday: "9:00-17:00",
+      tuesday: "9:00-17:00",
+      wednesday: "OFF",
+      thursday: "9:00-17:00",
+      friday: "9:00-17:00",
+      saturday: "OFF",
+      sunday: "12:00-20:00"
+    },
+    bankInfo: {
+      accountNumber: "****1234",
+      routingNumber: "****5678",
+      accountType: "checking"
+    }
   },
-  {
-    id: 2,
-    name: "Maria Garcia",
-    role: "Chef",
-    status: "active",
-    shift: "Evening",
-    salary: "25.00/hr"
-  },
-  {
-    id: 3,
-    name: "David Lee",
-    role: "Host",
-    status: "off_duty",
-    shift: "Morning",
-    salary: "14.00/hr"
-  },
-  {
-    id: 4,
-    name: "Sarah Johnson",
-    role: "Bartender",
-    status: "active",
-    shift: "Evening",
-    salary: "18.00/hr"
-  }
+  // ... More staff members with similar detailed information
 ];
 
 const initialShifts: Shift[] = [
@@ -57,14 +62,11 @@ export const useStaffState = () => {
   const [staff, setStaff] = useState<StaffMember[]>(initialStaff);
   const [shifts, setShifts] = useState<Shift[]>(initialShifts);
 
-  const addStaffMember = (data: { name: string; role: string; salary: string }) => {
+  const addStaffMember = (data: Omit<StaffMember, "id" | "status">) => {
     const newStaffMember: StaffMember = {
       id: staff.length + 1,
-      name: data.name,
-      role: data.role,
       status: "off_duty",
-      shift: "Morning",
-      salary: data.salary,
+      ...data,
     };
     setStaff([...staff, newStaffMember]);
     toast({
@@ -81,6 +83,16 @@ export const useStaffState = () => {
     toast({
       title: "Status updated",
       description: `${member?.name}'s status has been updated to ${newStatus.replace("_", " ")}.`,
+    });
+  };
+
+  const updateStaffInfo = (staffId: number, updates: Partial<StaffMember>) => {
+    setStaff(staff.map(member =>
+      member.id === staffId ? { ...member, ...updates } : member
+    ));
+    toast({
+      title: "Staff info updated",
+      description: "Staff member information has been updated successfully.",
     });
   };
 
@@ -113,11 +125,34 @@ export const useStaffState = () => {
     });
   };
 
+  const updateStaffSchedule = (staffId: number, schedule: StaffMember["schedule"]) => {
+    setStaff(staff.map(member =>
+      member.id === staffId ? { ...member, schedule } : member
+    ));
+    toast({
+      title: "Schedule updated",
+      description: "Staff member's schedule has been updated.",
+    });
+  };
+
+  const updateStaffPerformance = (staffId: number, rating: number, notes: string) => {
+    setStaff(staff.map(member =>
+      member.id === staffId ? { ...member, performanceRating: rating, notes } : member
+    ));
+    toast({
+      title: "Performance updated",
+      description: "Staff member's performance review has been updated.",
+    });
+  };
+
   return {
     staff,
     shifts,
     addStaffMember,
     updateStaffStatus,
     addShift,
+    updateStaffInfo,
+    updateStaffSchedule,
+    updateStaffPerformance,
   };
 };
