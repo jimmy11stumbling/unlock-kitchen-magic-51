@@ -45,13 +45,13 @@ const features = [
 
 export const Features = () => {
   return (
-    <section className="py-24 bg-gray-50">
+    <section className="py-24 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <div className="container px-4 mx-auto">
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 dark:text-white transition-colors">
             Everything You Need to Succeed
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 dark:text-gray-300 transition-colors">
             Powerful features designed to help you manage and grow your restaurant
             business efficiently
           </p>
@@ -60,13 +60,17 @@ export const Features = () => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="feature-card"
+              className="feature-card dark:hover:bg-gray-800/50"
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 mb-6 bg-sage-100 text-sage-500 rounded-xl">
+              <div className="inline-flex items-center justify-center w-12 h-12 mb-6 bg-sage-100 dark:bg-sage-900 text-sage-500 dark:text-sage-300 rounded-xl">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
+              <h3 className="text-xl font-semibold mb-3 dark:text-white transition-colors">
+                {feature.title}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 transition-colors">
+                {feature.description}
+              </p>
             </div>
           ))}
         </div>
