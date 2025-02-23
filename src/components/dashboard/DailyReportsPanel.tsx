@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -91,6 +90,18 @@ export const DailyReportsPanel = ({
     };
   }, [filteredReports]);
 
+  const calculateTrends = (items: { name: string; count: number; revenue: number }[]) => {
+    const previousPeriodItems = reports[1]?.topSellingItems || [];
+    return items.map(item => {
+      const previousItem = previousPeriodItems.find(prev => prev.name === item.name);
+      const trend = previousItem
+        ? ((item.revenue - (previousItem.price * (previousItem.orderCount || 0))) / 
+           (previousItem.price * (previousItem.orderCount || 0))) * 100
+        : 0;
+      return { ...item, trend };
+    });
+  };
+
   const topPerformingItems = useMemo(() => {
     const itemMap = new Map<string, { count: number; revenue: number }>();
     
@@ -104,7 +115,7 @@ export const DailyReportsPanel = ({
       });
     });
 
-    return Array.from(itemMap.entries())
+    const items = Array.from(itemMap.entries())
       .map(([name, data]) => ({
         name,
         count: data.count,
@@ -112,7 +123,9 @@ export const DailyReportsPanel = ({
       }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
-  }, [filteredReports]);
+
+    return calculateTrends(items);
+  }, [filteredReports, reports]);
 
   if (!reports.length) {
     return (
