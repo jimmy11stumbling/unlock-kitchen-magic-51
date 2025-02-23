@@ -21,9 +21,6 @@ const Index = () => {
             <span className="font-bold text-xl">MaestroAI</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/features" className="text-sm font-medium hover:text-primary transition-colors">
-              Features
-            </Link>
             <Link to="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
               Pricing
             </Link>
