@@ -7,6 +7,7 @@ import { useInstantOrderProcessing } from "@/hooks/dashboard/orders/useInstantOr
 import { useOrders } from "@/hooks/dashboard/orders/useOrders";
 import { useKitchenOrders } from "@/hooks/dashboard/orders/useKitchenOrders";
 import { useOrderActions } from "@/hooks/dashboard/orders/useOrderActions";
+import { useMenuState } from "@/hooks/dashboard/useMenuState";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -15,10 +16,11 @@ export default function Orders() {
   const { orders, isLoading: ordersLoading } = useOrders();
   const { kitchenOrders, isLoading: kitchenLoading } = useKitchenOrders();
   const { addOrder, updateOrderStatus, updateKitchenOrderStatus } = useOrderActions(kitchenOrders);
+  const { menuItems, isLoading: menuLoading } = useMenuState();
 
   useInstantOrderProcessing();
 
-  if (ordersLoading || kitchenLoading) {
+  if (ordersLoading || kitchenLoading || menuLoading) {
     return (
       <div className="p-8 space-y-4">
         <div className="h-8 bg-muted rounded w-1/4 animate-pulse"></div>
@@ -63,7 +65,10 @@ export default function Orders() {
         </TabsContent>
 
         <TabsContent value="new">
-          <CreateOrderPanel onCreateOrder={addOrder} />
+          <CreateOrderPanel 
+            onCreateOrder={addOrder}
+            menuItems={menuItems}
+          />
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">

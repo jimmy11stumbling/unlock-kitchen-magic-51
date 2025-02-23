@@ -99,13 +99,13 @@ export const OrderList = ({
           
           return (
             <Card key={order.id} className="p-4">
-              <OrderHeader order={order} />
+              <OrderHeader orderData={order} />
               
               <div className="mt-4 space-y-4">
                 {order.items.map((item) => (
                   <OrderItem
                     key={`${order.id}-${item.id}`}
-                    item={item}
+                    orderItem={item}
                     kitchenStatus={
                       kitchenOrder?.items.find(ki => ki.menuItemId === item.id)?.status
                     }
