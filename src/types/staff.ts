@@ -179,6 +179,7 @@ export interface TableLayout {
   status: "available" | "occupied" | "reserved" | "cleaning";
   section: "indoor" | "outdoor" | "bar";
   reservationId?: number;
+  activeOrder: number | null;
 }
 
 export interface DailyReport {
