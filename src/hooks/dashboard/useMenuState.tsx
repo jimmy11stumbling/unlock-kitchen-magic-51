@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import type { MenuItem } from "@/types/staff";
@@ -61,6 +62,7 @@ export const useMenuState = () => {
     const newItem: MenuItem = {
       id: menuItems.length + 1,
       ...item,
+      orderCount: 0,
     };
     setMenuItems([...menuItems, newItem]);
   };
@@ -72,6 +74,7 @@ export const useMenuState = () => {
   };
 
   const updateMenuItemPrice = (itemId: number, price: number) => {
+    if (price <= 0) return;
     setMenuItems(menuItems.map(item =>
       item.id === itemId ? { ...item, price } : item
     ));

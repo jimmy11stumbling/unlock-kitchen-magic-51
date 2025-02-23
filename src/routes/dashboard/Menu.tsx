@@ -21,10 +21,19 @@ const Menu = () => {
     toast({
       title: "Availability Updated",
       description: `Item availability has been ${available ? 'enabled' : 'disabled'}.`,
+      variant: available ? 'default' : 'destructive',
     });
   };
 
   const handleUpdatePrice = (itemId: number, price: number) => {
+    if (price <= 0) {
+      toast({
+        title: "Invalid Price",
+        description: "Price must be greater than zero.",
+        variant: "destructive",
+      });
+      return;
+    }
     updateMenuItemPrice(itemId, price);
     toast({
       title: "Price Updated",
@@ -39,6 +48,7 @@ const Menu = () => {
       toast({
         title: "Menu Item Deleted",
         description: `${item.name} has been removed from the menu.`,
+        variant: "destructive",
       });
     }
   };
