@@ -22,6 +22,9 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface StaffMember {
   id: number;
@@ -38,6 +41,12 @@ interface Shift {
   time: string;
 }
 
+const formSchema = z.object({
+  role: z.string().min(1, "Please select a role"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 const Dashboard = () => {
   const [staff] = useState<StaffMember[]>([
     { id: 1, name: "John Smith", role: "Chef", status: "active", shift: "Morning" },
@@ -51,6 +60,18 @@ const Dashboard = () => {
     { id: 2, staffId: 2, date: "2024-02-20", time: "2:00 PM - 10:00 PM" },
     { id: 3, staffId: 3, date: "2024-02-20", time: "5:00 PM - 1:00 AM" },
   ]);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      role: "",
+    },
+  });
+
+  const onSubmit = (data: FormValues) => {
+    console.log(data);
+    // Handle form submission
+  };
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -219,28 +240,32 @@ const Dashboard = () => {
                         <SheetTitle>Add New Staff Member</SheetTitle>
                       </SheetHeader>
                       <div className="mt-4 space-y-4">
-                        <Form>
-                          <FormField
-                            name="role"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Role</FormLabel>
-                                <Select>
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select role" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="chef">Chef</SelectItem>
-                                    <SelectItem value="server">Server</SelectItem>
-                                    <SelectItem value="bartender">Bartender</SelectItem>
-                                    <SelectItem value="host">Host</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormItem>
-                            )}
-                          />
+                        <Form {...form}>
+                          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="role"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Role</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select role" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="chef">Chef</SelectItem>
+                                      <SelectItem value="server">Server</SelectItem>
+                                      <SelectItem value="bartender">Bartender</SelectItem>
+                                      <SelectItem value="host">Host</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormItem>
+                              )}
+                            />
+                            <Button type="submit">Add Staff Member</Button>
+                          </form>
                         </Form>
                       </div>
                     </SheetContent>
