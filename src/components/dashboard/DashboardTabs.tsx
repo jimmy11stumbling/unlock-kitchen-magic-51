@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import {
   BarChart,
   Users,
-  ShoppingCart,
   LayoutDashboard,
   Box,
   Settings,
@@ -33,12 +32,6 @@ export const DashboardTabs = () => {
         <TabsTrigger value="daily-reports" className={`data-[state=active]:bg-background dark:data-[state=active]:bg-muted ${currentTab === 'daily-reports' ? 'bg-background dark:bg-muted' : ''}`}>
           <FileText className="h-4 w-4 mr-2" />
           Daily Reports
-        </TabsTrigger>
-      </Link>
-      <Link to="/dashboard/orders">
-        <TabsTrigger value="orders" className={`data-[state=active]:bg-background dark:data-[state=active]:bg-muted ${currentTab === 'orders' ? 'bg-background dark:bg-muted' : ''}`}>
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          Orders
         </TabsTrigger>
       </Link>
       <Link to="/dashboard/reservations">
