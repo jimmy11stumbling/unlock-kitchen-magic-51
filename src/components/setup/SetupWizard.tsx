@@ -1,66 +1,16 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { getAvailableStates } from "@/utils/taxCalculator";
 import { Clock, Users, ChefHat, DollarSign, MapPin, Menu } from "lucide-react";
-
-interface RestaurantInfo {
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  state: string;
-  businessHours: {
-    [key: string]: {
-      open: string;
-      close: string;
-    };
-  };
-}
-
-interface LayoutInfo {
-  sections: {
-    name: string;
-    tables: number;
-  }[];
-  defaultCapacities: number[];
-}
-
-interface MenuInfo {
-  categories: string[];
-  mealPeriods: string[];
-  specialMenus: string[];
-}
-
-interface StaffInfo {
-  roles: string[];
-  shifts: string[];
-}
-
-interface PaymentInfo {
-  methods: string[];
-  tipPresets: number[];
-  autoGratuity: boolean;
-  autoGratuityThreshold: number;
-}
-
-interface KitchenInfo {
-  stations: string[];
-  printers: string[];
-  averagePrepTimes: {
-    [category: string]: number;
-  };
-}
+import { BasicInfoTab } from "./tabs/BasicInfoTab";
+import { LayoutTab } from "./tabs/LayoutTab";
+import { RestaurantInfo, LayoutInfo } from "./types";
 
 export const SetupWizard = () => {
   const [currentStep, setCurrentStep] = useState("basic");
-  const states = getAvailableStates();
   const daysOfWeek = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
   const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>({
@@ -128,164 +78,17 @@ export const SetupWizard = () => {
           </TabsList>
 
           <TabsContent value="basic">
-            <Card className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Restaurant Name</label>
-                  <Input
-                    value={restaurantInfo.name}
-                    onChange={(e) => setRestaurantInfo({ ...restaurantInfo, name: e.target.value })}
-                    placeholder="Enter restaurant name"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Address</label>
-                  <Textarea
-                    value={restaurantInfo.address}
-                    onChange={(e) => setRestaurantInfo({ ...restaurantInfo, address: e.target.value })}
-                    placeholder="Enter full address"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">Phone</label>
-                    <Input
-                      value={restaurantInfo.phone}
-                      onChange={(e) => setRestaurantInfo({ ...restaurantInfo, phone: e.target.value })}
-                      placeholder="Enter phone number"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Email</label>
-                    <Input
-                      value={restaurantInfo.email}
-                      onChange={(e) => setRestaurantInfo({ ...restaurantInfo, email: e.target.value })}
-                      placeholder="Enter email address"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">State</label>
-                  <Select
-                    value={restaurantInfo.state}
-                    onValueChange={(value) => setRestaurantInfo({ ...restaurantInfo, state: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {states.map((state) => (
-                        <SelectItem key={state} value={state}>
-                          {state}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Business Hours</label>
-                  <div className="space-y-2">
-                    {daysOfWeek.map((day) => (
-                      <div key={day} className="grid grid-cols-3 gap-2 items-center">
-                        <span className="capitalize">{day}</span>
-                        <Input
-                          type="time"
-                          value={restaurantInfo.businessHours[day].open}
-                          onChange={(e) => setRestaurantInfo({
-                            ...restaurantInfo,
-                            businessHours: {
-                              ...restaurantInfo.businessHours,
-                              [day]: { ...restaurantInfo.businessHours[day], open: e.target.value }
-                            }
-                          })}
-                        />
-                        <Input
-                          type="time"
-                          value={restaurantInfo.businessHours[day].close}
-                          onChange={(e) => setRestaurantInfo({
-                            ...restaurantInfo,
-                            businessHours: {
-                              ...restaurantInfo.businessHours,
-                              [day]: { ...restaurantInfo.businessHours[day], close: e.target.value }
-                            }
-                          })}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <BasicInfoTab 
+              restaurantInfo={restaurantInfo}
+              setRestaurantInfo={setRestaurantInfo}
+            />
           </TabsContent>
 
           <TabsContent value="layout">
-            <Card className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Sections</label>
-                  {layoutInfo.sections.map((section, index) => (
-                    <div key={index} className="grid grid-cols-2 gap-4 mb-2">
-                      <Input
-                        value={section.name}
-                        onChange={(e) => {
-                          const newSections = [...layoutInfo.sections];
-                          newSections[index].name = e.target.value;
-                          setLayoutInfo({ ...layoutInfo, sections: newSections });
-                        }}
-                        placeholder="Section name"
-                      />
-                      <Input
-                        type="number"
-                        value={section.tables}
-                        onChange={(e) => {
-                          const newSections = [...layoutInfo.sections];
-                          newSections[index].tables = Number(e.target.value);
-                          setLayoutInfo({ ...layoutInfo, sections: newSections });
-                        }}
-                        placeholder="Number of tables"
-                      />
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    onClick={() => setLayoutInfo({
-                      ...layoutInfo,
-                      sections: [...layoutInfo.sections, { name: "", tables: 0 }]
-                    })}
-                  >
-                    Add Section
-                  </Button>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Default Table Capacities</label>
-                  <div className="flex flex-wrap gap-2">
-                    {layoutInfo.defaultCapacities.map((capacity, index) => (
-                      <Input
-                        key={index}
-                        type="number"
-                        className="w-20"
-                        value={capacity}
-                        onChange={(e) => {
-                          const newCapacities = [...layoutInfo.defaultCapacities];
-                          newCapacities[index] = Number(e.target.value);
-                          setLayoutInfo({ ...layoutInfo, defaultCapacities: newCapacities });
-                        }}
-                      />
-                    ))}
-                    <Button
-                      variant="outline"
-                      onClick={() => setLayoutInfo({
-                        ...layoutInfo,
-                        defaultCapacities: [...layoutInfo.defaultCapacities, 2]
-                      })}
-                    >
-                      Add Capacity
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <LayoutTab 
+              layoutInfo={layoutInfo}
+              setLayoutInfo={setLayoutInfo}
+            />
           </TabsContent>
 
           <TabsContent value="menu">
