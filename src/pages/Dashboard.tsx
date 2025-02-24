@@ -14,6 +14,7 @@ import Feedback from "@/routes/dashboard/Feedback";
 import Promotions from "@/routes/dashboard/Promotions";
 import Tables from "@/routes/dashboard/Tables";
 import Orders from "@/routes/dashboard/Orders";
+import Vendors from "@/routes/dashboard/Vendors";
 import { useLocation } from "react-router-dom";
 import { ChefHat, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -110,6 +111,9 @@ const Dashboard = () => {
             </TabsContent>
             <TabsContent value="tables" className="m-0">
               <Tables />
+            </TabsContent>
+            <TabsContent value="vendors" className="m-0">
+              <Vendors />
             </TabsContent>
           </Tabs>
         </div>
