@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Card,
@@ -26,6 +25,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useSupplierManagement } from "@/hooks/dashboard/useSupplierManagement";
 import { SupplierForm } from "./SupplierForm";
 import type { Supplier } from "@/hooks/dashboard/useSupplierManagement";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const SupplierManagement = () => {
   const { suppliers, isLoading, addSupplier, updateSupplier, deleteSupplier } = useSupplierManagement();
@@ -78,58 +78,73 @@ export const SupplierManagement = () => {
           <CardTitle>Suppliers</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact Person</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {suppliers.map((supplier) => (
-                <TableRow key={supplier.id}>
-                  <TableCell className="font-medium">{supplier.name}</TableCell>
-                  <TableCell>{supplier.contact_person || "-"}</TableCell>
-                  <TableCell>{supplier.email || "-"}</TableCell>
-                  <TableCell>{supplier.phone || "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant={supplier.status === "active" ? "default" : "secondary"}>
-                      {supplier.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleAddEdit(supplier)}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(supplier.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {suppliers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6">
-                    No suppliers found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <Tabs defaultValue="suppliers">
+            <TabsList>
+              <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
+              <TabsTrigger value="ingredients">Supplier Ingredients</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="suppliers">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Contact Person</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {suppliers.map((supplier) => (
+                    <TableRow key={supplier.id}>
+                      <TableCell className="font-medium">{supplier.name}</TableCell>
+                      <TableCell>{supplier.contact_person || "-"}</TableCell>
+                      <TableCell>{supplier.email || "-"}</TableCell>
+                      <TableCell>{supplier.phone || "-"}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={supplier.status === "active" ? "default" : "secondary"}
+                        >
+                          {supplier.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAddEdit(supplier)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(supplier.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {suppliers.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-6">
+                        No suppliers found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TabsContent>
+
+            <TabsContent value="ingredients">
+              <SupplierIngredients suppliers={suppliers} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
