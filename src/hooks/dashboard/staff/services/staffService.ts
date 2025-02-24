@@ -22,6 +22,7 @@ const createStaffMembersTable = async () => {
         schedule JSONB,
         bank_info JSONB,
         emergency_contact JSONB,
+        notes TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
       );
@@ -58,11 +59,8 @@ const createStaffMembersTable = async () => {
       END $$;
     `;
 
-    // Using raw SQL query instead of RPC
-    const { error: createError } = await supabase.from('_sql').select('*').eq('query', createTableSQL);
-    if (createError && !createError.message.includes('already exists')) {
-      console.error('Error creating table:', createError);
-    }
+    // Execute the SQL directly through Supabase function
+    await supabase.rpc('execute_sql', { query: createTableSQL });
   } catch (error) {
     console.error('Error in createStaffMembersTable:', error);
   }
@@ -84,8 +82,10 @@ export const fetchStaffMembers = async () => {
       return [];
     }
 
+    if (!staffData) return [];
+
     // Transform the data to match DatabaseStaffMember type
-    const transformedData = (staffData || []).map(staff => ({
+    const transformedData: DatabaseStaffMember[] = staffData.map(staff => ({
       id: staff.id,
       name: staff.name,
       role: staff.role,
@@ -98,7 +98,7 @@ export const fetchStaffMembers = async () => {
       certifications: staff.certifications || [],
       performance_rating: staff.performance_rating || 0,
       address: staff.address || '',
-      schedule: staff.schedule || {
+      schedule: staff.schedule as Record<string, string> || {
         monday: "OFF",
         tuesday: "OFF",
         wednesday: "OFF",
@@ -117,11 +117,12 @@ export const fetchStaffMembers = async () => {
         phone: (staff.emergency_contact as any)?.phone || '',
         relationship: (staff.emergency_contact as any)?.relationship || ''
       },
+      notes: staff.notes || '',
       created_at: staff.created_at,
       updated_at: staff.updated_at
     }));
 
-    return transformedData as DatabaseStaffMember[];
+    return transformedData;
   } catch (error) {
     console.error('Error in fetchStaffMembers:', error);
     return [];
@@ -160,7 +161,8 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
         name: data.emergencyContact?.name || '',
         phone: data.emergencyContact?.phone || '',
         relationship: data.emergencyContact?.relationship || ''
-      }
+      },
+      notes: ''
     };
 
     const { data: newStaff, error } = await supabase
@@ -174,7 +176,11 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       throw error;
     }
 
-    // Transform the response to match DatabaseStaffMember type
+    if (!newStaff) {
+      throw new Error('No staff member returned from creation');
+    }
+
+    // Transform to match DatabaseStaffMember type
     const transformedStaff: DatabaseStaffMember = {
       id: newStaff.id,
       name: newStaff.name,
@@ -188,15 +194,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       certifications: newStaff.certifications || [],
       performance_rating: newStaff.performance_rating || 0,
       address: newStaff.address || '',
-      schedule: newStaff.schedule || {
-        monday: "OFF",
-        tuesday: "OFF",
-        wednesday: "OFF",
-        thursday: "OFF",
-        friday: "OFF",
-        saturday: "OFF",
-        sunday: "OFF"
-      },
+      schedule: newStaff.schedule as Record<string, string>,
       bank_info: {
         accountNumber: (newStaff.bank_info as any)?.accountNumber || '',
         routingNumber: (newStaff.bank_info as any)?.routingNumber || '',
@@ -207,6 +205,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
         phone: (newStaff.emergency_contact as any)?.phone || '',
         relationship: (newStaff.emergency_contact as any)?.relationship || ''
       },
+      notes: newStaff.notes || '',
       created_at: newStaff.created_at,
       updated_at: newStaff.updated_at
     };
