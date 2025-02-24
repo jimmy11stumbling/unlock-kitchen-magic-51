@@ -1,99 +1,24 @@
 
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RealtimeChannel, PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-
-export interface Ingredient {
-  id: number;
-  name: string;
-  current_stock: number;
-  unit: string;
-  minimum_stock: number;
-  cost_per_unit: number;
-}
-
-export interface MenuItemIngredient {
-  id: number;
-  menu_item_id: number;
-  ingredient_id: number;
-  quantity: number;
-  unit: string;
-  ingredients?: Ingredient;
-}
-
-// Interface for the data structure returned from the join query
-interface MenuItemIngredientJoin {
-  quantity: number;
-  ingredient_id: number;
-  ingredients: Ingredient;
-}
-
-interface PrepDetails {
-  steps: Array<{ duration: number }>;
-  equipment_needed: string[];
-}
-
-interface RealtimePayload {
-  commit_timestamp: string;
-  errors: null | any[];
-  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-  new: { [key: string]: any };
-  old: { [key: string]: any };
-  schema: string;
-  table: string;
-}
-
-const MINIMUM_STOCK_THRESHOLD = 0;
-const MAXIMUM_STOCK_THRESHOLD = 100000;
-const DEFAULT_PREP_TIME = 15;
-const MAX_RETRIES = 3;
-const BASE_RETRY_DELAY = 1000;
-
-const isValidPrepDetails = (data: unknown): data is PrepDetails => {
-  if (typeof data !== 'object' || !data) return false;
-  
-  const details = data as Record<string, unknown>;
-  return (
-    Array.isArray(details.steps) &&
-    Array.isArray(details.equipment_needed) &&
-    details.steps.every(step => 
-      typeof step === 'object' && 
-      step !== null && 
-      'duration' in step && 
-      typeof step.duration === 'number'
-    ) &&
-    details.equipment_needed.every(item => typeof item === 'string')
-  );
-};
-
-const isValidStockQuantity = (quantity: number): boolean => {
-  if (typeof quantity !== 'number' || isNaN(quantity)) {
-    return false;
-  }
-  return quantity >= MINIMUM_STOCK_THRESHOLD && 
-         quantity <= MAXIMUM_STOCK_THRESHOLD &&
-         Number.isInteger(quantity);
-};
-
-const handleDatabaseError = (error: PostgrestError): never => {
-  if (error.code === '42P01') {
-    throw new Error('Ingredients table not found. Please ensure the database is properly set up.');
-  }
-  if (error.code === '28P01') {
-    throw new Error('Database connection error. Please check your credentials.');
-  }
-  if (error.code === '23505') {
-    throw new Error('This ingredient already exists.');
-  }
-  throw new Error(`Database error: ${error.message}`);
-};
+import { Ingredient, MenuItemIngredientJoin } from './types/ingredientTypes';
+import { 
+  isValidStockQuantity, 
+  isValidPrepDetails,
+  DEFAULT_PREP_TIME,
+  MAX_RETRIES,
+  BASE_RETRY_DELAY 
+} from './utils/ingredientValidation';
+import { handleDatabaseError } from './utils/errorHandling';
+import { useIngredientRealtime } from './useIngredientRealtime';
 
 export const useIngredientManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [realtimeChannel, setRealtimeChannel] = useState<RealtimeChannel | null>(null);
+  
+  // Set up realtime subscription
+  useIngredientRealtime(queryClient);
 
   // Fetch ingredients with comprehensive error handling and retry logic
   const { 
@@ -127,23 +52,21 @@ export const useIngredientManagement = () => {
     },
     retry: MAX_RETRIES,
     retryDelay: (attemptIndex) => Math.min(BASE_RETRY_DELAY * 2 ** attemptIndex, 30000),
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
   });
 
   // Update ingredient stock with comprehensive validation and error handling
   const updateStockMutation = useMutation({
     mutationFn: async ({ id, quantity }: { id: number; quantity: number }) => {
-      // Pre-validation
       if (!id || typeof id !== 'number') {
         throw new Error('Invalid ingredient ID');
       }
 
       if (!isValidStockQuantity(quantity)) {
-        throw new Error(`Invalid stock quantity. Must be between ${MINIMUM_STOCK_THRESHOLD} and ${MAXIMUM_STOCK_THRESHOLD}`);
+        throw new Error(`Invalid stock quantity. Must be between ${0} and ${100000}`);
       }
 
-      // Check if ingredient exists before updating
       const { data: existingIngredient, error: checkError } = await supabase
         .from('ingredients')
         .select('id')
@@ -158,7 +81,6 @@ export const useIngredientManagement = () => {
         throw new Error('Ingredient not found');
       }
 
-      // Perform update with retry logic
       let retries = 0;
       while (retries < MAX_RETRIES) {
         try {
@@ -236,34 +158,6 @@ export const useIngredientManagement = () => {
     }
   };
 
-  // Set up realtime subscription with proper typing and error handling
-  useEffect(() => {
-    const channel = supabase
-      .channel('ingredients-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'ingredients' },
-        (payload: RealtimePayload) => {
-          console.log('Realtime update:', payload);
-          queryClient.invalidateQueries({ queryKey: ['ingredients'] });
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to ingredients changes');
-        }
-      });
-
-    setRealtimeChannel(channel);
-
-    return () => {
-      if (realtimeChannel) {
-        supabase.removeChannel(realtimeChannel)
-          .then(() => console.log('Realtime subscription cleaned up'))
-          .catch(err => console.error('Error removing channel:', err));
-      }
-    };
-  }, [queryClient]);
-
   // Check for low stock with proper typing
   const checkLowStock = (): Ingredient[] => {
     return ingredients.filter(ing => ing.current_stock <= ing.minimum_stock);
@@ -281,3 +175,5 @@ export const useIngredientManagement = () => {
     checkLowStock,
   };
 };
+
+export type { Ingredient, MenuItemIngredient } from './types/ingredientTypes';
