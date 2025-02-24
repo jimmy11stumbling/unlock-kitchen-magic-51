@@ -1,9 +1,12 @@
 
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Vendor } from "@/types/vendor";
 import { vendorService } from "../services/vendorService";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -11,35 +14,19 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: 'Vendor name must be at least 2 characters.',
-  }),
-  contactEmail: z.string().email({
-    message: 'Please enter a valid email address.',
-  }),
-  contactPhone: z.string().min(10, {
-    message: 'Phone number must be at least 10 characters.',
-  }),
-  address: z.string().min(5, {
-    message: 'Address must be at least 5 characters.',
-  }),
-  description: z.string().optional(),
+  name: z.string().min(2),
+  email: z.string().email().optional(),
+  phone: z.string().min(10).optional(),
+  address: z.string().min(5).optional(),
+  taxId: z.string().optional(),
+  paymentTerms: z.enum(["cash", "card", "bank_transfer", "check"]),
+  notes: z.string().optional()
 });
 
 export interface VendorFormProps {
-  vendor?: {
-    id: number;
-    name: string;
-    contactEmail: string;
-    contactPhone: string;
-    address: string;
-    description?: string;
-  };
+  vendor?: Vendor;
   onSuccess?: () => void;
   onClose?: () => void;
 }
@@ -49,19 +36,38 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: vendor?.name || '',
-      contactEmail: vendor?.contactEmail || '',
-      contactPhone: vendor?.contactPhone || '',
+      email: vendor?.email || '',
+      phone: vendor?.phone || '',
       address: vendor?.address || '',
-      description: vendor?.description || '',
+      taxId: vendor?.taxId || '',
+      paymentTerms: vendor?.paymentTerms || 'cash',
+      notes: vendor?.notes || ''
     },
   });
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       if (vendor) {
-        await vendorService.updateVendor(vendor.id.toString(), data);
+        await vendorService.updateVendor(vendor.id.toString(), {
+          name: data.name,
+          email: data.email || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          taxId: data.taxId || '',
+          paymentTerms: data.paymentTerms,
+          notes: data.notes || ''
+        });
       } else {
-        await vendorService.addVendor(data);
+        await vendorService.addVendor({
+          name: data.name,
+          email: data.email || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          taxId: data.taxId || '',
+          status: 'active',
+          paymentTerms: data.paymentTerms,
+          notes: data.notes || ''
+        });
       }
       onSuccess?.();
       onClose?.();
@@ -72,51 +78,42 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vendor Name</FormLabel>
+              <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="Acme Corp" {...field} />
+                <Input {...field} />
               </FormControl>
-              <FormDescription>
-                This is the name of the vendor.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
         <FormField
           control={form.control}
-          name="contactEmail"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contact Email</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="mail@example.com" type="email" {...field} />
+                <Input type="email" {...field} />
               </FormControl>
-              <FormDescription>
-                This is the vendor's contact email address.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
         <FormField
           control={form.control}
-          name="contactPhone"
+          name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contact Phone</FormLabel>
+              <FormLabel>Phone</FormLabel>
               <FormControl>
-                <Input placeholder="555-555-5555" type="tel" {...field} />
+                <Input type="tel" {...field} />
               </FormControl>
-              <FormDescription>
-                This is the vendor's contact phone number.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -128,27 +125,52 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Input placeholder="123 Main St" {...field} />
+                <Input {...field} />
               </FormControl>
-              <FormDescription>
-                This is the vendor's address.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
         <FormField
           control={form.control}
-          name="description"
+          name="taxId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Tax ID</FormLabel>
               <FormControl>
-                <Input placeholder="Description" {...field} />
+                <Input {...field} />
               </FormControl>
-              <FormDescription>
-                This is the vendor's description.
-              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="paymentTerms"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Payment Terms</FormLabel>
+              <FormControl>
+                <select {...field} className="w-full p-2 border rounded">
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="check">Check</option>
+                </select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

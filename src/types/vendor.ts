@@ -1,4 +1,8 @@
 
+import type { Database } from "@/integrations/supabase/types";
+
+export type PaymentMethod = Database["public"]["Enums"]["payment_method"];
+
 export interface Vendor {
   id: number;
   name: string;
@@ -7,7 +11,7 @@ export interface Vendor {
   address: string;
   taxId: string;
   status: 'active' | 'inactive';
-  paymentTerms: string;
+  paymentTerms: PaymentMethod;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -20,20 +24,12 @@ export interface Expense {
   date: string;
   category: string;
   description: string;
-  paymentMethod: string;
+  paymentMethod: PaymentMethod;
   receiptUrl?: string;
   taxDeductible: boolean;
   status: 'pending' | 'paid' | 'void';
   createdAt: string;
   updatedAt: string;
-}
-
-export interface TaxCategory {
-  id: number;
-  name: string;
-  description: string;
-  rate: number;
-  deductible: boolean;
 }
 
 export interface AccountingSummary {
