@@ -7,6 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, FileSpreadsheet, Calculator } from "lucide-react";
 import type { Vendor, Expense, AccountingSummary } from "@/types/vendor";
+import { VendorList } from "./vendors/VendorList";
+import { ExpenseTable } from "./vendors/ExpenseTable";
+import { AccountingSummary as AccountingSummaryComponent } from "./vendors/AccountingSummary";
 
 export const VendorPanel = () => {
   const { toast } = useToast();
@@ -64,36 +67,15 @@ export const VendorPanel = () => {
           </div>
 
           <TabsContent value="vendors">
-            <div className="rounded-md border">
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">No vendors found. Add your first vendor to get started.</p>
-              </div>
-            </div>
+            <VendorList vendors={vendors} searchTerm={searchTerm} />
           </TabsContent>
 
           <TabsContent value="expenses">
-            <div className="rounded-md border">
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">No expenses recorded. Add expenses to track your vendor payments.</p>
-              </div>
-            </div>
+            <ExpenseTable expenses={expenses} searchTerm={searchTerm} />
           </TabsContent>
 
           <TabsContent value="accounting">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Card className="p-4">
-                <h3 className="font-semibold mb-2">Total Expenses</h3>
-                <p className="text-2xl">${summary.totalExpenses.toFixed(2)}</p>
-              </Card>
-              <Card className="p-4">
-                <h3 className="font-semibold mb-2">Tax Deductible Amount</h3>
-                <p className="text-2xl">${summary.taxDeductibleAmount.toFixed(2)}</p>
-              </Card>
-              <Card className="p-4">
-                <h3 className="font-semibold mb-2">Pending Payments</h3>
-                <p className="text-2xl">${summary.totalPending.toFixed(2)}</p>
-              </Card>
-            </div>
+            <AccountingSummaryComponent summary={summary} />
           </TabsContent>
         </Tabs>
       </Card>
