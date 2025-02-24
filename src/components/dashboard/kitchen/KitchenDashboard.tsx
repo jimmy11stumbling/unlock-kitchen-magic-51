@@ -10,21 +10,24 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { KitchenOrder, MenuItem } from "@/types/staff";
 
-interface KitchenOrderResponse {
+// This interface matches the actual Supabase response structure
+interface SupabaseKitchenOrder {
   id: number;
   order_id: number;
-  items: Array<{
+  items: {
     menuItemId: number;
     quantity: number;
     status: "pending" | "preparing" | "ready" | "delivered";
     cookingStation: string;
     allergenAlert: boolean;
-  }>;
-  priority: "normal" | "high" | "rush";
+  }[];
+  priority: string;
   notes: string | null;
   coursing: string;
   estimated_delivery_time: string;
-  table_number: number;
+  table_number: number | null;
+  created_at: string | null;
+  updated_at: string | null;
   menu_items: MenuItem[];
 }
 
@@ -44,18 +47,21 @@ export function KitchenDashboard() {
 
       if (error) throw error;
 
-      return (data as KitchenOrderResponse[]).map(order => ({
+      // First cast to unknown, then to our known type to safely handle the conversion
+      const orders = (data as unknown) as SupabaseKitchenOrder[];
+      
+      return orders.map(order => ({
         id: order.id,
         orderId: order.order_id,
         items: order.items.map(item => ({
           ...item,
           menuItem: order.menu_items.find(mi => mi.id === item.menuItemId)
         })),
-        priority: order.priority,
+        priority: order.priority as "normal" | "high" | "rush",
         notes: order.notes || "",
         coursing: order.coursing,
         estimatedDeliveryTime: order.estimated_delivery_time,
-        tableNumber: order.table_number
+        tableNumber: order.table_number || 0
       }));
     },
     refetchInterval: autoRefresh ? 10000 : false
