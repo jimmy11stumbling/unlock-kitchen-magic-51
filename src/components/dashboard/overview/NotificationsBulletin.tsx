@@ -1,5 +1,5 @@
 
-import { AlertCircle, Clock, Restaurant, Users, DollarSign } from "lucide-react";
+import { AlertCircle, Clock, Utensils, Users, DollarSign } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface NotificationItem {
@@ -61,7 +61,7 @@ export const NotificationsBulletin = () => {
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Restaurant className="w-5 h-5" />
+          <Utensils className="w-5 h-5" />
           Restaurant Notifications
         </h3>
         <div className="text-sm text-muted-foreground">
