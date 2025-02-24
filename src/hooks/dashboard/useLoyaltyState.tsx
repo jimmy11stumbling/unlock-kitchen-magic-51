@@ -1,68 +1,54 @@
 
-import { useState } from "react";
+import { useCustomerManagement } from './useCustomerManagement';
 import { useToast } from "@/components/ui/use-toast";
-
-interface LoyaltyMember {
-  id: number;
-  name: string;
-  email: string;
-  points: number;
-  tier: "Bronze" | "Silver" | "Gold" | "Platinum";
-  joinDate: string;
-  lastVisit: string;
-}
 
 export const useLoyaltyState = () => {
   const { toast } = useToast();
-  const [members, setMembers] = useState<LoyaltyMember[]>([]);
+  const { 
+    customers,
+    isLoading,
+    addCustomer,
+    updatePoints,
+    updatePreferences,
+    calculateTier
+  } = useCustomerManagement();
 
-  const calculateTier = (points: number): LoyaltyMember["tier"] => {
-    if (points >= 1000) return "Platinum";
-    if (points >= 500) return "Gold";
-    if (points >= 200) return "Silver";
-    return "Bronze";
+  const addMember = async (memberData: { 
+    name: string;
+    email: string;
+    phone?: string;
+  }) => {
+    try {
+      await addCustomer({
+        ...memberData,
+        preferences: {}
+      });
+    } catch (error) {
+      console.error('Error adding member:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add member to loyalty program",
+        variant: "destructive",
+      });
+    }
   };
 
-  const addMember = (memberData: Omit<LoyaltyMember, "id" | "tier" | "points">) => {
-    const newMember: LoyaltyMember = {
-      id: members.length + 1,
-      points: 0,
-      tier: "Bronze",
-      ...memberData,
-    };
-    setMembers([...members, newMember]);
-    toast({
-      title: "Member added",
-      description: `${memberData.name} has been added to the loyalty program.`,
-    });
-  };
-
-  const addPoints = (memberId: number, points: number) => {
-    setMembers(members.map(member => {
-      if (member.id === memberId) {
-        const newPoints = member.points + points;
-        const newTier = calculateTier(newPoints);
-        
-        if (newTier !== member.tier) {
-          toast({
-            title: "Tier upgrade!",
-            description: `Congratulations! ${member.name} has reached ${newTier} tier!`,
-          });
-        }
-        
-        return {
-          ...member,
-          points: newPoints,
-          tier: newTier,
-          lastVisit: new Date().toISOString(),
-        };
-      }
-      return member;
-    }));
+  const addPoints = async (memberId: string, points: number) => {
+    try {
+      await updatePoints(memberId, points);
+    } catch (error) {
+      console.error('Error adding points:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add loyalty points",
+        variant: "destructive",
+      });
+    }
   };
 
   return {
-    members,
+    members: customers,
+    isLoading,
     addMember,
     addPoints,
   };
