@@ -89,8 +89,13 @@ export const useIngredientManagement = () => {
 
     if (!menuItem || !ingredients) return 15; // Default prep time
 
-    const prepDetails = menuItem.prep_details as PrepDetails;
-    const baseTime = prepDetails.steps?.reduce((total: number, step) => total + (step.duration || 0), 0) || 0;
+    // Safely cast prep_details to PrepDetails type with default values
+    const prepDetails: PrepDetails = {
+      steps: (menuItem.prep_details as any)?.steps || [],
+      equipment_needed: (menuItem.prep_details as any)?.equipment_needed || []
+    };
+    
+    const baseTime = prepDetails.steps.reduce((total: number, step) => total + (step.duration || 0), 0);
     
     // Add complexity factor based on number of ingredients
     const complexityFactor = Math.ceil(ingredients.length / 3) * 5;
