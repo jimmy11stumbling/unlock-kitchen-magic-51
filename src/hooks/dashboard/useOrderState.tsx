@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import type { KitchenOrder, Order } from "@/types/staff";
+import type { KitchenOrder, Order, OrderItem } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,14 +43,19 @@ export const useOrderState = () => {
       const transformedOrders: Order[] = (data || []).map(order => ({
         id: order.id,
         tableNumber: order.table_number,
-        items: order.items || [],
-        status: order.status,
+        items: Array.isArray(order.items) ? order.items.map((item: any) => ({
+          id: item.id || Date.now(),
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })) : [],
+        status: order.status as Order['status'],
         total: order.total,
         timestamp: order.timestamp,
         serverName: order.server_name,
-        specialInstructions: order.special_instructions,
-        guestCount: order.guest_count,
-        estimatedPrepTime: order.estimated_prep_time
+        specialInstructions: order.special_instructions || '',
+        guestCount: order.guest_count || 1,
+        estimatedPrepTime: order.estimated_prep_time || 15
       }));
 
       setOrders(transformedOrders);
@@ -72,11 +77,11 @@ export const useOrderState = () => {
         table_number: tableId,
         server_name: serverName,
         status: 'pending' as const,
-        items: [],
+        items: [] as OrderItem[],
         total: 0,
         timestamp: new Date().toISOString(),
-        guest_count: 1, // Default value
-        estimated_prep_time: 15, // Default value in minutes
+        guest_count: 1,
+        estimated_prep_time: 15,
         special_instructions: '',
       };
 
@@ -88,18 +93,17 @@ export const useOrderState = () => {
 
       if (error) throw error;
 
-      // Transform the response to match Order type
       const transformedOrder: Order = {
         id: data.id,
         tableNumber: data.table_number,
-        items: data.items || [],
-        status: data.status,
+        items: [] as OrderItem[],
+        status: data.status as Order['status'],
         total: data.total,
         timestamp: data.timestamp,
         serverName: data.server_name,
-        specialInstructions: data.special_instructions,
-        guestCount: data.guest_count,
-        estimatedPrepTime: data.estimated_prep_time
+        specialInstructions: data.special_instructions || '',
+        guestCount: data.guest_count || 1,
+        estimatedPrepTime: data.estimated_prep_time || 15
       };
       
       toast({
@@ -132,7 +136,6 @@ export const useOrderState = () => {
         description: `Order status updated to ${status}`,
       });
 
-      // Refresh orders after update
       fetchOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
@@ -154,7 +157,11 @@ export const useOrderState = () => {
 
       if (fetchError) throw fetchError;
 
-      const updatedItems = existingOrder.items.map((item: any) => ({
+      if (!existingOrder || !Array.isArray(existingOrder.items)) {
+        throw new Error('Invalid kitchen order data');
+      }
+
+      const updatedItems = existingOrder.items.map((item) => ({
         ...item,
         status: itemStatus
       }));
