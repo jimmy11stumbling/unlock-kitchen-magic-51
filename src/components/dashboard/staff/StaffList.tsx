@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon, UserCog, ShieldAlert } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember } from "@/types/staff";
 import { hasAdminAccess } from "@/hooks/dashboard/staff/services/queries/staffQueries";
@@ -106,7 +107,16 @@ export const StaffList = ({
             <TableCell className="font-medium">
               <div className="flex items-center gap-2">
                 {member.role === 'manager' && (
-                  <ShieldAlert className="h-4 w-4 text-primary" title="Manager" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <ShieldAlert className="h-4 w-4 text-primary" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Manager
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 {member.name}
               </div>

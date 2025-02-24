@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { checkTableExists } from "../utils/supabaseUtils";
 import { mockStaffData } from "../mockData/mockStaffData";
@@ -68,37 +69,41 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       return newStaff;
     }
 
+    const staffData = {
+      name: data.name,
+      role: data.role,
+      email: data.email,
+      phone: data.phone,
+      status: 'active',
+      salary: data.salary,
+      department: data.department,
+      certifications: data.certifications,
+      performance_rating: data.performanceRating,
+      shift: data.shift,
+      address: data.address,
+      schedule: data.schedule,
+      bank_info: data.bankInfo,
+      emergency_contact: data.emergencyContact,
+      notes: data.notes,
+      employment_status: 'full_time',
+      hire_date: data.startDate,
+      hourly_rate: data.hourlyRate || 0,
+      overtime_rate: data.overtimeRate || 0
+    };
+
     const { data: newStaff, error } = await supabase
       .from('staff_members')
-      .insert([{
-        name: data.name,
-        role: data.role,
-        email: data.email,
-        phone: data.phone,
-        status: 'active',
-        salary: data.salary,
-        department: data.department,
-        certifications: data.certifications,
-        performance_rating: data.performanceRating,
-        shift: data.shift,
-        address: data.address,
-        schedule: data.schedule,
-        bank_info: data.bankInfo,
-        emergency_contact: data.emergencyContact,
-        notes: data.notes,
-        employment_status: 'full_time',
-        hire_date: data.startDate,
-        hourly_rate: data.hourlyRate || 0,
-        overtime_rate: data.overtimeRate || 0,
-        access_level: data.role === 'manager' ? 'admin' : 'staff'
-      }])
+      .insert([staffData])
       .select()
       .single();
 
     if (error) throw error;
     if (!newStaff) throw new Error('Failed to create staff member');
 
-    return newStaff;
+    return {
+      ...newStaff,
+      access_level: data.role === 'manager' ? 'admin' : 'staff'
+    };
   } catch (error) {
     console.error('Error creating staff member:', error);
     throw error;
