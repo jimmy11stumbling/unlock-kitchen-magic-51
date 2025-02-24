@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { Vendor, Expense, AccountingSummary } from "@/types/vendor";
+import { v4 as uuidv4 } from 'uuid';
 
 type FinancialTransaction = Database["public"]["Tables"]["financial_transactions"]["Row"];
 type FinancialTransactionInsert = Database["public"]["Tables"]["financial_transactions"]["Insert"];
@@ -51,13 +52,13 @@ export const vendorService = {
       .from('financial_transactions')
       .insert({
         amount: 0,
-        category_id: '',
+        category_id: uuidv4(), // Generate a valid UUID for category_id
         date: new Date().toISOString(),
         description: vendor.name,
         payment_method: vendor.paymentTerms,
         type: 'expense',
         reference_number: vendor.taxId,
-        created_by: ''
+        created_by: uuidv4() // Generate a valid UUID for created_by
       })
       .select('*')
       .single();
@@ -101,12 +102,12 @@ export const vendorService = {
       .from('financial_transactions')
       .insert({
         amount: expense.amount,
-        category_id: expense.category,
+        category_id: uuidv4(), // Generate a valid UUID for category_id
         date: expense.date,
         description: expense.description,
         payment_method: expense.paymentMethod,
         type: 'expense',
-        created_by: '',
+        created_by: uuidv4(), // Generate a valid UUID for created_by
         reference_number: ''
       })
       .select('*')
