@@ -110,6 +110,7 @@ export interface InventoryItem {
   unit: string;
   minQuantity: number;
   price: number;
+  category: string;
 }
 
 export interface Order {
