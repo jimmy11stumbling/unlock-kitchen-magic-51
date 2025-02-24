@@ -200,6 +200,7 @@ export interface KitchenOrder {
   orderId: number;
   items: {
     menuItemId: number;
+    itemName: string;
     quantity: number;
     status: "pending" | "preparing" | "ready" | "delivered";
     startTime?: string;
@@ -209,10 +210,15 @@ export interface KitchenOrder {
     modifications: string[];
     allergenAlert: boolean;
   }[];
-  priority: "normal" | "high" | "rush";
+  priority: "normal" | "rush";
   notes: string;
-  coursing: "standard" | "appetizers first" | "serve together" | "desserts after clearing mains";
-  estimatedDeliveryTime: string;
+  coursing: "standard" | "appetizers first" | "serve together";
+  created_at: string;
+  updated_at: string;
+  estimated_delivery_time: string;
+  table_number: number;
+  server_name: string;
+  status: "pending" | "preparing" | "ready" | "delivered";
 }
 
 export interface CustomerFeedback {
@@ -232,7 +238,7 @@ export interface Promotion {
   endDate: string;
   discountType: "percentage" | "fixed";
   discountValue: number;
-  applicableItems: number[]; // menuItemIds
+  applicableItems: number[];
   active: boolean;
 }
 

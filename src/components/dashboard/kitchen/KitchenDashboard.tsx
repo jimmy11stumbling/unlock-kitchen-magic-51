@@ -7,7 +7,7 @@ import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useIngredientManagement } from '@/hooks/dashboard/useIngredientManagement';
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { Clock, CheckCircle, AlertTriangle, Users, UtensilsCrossed } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import type { KitchenOrder } from "@/types/staff";
@@ -28,7 +28,6 @@ export function KitchenDashboard() {
   }, [ingredients]);
 
   useEffect(() => {
-    // Fetch initial kitchen orders
     const fetchKitchenOrders = async () => {
       const { data, error } = await supabase
         .from('kitchen_orders')
@@ -40,12 +39,38 @@ export function KitchenDashboard() {
         return;
       }
 
-      setActiveOrders(data || []);
+      // Transform the data to match KitchenOrder type
+      const transformedOrders: KitchenOrder[] = (data || []).map(order => ({
+        id: order.id,
+        orderId: order.order_id,
+        items: order.items.map((item: any) => ({
+          menuItemId: item.menuItemId,
+          itemName: item.itemName,
+          quantity: item.quantity,
+          status: item.status,
+          startTime: item.startTime,
+          completionTime: item.completionTime,
+          cookingStation: item.cookingStation,
+          assignedChef: item.assignedChef,
+          modifications: item.modifications || [],
+          allergenAlert: item.allergenAlert || false
+        })),
+        priority: order.priority,
+        notes: order.notes,
+        coursing: order.coursing,
+        created_at: order.created_at,
+        updated_at: order.updated_at,
+        estimated_delivery_time: order.estimated_delivery_time,
+        table_number: order.table_number,
+        server_name: order.server_name,
+        status: order.status
+      }));
+
+      setActiveOrders(transformedOrders);
     };
 
     fetchKitchenOrders();
 
-    // Subscribe to new orders and order updates
     const channel = supabase
       .channel('kitchen-updates')
       .on(
@@ -53,7 +78,7 @@ export function KitchenDashboard() {
         { event: '*', schema: 'public', table: 'kitchen_orders' },
         (payload) => {
           console.log('Kitchen order update:', payload);
-          fetchKitchenOrders(); // Refresh orders when changes occur
+          fetchKitchenOrders();
         }
       )
       .subscribe();
@@ -100,9 +125,20 @@ export function KitchenDashboard() {
     }
   };
 
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'ready': return 'success';
+      case 'preparing': return 'default';
+      case 'pending': return 'secondary';
+      case 'delivered': return 'outline';
+      default: return 'default';
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Kitchen Alerts Section */}
         <Card className="col-span-full p-6">
           <h2 className="text-xl font-semibold mb-4">Kitchen Alerts</h2>
           <div className="space-y-4">
@@ -116,6 +152,7 @@ export function KitchenDashboard() {
           </div>
         </Card>
 
+        {/* Active Orders Section */}
         <Card className="col-span-full p-6">
           <h2 className="text-xl font-semibold mb-4">Active Orders</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -123,13 +160,21 @@ export function KitchenDashboard() {
               <Card key={order.id} className="p-4 space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-semibold">Order #{order.orderId}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">Order #{order.orderId}</h3>
+                      <Badge variant={order.priority === 'rush' ? 'destructive' : 'default'}>
+                        {order.priority}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Table {order.table_number} • Server: {order.server_name}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       Sent: {new Date(order.created_at).toLocaleTimeString()}
                     </p>
                   </div>
-                  <Badge variant={order.priority === 'rush' ? 'destructive' : 'default'}>
-                    {order.priority}
+                  <Badge variant={getStatusBadgeVariant(order.status)}>
+                    {order.status}
                   </Badge>
                 </div>
                 
@@ -138,8 +183,20 @@ export function KitchenDashboard() {
                     <div key={item.menuItemId} className="flex items-center justify-between bg-muted p-2 rounded">
                       <div>
                         <span className="font-medium">
-                          {item.quantity}x {item.name || `Item #${item.menuItemId}`}
+                          {item.quantity}x {item.itemName}
                         </span>
+                        <div className="flex gap-2 mt-1">
+                          {item.cookingStation && (
+                            <Badge variant="outline" className="text-xs">
+                              {item.cookingStation}
+                            </Badge>
+                          )}
+                          {item.allergenAlert && (
+                            <Badge variant="destructive" className="text-xs">
+                              Allergy Alert
+                            </Badge>
+                          )}
+                        </div>
                         {item.modifications.length > 0 && (
                           <p className="text-sm text-muted-foreground">
                             {item.modifications.join(', ')}
@@ -174,11 +231,16 @@ export function KitchenDashboard() {
                     </Badge>
                   </div>
                 )}
+
+                <div className="text-sm text-muted-foreground mt-2">
+                  Est. Delivery: {new Date(order.estimated_delivery_time).toLocaleTimeString()}
+                </div>
               </Card>
             ))}
           </div>
         </Card>
 
+        {/* Ingredient Status Section */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Ingredient Status</h2>
           <div className="space-y-4">
