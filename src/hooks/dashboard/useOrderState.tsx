@@ -63,36 +63,43 @@ export const useOrderState = () => {
     };
   }, []);
 
-  const transformDatabaseOrder = (dbOrder: SupabaseOrder): Order => ({
-    id: dbOrder.id,
-    tableNumber: dbOrder.table_number,
-    items: Array.isArray(dbOrder.items) 
-      ? (dbOrder.items as DatabaseOrderItem[]).map(item => ({
+  const transformDatabaseOrder = (dbOrder: SupabaseOrder): Order => {
+    // First, safely cast items to an array of unknown, then to DatabaseOrderItem[]
+    const items = Array.isArray(dbOrder.items) 
+      ? (dbOrder.items as unknown as DatabaseOrderItem[]).map(item => ({
           id: item.id,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
         }))
-      : [],
-    status: dbOrder.status as OrderStatus,
-    total: dbOrder.total,
-    timestamp: dbOrder.timestamp,
-    serverName: dbOrder.server_name,
-    specialInstructions: dbOrder.special_instructions,
-    guestCount: dbOrder.guest_count,
-    estimatedPrepTime: dbOrder.estimated_prep_time
-  });
+      : [];
+
+    return {
+      id: dbOrder.id,
+      tableNumber: dbOrder.table_number,
+      items,
+      status: dbOrder.status as OrderStatus,
+      total: dbOrder.total,
+      timestamp: dbOrder.timestamp,
+      serverName: dbOrder.server_name,
+      specialInstructions: dbOrder.special_instructions,
+      guestCount: dbOrder.guest_count,
+      estimatedPrepTime: dbOrder.estimated_prep_time
+    };
+  };
 
   const fetchOrders = async () => {
     try {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .order('timestamp', { ascending: false }) as PostgrestResponse<SupabaseOrder>;
+        .order('timestamp', { ascending: false });
 
       if (error) throw error;
 
-      const transformedOrders = (data || []).map(transformDatabaseOrder);
+      // Ensure data is an array before mapping
+      const ordersData = Array.isArray(data) ? data : [];
+      const transformedOrders = ordersData.map((order: SupabaseOrder) => transformDatabaseOrder(order));
       setOrders(transformedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -128,12 +135,12 @@ export const useOrderState = () => {
         .from('orders')
         .insert(newOrderData)
         .select()
-        .single() as PostgrestResponse<SupabaseOrder>;
+        .single();
 
       if (error) throw error;
       if (!data) throw new Error('No data returned from insert');
 
-      const transformedOrder = transformDatabaseOrder(data);
+      const transformedOrder = transformDatabaseOrder(data as SupabaseOrder);
       
       toast({
         title: "Order Created",
