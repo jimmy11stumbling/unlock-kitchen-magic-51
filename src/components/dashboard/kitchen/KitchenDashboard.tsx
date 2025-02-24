@@ -24,22 +24,43 @@ export function KitchenDashboard() {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as KitchenOrder[];
+
+      // Transform the data to match KitchenOrder type
+      return (data || []).map(order => ({
+        id: order.id,
+        orderId: order.order_id,
+        items: order.items as KitchenOrder['items'],
+        priority: order.priority as "normal" | "high" | "rush",
+        notes: order.notes || "",
+        coursing: order.coursing,
+        estimatedDeliveryTime: order.estimated_delivery_time
+      })) as KitchenOrder[];
     }
   });
 
-  const handleUpdateOrderStatus = async (orderId: number, status: "preparing" | "ready" | "delivered") => {
+  const handleUpdateOrderStatus = async (orderId: number, itemStatus: "preparing" | "ready" | "delivered") => {
     try {
+      const order = activeOrders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const updatedItems = order.items.map(item => ({
+        ...item,
+        status: itemStatus
+      }));
+
       const { error } = await supabase
         .from('kitchen_orders')
-        .update({ status })
+        .update({ 
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', orderId);
 
       if (error) throw error;
 
       toast({
         title: "Order Updated",
-        description: `Order #${orderId} is now ${status}`,
+        description: `Order #${orderId} is now ${itemStatus}`,
       });
     } catch (error) {
       toast({
@@ -91,7 +112,7 @@ export function KitchenDashboard() {
                       <div>
                         <h3 className="text-lg font-semibold">Order #{order.orderId}</h3>
                         <p className="text-sm text-muted-foreground">
-                          Table {order.items[0]?.tableNumber}
+                          Items: {order.items.length}
                         </p>
                       </div>
                       <Badge 
@@ -111,7 +132,7 @@ export function KitchenDashboard() {
                             <Badge variant="outline">
                               {item.quantity}x
                             </Badge>
-                            <span>{item.menuItemId}</span>
+                            <span>Item #{item.menuItemId}</span>
                           </div>
                           {item.allergenAlert && (
                             <AlertTriangle className="w-4 h-4 text-destructive" />
