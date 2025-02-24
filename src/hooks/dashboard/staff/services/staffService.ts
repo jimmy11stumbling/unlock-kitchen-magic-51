@@ -16,43 +16,10 @@ const createStaffMembersTable = async () => {
       return;
     }
 
-    // Create table if it doesn't exist
-    const createTableSQL = `
-      CREATE TABLE IF NOT EXISTS staff_members (
-        id SERIAL PRIMARY KEY,
-        name TEXT,
-        role TEXT,
-        email TEXT,
-        phone TEXT,
-        status TEXT,
-        salary NUMERIC,
-        department TEXT,
-        certifications JSONB,
-        performance_rating NUMERIC,
-        shift TEXT,
-        address TEXT,
-        schedule JSONB,
-        bank_info JSONB,
-        emergency_contact JSONB,
-        notes TEXT,
-        employment_status TEXT,
-        hire_date TIMESTAMPTZ,
-        benefits JSONB,
-        hourly_rate NUMERIC,
-        overtime_rate NUMERIC,
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        updated_at TIMESTAMPTZ DEFAULT NOW()
-      );
-    `;
-
-    const { error: createError } = await supabase.rpc('exec_sql', {
-      sql: createTableSQL
-    });
-
-    if (createError) {
-      console.error('Error creating staff table:', createError);
-      throw createError;
-    }
+    // Since we can't create tables directly through the Supabase client,
+    // we'll use the UI to create the table and handle the error gracefully
+    console.error('Staff members table does not exist. Please create it through the Supabase dashboard.');
+    throw new Error('Staff members table does not exist');
   } catch (error) {
     console.error('Error in createStaffMembersTable:', error);
     throw error;
