@@ -1774,6 +1774,12 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_estimated_delivery_time: {
+        Args: {
+          order_items: Json
+        }
+        Returns: string
+      }
       has_feature_access: {
         Args: {
           user_id: string
