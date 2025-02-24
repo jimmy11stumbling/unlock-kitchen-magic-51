@@ -1,7 +1,7 @@
 
 import { jsPDF } from 'jspdf';
 import Papa from 'papaparse';
-import type { DailyReport } from "@/types/staff";
+import type { DailyReport, InventoryItem } from "@/types/staff";
 
 export const exportToPDF = async (data: any[], title: string): Promise<void> => {
   const doc = new jsPDF();
@@ -14,7 +14,7 @@ export const exportToPDF = async (data: any[], title: string): Promise<void> => 
   doc.setFontSize(12);
   let yPos = 40;
   
-  data.forEach((item, index) => {
+  data.forEach((item) => {
     const text = JSON.stringify(item, null, 2);
     doc.text(text, 20, yPos);
     yPos += 10;
@@ -33,11 +33,7 @@ export const exportToCSV = <T>(data: T[], filename: string): void => {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   
-  if (navigator.msSaveBlob) {
-    navigator.msSaveBlob(blob, filename);
-    return;
-  }
-  
+  // Modern browsers
   link.href = URL.createObjectURL(blob);
   link.setAttribute('download', `${filename}.csv`);
   document.body.appendChild(link);
@@ -55,4 +51,30 @@ export const exportReport = async (
   } else {
     await exportToPDF(reports, filename);
   }
+};
+
+export const exportData = <T>(data: T[], filename: string, format: 'csv' | 'pdf'): void => {
+  if (format === 'csv') {
+    exportToCSV(data, filename);
+  } else {
+    exportToPDF(data, filename);
+  }
+};
+
+export const exportInventory = (items: InventoryItem[], filename: string, format: 'csv' | 'pdf'): void => {
+  exportData(items, filename, format);
+};
+
+export const importFromCSV = async (file: File): Promise<any[]> => {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      complete: (results) => {
+        resolve(results.data);
+      },
+      error: (error) => {
+        reject(error);
+      }
+    });
+  });
 };

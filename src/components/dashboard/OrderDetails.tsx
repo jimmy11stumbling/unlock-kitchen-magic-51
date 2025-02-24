@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ export const OrderDetails = ({
   const states = getAvailableStates();
   
   const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const { tax, total } = calculateTax(subtotal, selectedState);
+  const taxResults = calculateTax(subtotal, 0.08); // 8% tax rate
 
   const categories: MenuItem["category"][] = ["appetizer", "main", "dessert", "beverage"];
   const filteredMenuItems = menuItems.filter(item => item.category === menuCategory);
@@ -215,11 +214,11 @@ export const OrderDetails = ({
           </div>
           <div className="flex justify-between text-sm">
             <span>Tax ({selectedState})</span>
-            <span>${tax.toFixed(2)}</span>
+            <span>${taxResults.tax.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-lg font-semibold">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>${taxResults.total.toFixed(2)}</span>
           </div>
         </div>
       </div>
