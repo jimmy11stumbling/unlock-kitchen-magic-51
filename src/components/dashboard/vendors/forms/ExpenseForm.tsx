@@ -1,103 +1,196 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import type { Expense } from "@/types/vendor";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Expense, PaymentMethod } from "@/types/vendor";
 import { vendorService } from "../services/vendorService";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface ExpenseFormProps {
+const formSchema = z.object({
+  vendorId: z.number(),
+  amount: z.number().min(0),
+  date: z.string(),
+  category: z.string(),
+  description: z.string(),
+  paymentMethod: z.enum(["cash", "card", "bank_transfer", "check"]),
+  taxDeductible: z.boolean(),
+  status: z.enum(["pending", "paid", "void"])
+});
+
+export interface ExpenseFormProps {
   expense?: Expense;
-  vendorId: number;
-  onClose: () => void;
-  onSubmit: () => void;
+  onSuccess?: () => void;
+  onClose?: () => void;
 }
 
-export const ExpenseForm = ({ expense, vendorId, onClose, onSubmit }: ExpenseFormProps) => {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    vendorId,
-    amount: expense?.amount || 0,
-    date: expense?.date || new Date().toISOString().split('T')[0],
-    category: expense?.category || "",
-    description: expense?.description || "",
-    paymentMethod: expense?.paymentMethod || "",
-    taxDeductible: expense?.taxDeductible || false,
-    status: expense?.status || "pending"
+export const ExpenseForm = ({ expense, onSuccess, onClose }: ExpenseFormProps) => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      vendorId: expense?.vendorId || 0,
+      amount: expense?.amount || 0,
+      date: expense?.date || new Date().toISOString().split('T')[0],
+      category: expense?.category || '',
+      description: expense?.description || '',
+      paymentMethod: (expense?.paymentMethod as PaymentMethod) || 'cash',
+      taxDeductible: expense?.taxDeductible || false,
+      status: expense?.status || 'pending'
+    },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      await vendorService.addExpense(formData);
-      toast({ title: "Expense added successfully" });
-      onSubmit();
-      onClose();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save expense",
-        variant: "destructive"
+      await vendorService.addExpense({
+        ...data,
+        paymentMethod: data.paymentMethod as PaymentMethod
       });
-    } finally {
-      setLoading(false);
+      onSuccess?.();
+      onClose?.();
+    } catch (error) {
+      console.error('Error submitting expense form:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        type="number"
-        placeholder="Amount"
-        value={formData.amount}
-        onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
-        required
-        min="0"
-        step="0.01"
-      />
-      <Input
-        type="date"
-        value={formData.date}
-        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-        required
-      />
-      <Input
-        placeholder="Category"
-        value={formData.category}
-        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-        required
-      />
-      <Textarea
-        placeholder="Description"
-        value={formData.description}
-        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-      />
-      <Input
-        placeholder="Payment Method"
-        value={formData.paymentMethod}
-        onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-      />
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="taxDeductible"
-          checked={formData.taxDeductible}
-          onChange={(e) => setFormData({ ...formData, taxDeductible: e.target.checked })}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Amount</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  {...field} 
+                  onChange={e => field.onChange(parseFloat(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        <label htmlFor="taxDeductible">Tax Deductible</label>
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Add Expense"}
-        </Button>
-      </div>
-    </form>
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="paymentMethod"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Payment Method</FormLabel>
+              <FormControl>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="check">Check</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="taxDeductible"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tax Deductible</FormLabel>
+              <FormControl>
+                <input 
+                  type="checkbox"
+                  checked={field.value}
+                  onChange={e => field.onChange(e.target.checked)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <FormControl>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="void">Void</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="flex justify-end gap-4">
+          {onClose && (
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit">Submit</Button>
+        </div>
+      </form>
+    </Form>
   );
 };

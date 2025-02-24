@@ -2,7 +2,7 @@
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Vendor } from "@/types/vendor";
+import type { Vendor, PaymentMethod } from "@/types/vendor";
 import { vendorService } from "../services/vendorService";
 import {
   Form,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formSchema = z.object({
   name: z.string().min(2),
@@ -40,7 +41,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
       phone: vendor?.phone || '',
       address: vendor?.address || '',
       taxId: vendor?.taxId || '',
-      paymentTerms: vendor?.paymentTerms || 'cash',
+      paymentTerms: (vendor?.paymentTerms as PaymentMethod) || 'cash',
       notes: vendor?.notes || ''
     },
   });
@@ -55,7 +56,8 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
           address: data.address || '',
           taxId: data.taxId || '',
           paymentTerms: data.paymentTerms,
-          notes: data.notes || ''
+          notes: data.notes || '',
+          status: 'active'
         });
       } else {
         await vendorService.addVendor({
@@ -151,12 +153,17 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
             <FormItem>
               <FormLabel>Payment Terms</FormLabel>
               <FormControl>
-                <select {...field} className="w-full p-2 border rounded">
-                  <option value="cash">Cash</option>
-                  <option value="card">Card</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="check">Check</option>
-                </select>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment terms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="check">Check</SelectItem>
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
