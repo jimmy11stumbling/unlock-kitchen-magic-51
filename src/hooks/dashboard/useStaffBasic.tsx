@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +9,7 @@ import {
   createStaffMember, 
   updateStaffMemberStatus, 
   updateStaffMemberInfo 
-} from "./staff/services/staffService";
+} from "./staff/services/queries/staffQueries";
 
 export const useStaffBasic = () => {
   const { toast } = useToast();

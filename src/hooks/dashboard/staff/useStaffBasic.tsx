@@ -9,7 +9,7 @@ import {
   createStaffMember, 
   updateStaffMemberStatus, 
   updateStaffMemberInfo 
-} from "./services/staffService";
+} from "./services/queries/staffQueries";
 
 // Initial staff data for testing
 const initialStaffData: StaffMember[] = [
