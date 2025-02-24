@@ -23,7 +23,7 @@ export function Hero() {
             <div className="w-24 h-24 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20 flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
               <ChefHat className="w-12 h-12 text-primary animate-float" />
             </div>
-            <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-primary to-gray-400 animate-pulse duration-[3000ms] hover:scale-110 transition-transform cursor-default">
+            <span className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-primary to-gray-400 animate-pulse duration-[3000ms] hover:scale-110 transition-transform cursor-default">
               MaestroAI
             </span>
           </div>
