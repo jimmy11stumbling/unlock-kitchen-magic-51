@@ -1,7 +1,6 @@
 
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { useDashboardState } from "@/hooks/useDashboardState";
-import { TestingPanel } from "@/components/dashboard/TestingPanel";
 
 const Overview = () => {
   const { salesData, staff, orders, menuItems, reservations, inventory } = useDashboardState();
@@ -16,7 +15,6 @@ const Overview = () => {
         reservations={reservations}
         inventory={inventory}
       />
-      <TestingPanel />
     </div>
   );
 };

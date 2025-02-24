@@ -1672,51 +1672,36 @@ export type Database = {
       suppliers: {
         Row: {
           address: string | null
-          contact_person: string | null
           created_at: string | null
-          delivery_terms: Json | null
           email: string | null
           id: string
           name: string
           payment_terms: Json | null
           phone: string | null
-          rating: number | null
           status: string | null
-          tax_id: string | null
           updated_at: string | null
-          website: string | null
         }
         Insert: {
           address?: string | null
-          contact_person?: string | null
           created_at?: string | null
-          delivery_terms?: Json | null
           email?: string | null
           id?: string
           name: string
           payment_terms?: Json | null
           phone?: string | null
-          rating?: number | null
           status?: string | null
-          tax_id?: string | null
           updated_at?: string | null
-          website?: string | null
         }
         Update: {
           address?: string | null
-          contact_person?: string | null
           created_at?: string | null
-          delivery_terms?: Json | null
           email?: string | null
           id?: string
           name?: string
           payment_terms?: Json | null
           phone?: string | null
-          rating?: number | null
           status?: string | null
-          tax_id?: string | null
           updated_at?: string | null
-          website?: string | null
         }
         Relationships: []
       }
