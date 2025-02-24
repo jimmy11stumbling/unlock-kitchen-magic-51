@@ -14,6 +14,7 @@ import {
   FileText,
   Menu as MenuIcon,
   LayoutGrid,
+  Building2
 } from "lucide-react";
 
 export const DashboardTabs = () => {
@@ -50,6 +51,12 @@ export const DashboardTabs = () => {
         <TabsTrigger value="inventory" className={`data-[state=active]:bg-background dark:data-[state=active]:bg-muted ${currentTab === 'inventory' ? 'bg-background dark:bg-muted' : ''}`}>
           <Box className="h-4 w-4 mr-2" />
           Inventory
+        </TabsTrigger>
+      </Link>
+      <Link to="/dashboard/vendors">
+        <TabsTrigger value="vendors" className={`data-[state=active]:bg-background dark:data-[state=active]:bg-muted ${currentTab === 'vendors' ? 'bg-background dark:bg-muted' : ''}`}>
+          <Building2 className="h-4 w-4 mr-2" />
+          Vendors
         </TabsTrigger>
       </Link>
       <Link to="/dashboard/analytics">
