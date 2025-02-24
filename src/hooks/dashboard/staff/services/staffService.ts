@@ -17,30 +17,36 @@ const createStaffMembersTable = async () => {
     }
 
     // Create table if it doesn't exist
-    const { error: createError } = await supabase.schema.createTable('staff_members', {
-      id: 'serial primary key',
-      name: 'text',
-      role: 'text',
-      email: 'text',
-      phone: 'text',
-      status: 'text',
-      salary: 'numeric',
-      department: 'text',
-      certifications: 'jsonb',
-      performance_rating: 'numeric',
-      shift: 'text',
-      address: 'text',
-      schedule: 'jsonb',
-      bank_info: 'jsonb',
-      emergency_contact: 'jsonb',
-      notes: 'text',
-      employment_status: 'text',
-      hire_date: 'timestamptz',
-      benefits: 'jsonb',
-      hourly_rate: 'numeric',
-      overtime_rate: 'numeric',
-      created_at: 'timestamptz default now()',
-      updated_at: 'timestamptz default now()'
+    const createTableSQL = `
+      CREATE TABLE IF NOT EXISTS staff_members (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        role TEXT,
+        email TEXT,
+        phone TEXT,
+        status TEXT,
+        salary NUMERIC,
+        department TEXT,
+        certifications JSONB,
+        performance_rating NUMERIC,
+        shift TEXT,
+        address TEXT,
+        schedule JSONB,
+        bank_info JSONB,
+        emergency_contact JSONB,
+        notes TEXT,
+        employment_status TEXT,
+        hire_date TIMESTAMPTZ,
+        benefits JSONB,
+        hourly_rate NUMERIC,
+        overtime_rate NUMERIC,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `;
+
+    const { error: createError } = await supabase.rpc('exec_sql', {
+      sql: createTableSQL
     });
 
     if (createError) {
