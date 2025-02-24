@@ -4,22 +4,33 @@ import type { KitchenOrder, Order, OrderItem } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define the database schema type
+interface DatabaseOrderItem {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+}
+
 interface DatabaseOrder {
   id: number;
   table_number: number;
   server_name: string;
-  status: Order['status'];
-  items: any[];
+  status: "pending" | "preparing" | "ready" | "delivered";
+  items: DatabaseOrderItem[];
   total: number;
   timestamp: string;
-  special_instructions?: string;
-  guest_count?: number;
-  estimated_prep_time?: number;
-  created_at?: string;
-  updated_at?: string;
-  payment_method?: string;
-  payment_status?: string;
+  special_instructions: string;
+  guest_count: number;
+  estimated_prep_time: number;
+  created_at: string;
+  updated_at: string;
+  payment_method: string;
+  payment_status: string;
 }
+
+// Define the type for creating a new order
+type NewDatabaseOrder = Omit<Required<DatabaseOrder>, 'id'>;
 
 export const useOrderState = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -56,22 +67,22 @@ export const useOrderState = () => {
 
       if (error) throw error;
 
-      const transformedOrders: Order[] = (data || []).map((order: DatabaseOrder) => ({
-        id: order.id,
-        tableNumber: order.table_number,
-        items: Array.isArray(order.items) ? order.items.map(item => ({
-          id: item.id || Date.now(),
+      const transformedOrders: Order[] = (data || []).map((dbOrder: DatabaseOrder) => ({
+        id: dbOrder.id,
+        tableNumber: dbOrder.table_number,
+        items: dbOrder.items.map(item => ({
+          id: item.id,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-        })) : [],
-        status: order.status,
-        total: order.total,
-        timestamp: order.timestamp,
-        serverName: order.server_name,
-        specialInstructions: order.special_instructions || '',
-        guestCount: order.guest_count || 1,
-        estimatedPrepTime: order.estimated_prep_time || 15
+        })),
+        status: dbOrder.status,
+        total: dbOrder.total,
+        timestamp: dbOrder.timestamp,
+        serverName: dbOrder.server_name,
+        specialInstructions: dbOrder.special_instructions,
+        guestCount: dbOrder.guest_count,
+        estimatedPrepTime: dbOrder.estimated_prep_time
       }));
 
       setOrders(transformedOrders);
@@ -89,10 +100,10 @@ export const useOrderState = () => {
 
   const addOrder = async (tableId: number, serverName: string) => {
     try {
-      const newOrderData: Omit<DatabaseOrder, 'id'> = {
+      const newOrderData: NewDatabaseOrder = {
         table_number: tableId,
         server_name: serverName,
-        status: 'pending',
+        status: "pending",
         items: [],
         total: 0,
         timestamp: new Date().toISOString(),
@@ -107,7 +118,7 @@ export const useOrderState = () => {
 
       const { data, error } = await supabase
         .from('orders')
-        .insert([newOrderData])
+        .insert(newOrderData)
         .select()
         .single();
 
@@ -121,9 +132,9 @@ export const useOrderState = () => {
         total: data.total,
         timestamp: data.timestamp,
         serverName: data.server_name,
-        specialInstructions: data.special_instructions || '',
-        guestCount: data.guest_count || 1,
-        estimatedPrepTime: data.estimated_prep_time || 15
+        specialInstructions: data.special_instructions,
+        guestCount: data.guest_count,
+        estimatedPrepTime: data.estimated_prep_time
       };
       
       toast({
@@ -145,7 +156,7 @@ export const useOrderState = () => {
   const updateOrderStatus = async (orderId: number, status: Order['status']) => {
     try {
       const updateData = {
-        status,
+        status: status as DatabaseOrder['status'],
         updated_at: new Date().toISOString()
       };
 
@@ -186,7 +197,7 @@ export const useOrderState = () => {
         throw new Error('Invalid kitchen order data');
       }
 
-      const updatedItems = existingOrder.items.map(item => ({
+      const updatedItems = existingOrder.items.map((item: Record<string, any>) => ({
         ...item,
         status: itemStatus
       }));
