@@ -7,6 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const CLAUDE_API_KEY = "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";
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -14,13 +16,6 @@ serve(async (req) => {
   }
 
   try {
-    const claudeApiKey = Deno.env.get('CLAUDE_API_KEY');
-    
-    if (!claudeApiKey) {
-      console.error('Claude API key not configured');
-      throw new Error('Claude API key not configured');
-    }
-
     const { messages, system } = await req.json();
     console.log('Received request with messages:', messages);
     console.log('System prompt:', system);
@@ -29,7 +24,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': claudeApiKey,
+        'x-api-key': CLAUDE_API_KEY,
         'anthropic-version': '2024-02-15-preview'
       },
       body: JSON.stringify({
