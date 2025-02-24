@@ -1,5 +1,5 @@
 
-import type { MenuItem } from "@/types/staff";
+import type { MenuItem } from "@/types";
 
 export interface MenuItemFormData extends Omit<MenuItem, "id" | "orderCount"> {
   id?: number;

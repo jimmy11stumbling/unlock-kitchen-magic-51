@@ -1,71 +1,81 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { NewSupabaseOrder, SupabaseOrder } from "../types/orderTypes";
-import type { KitchenOrder } from "@/types/staff";
+import { supabase } from '@/integrations/supabase/client';
+import type { KitchenOrder } from '@/types';
 
 export const orderService = {
-  async fetchOrders() {
+  fetchOrders: async () => {
     const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('timestamp', { ascending: false });
+      .from('kitchen_orders')
+      .select(`
+        id,
+        order_id,
+        items,
+        priority,
+        notes,
+        coursing,
+        created_at,
+        updated_at,
+        estimated_delivery_time,
+        table_number,
+        server_name,
+        status
+      `);
 
-    if (error) throw error;
-    return Array.isArray(data) ? data : [];
+    if (error) {
+      throw error;
+    }
+
+    return data;
   },
 
-  async createOrder(newOrderData: NewSupabaseOrder) {
+  createOrder: async (orderData: Omit<KitchenOrder, 'id'>) => {
     const { data, error } = await supabase
-      .from('orders')
-      .insert(newOrderData)
+      .from('kitchen_orders')
+      .insert([orderData])
       .select()
       .single();
 
-    if (error) throw error;
-    if (!data) throw new Error('No data returned from insert');
-    return data as SupabaseOrder;
-  },
-
-  async updateOrderStatus(orderId: number, status: string) {
-    const { error } = await supabase
-      .from('orders')
-      .update({
-        status,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', orderId);
-
-    if (error) throw error;
-  },
-
-  async updateKitchenOrderStatus(
-    orderId: number,
-    itemStatus: KitchenOrder['items'][0]['status']
-  ) {
-    const { data: existingOrder, error: fetchError } = await supabase
-      .from('kitchen_orders')
-      .select('*')
-      .eq('order_id', orderId)
-      .single();
-
-    if (fetchError) throw fetchError;
-    if (!existingOrder || !Array.isArray(existingOrder.items)) {
-      throw new Error('Invalid kitchen order data');
+    if (error) {
+      throw error;
     }
 
-    const updatedItems = existingOrder.items.map((item: Record<string, any>) => ({
+    return data;
+  },
+
+  updateOrderStatus: async (orderId: number, status: KitchenOrder['status']) => {
+    const { error } = await supabase
+      .from('kitchen_orders')
+      .update({ status })
+      .eq('id', orderId);
+
+    if (error) {
+      throw error;
+    }
+  },
+
+  updateKitchenOrderStatus: async (orderId: number, itemStatus: string) => {
+    const { data: order, error: fetchError } = await supabase
+      .from('kitchen_orders')
+      .select('items')
+      .eq('id', orderId)
+      .single();
+
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    const updatedItems = order.items.map((item: any) => ({
       ...item,
-      status: itemStatus
+      status: itemStatus,
     }));
 
     const { error: updateError } = await supabase
       .from('kitchen_orders')
-      .update({ 
-        items: updatedItems,
-        updated_at: new Date().toISOString()
-      })
-      .eq('order_id', orderId);
+      .update({ items: updatedItems })
+      .eq('id', orderId);
 
-    if (updateError) throw updateError;
-  }
+    if (updateError) {
+      throw updateError;
+    }
+  },
 };

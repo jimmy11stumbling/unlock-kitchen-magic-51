@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Download, AlertTriangle } from "lucide-react";
 import { exportReport } from "@/utils/exportUtils";
 import { useState, useMemo, useCallback } from "react";
-import type { DailyReport, MenuItem, SalesData } from "@/types/staff";
+import type { DailyReport, MenuItem, SalesData } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { DateRangeSelector } from "./DateRangeSelector";
 import { MetricsCards } from "./reports/MetricsCards";

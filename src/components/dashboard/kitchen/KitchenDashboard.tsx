@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import type { KitchenOrder, KitchenOrderItem } from "@/types/kitchen";
+import type { KitchenOrder, KitchenOrderItem } from "@/types";
 
 export function KitchenDashboard() {
   const [alerts, setAlerts] = useState<string[]>([]);

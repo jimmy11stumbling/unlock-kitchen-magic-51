@@ -1,11 +1,10 @@
-
-import { useState, useEffect } from "react";
-import type { KitchenOrder, Order, OrderItem } from "@/types/staff";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { orderService } from "./services/orderService";
+import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import type { KitchenOrder, Order, OrderItem } from '@/types';
+import { orderService } from './services/orderService';
 import { transformDatabaseOrder } from "./utils/orderTransformers";
 import { OrderStatus } from "./types/orderTypes";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useOrderState = () => {
   const [orders, setOrders] = useState<Order[]>([]);
