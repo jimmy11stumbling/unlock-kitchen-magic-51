@@ -3,6 +3,7 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import { parse } from 'papaparse';
 import type { InventoryItem } from '@/hooks/dashboard/useInventoryData';
+import type { DailyReport } from '@/types/staff';
 
 export type ExportFormat = 'csv' | 'pdf';
 
@@ -26,7 +27,7 @@ export const exportToCSV = (data: any[], filename: string) => {
         const value = row[header];
         
         // Format numbers to 2 decimal places if they're currency values
-        if (['price', 'totalValue'].includes(header)) {
+        if (['price', 'totalValue', 'totalRevenue', 'laborCosts', 'inventoryCosts', 'netProfit'].includes(header)) {
           return typeof value === 'number' ? value.toFixed(2) : value;
         }
 
@@ -84,11 +85,11 @@ export const exportToPDF = (data: any[], filename: string) => {
     // Format and draw each cell
     [
       row.name,
-      row.quantity.toString(),
-      row.unit,
-      `$${row.price.toFixed(2)}`,
-      row.category,
-      row.minQuantity.toString()
+      row.quantity?.toString() || '',
+      row.unit || '',
+      row.price ? `$${row.price.toFixed(2)}` : '',
+      row.category || '',
+      row.minQuantity?.toString() || ''
     ].forEach((text, colIndex) => {
       pdf.text(text, margin + (colIndex * 25), y);
     });
@@ -134,5 +135,18 @@ export const exportInventory = (data: InventoryItem[], filename: string, format:
   } catch (error) {
     console.error('Export error:', error);
     throw new Error('Failed to export inventory');
+  }
+};
+
+export const exportReport = async (data: any[], filename: string, format: ExportFormat) => {
+  try {
+    if (format === 'csv') {
+      exportToCSV(data, filename);
+    } else {
+      exportToPDF(data, filename);
+    }
+  } catch (error) {
+    console.error('Export error:', error);
+    throw new Error('Failed to export report');
   }
 };
