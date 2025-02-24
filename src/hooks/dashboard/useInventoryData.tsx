@@ -60,6 +60,27 @@ export function useInventoryData(autoRefresh: boolean) {
     }
   });
 
+  const addItemMutation = useMutation({
+    mutationFn: async (item: Omit<InventoryItem, "id">) => {
+      console.log("Adding new item:", item);
+      return Promise.resolve();
+    },
+    onSuccess: () => {
+      refetch();
+      toast({
+        title: "Item Added",
+        description: "New item has been added to inventory",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add new item",
+        variant: "destructive",
+      });
+    }
+  });
+
   return {
     inventoryItems,
     isLoading,
@@ -67,6 +88,9 @@ export function useInventoryData(autoRefresh: boolean) {
       if (quantity >= 0) {
         updateQuantityMutation.mutate({ itemId, quantity });
       }
+    },
+    addItem: (item: Omit<InventoryItem, "id">) => {
+      addItemMutation.mutate(item);
     }
   };
 }

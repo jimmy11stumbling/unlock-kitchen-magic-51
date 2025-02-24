@@ -10,7 +10,7 @@ export function InventoryDashboard() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [autoRefresh, setAutoRefresh] = useState(true);
   
-  const { inventoryItems, isLoading, updateQuantity } = useInventoryData(autoRefresh);
+  const { inventoryItems, isLoading, updateQuantity, addItem } = useInventoryData(autoRefresh);
 
   const categories = ["all", "produce", "meat", "dairy", "dry goods", "beverages"];
 
@@ -25,6 +25,7 @@ export function InventoryDashboard() {
       <InventoryHeader 
         autoRefresh={autoRefresh}
         onAutoRefreshToggle={setAutoRefresh}
+        onAddItem={addItem}
       />
 
       <InventoryStats 
