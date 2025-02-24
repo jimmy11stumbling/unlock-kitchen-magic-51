@@ -5,10 +5,47 @@ import type { DatabaseStaffMember, DatabaseStaffMemberInsert } from "../types/da
 
 const createStaffMembersTable = async () => {
   try {
-    const { error } = await supabase.rpc('init_staff_table');
-    if (error) {
-      console.error('Error creating staff table:', error);
-      throw error;
+    // Check if table exists
+    const { data: existingTable, error: checkError } = await supabase
+      .from('staff_members')
+      .select('id')
+      .limit(1);
+
+    // If we can query the table, it exists
+    if (!checkError) {
+      return;
+    }
+
+    // Create table if it doesn't exist
+    const { error: createError } = await supabase.schema.createTable('staff_members', {
+      id: 'serial primary key',
+      name: 'text',
+      role: 'text',
+      email: 'text',
+      phone: 'text',
+      status: 'text',
+      salary: 'numeric',
+      department: 'text',
+      certifications: 'jsonb',
+      performance_rating: 'numeric',
+      shift: 'text',
+      address: 'text',
+      schedule: 'jsonb',
+      bank_info: 'jsonb',
+      emergency_contact: 'jsonb',
+      notes: 'text',
+      employment_status: 'text',
+      hire_date: 'timestamptz',
+      benefits: 'jsonb',
+      hourly_rate: 'numeric',
+      overtime_rate: 'numeric',
+      created_at: 'timestamptz default now()',
+      updated_at: 'timestamptz default now()'
+    });
+
+    if (createError) {
+      console.error('Error creating staff table:', createError);
+      throw createError;
     }
   } catch (error) {
     console.error('Error in createStaffMembersTable:', error);
