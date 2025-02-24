@@ -39,12 +39,13 @@ export function AddInventoryItemDialog({ onAddItem }: AddInventoryItemDialogProp
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="whitespace-nowrap">
           <Plus className="w-4 h-4 mr-2" />
-          Add Item
+          <span className="hidden sm:inline">Add Item</span>
+          <span className="sm:hidden">Add</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[425px] p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Add New Inventory Item</DialogTitle>
         </DialogHeader>
@@ -56,10 +57,11 @@ export function AddInventoryItemDialog({ onAddItem }: AddInventoryItemDialogProp
               value={newItem.name}
               onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
               placeholder="Item name"
+              className="h-12 sm:h-10 text-base sm:text-sm"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Quantity</label>
               <Input
@@ -68,6 +70,7 @@ export function AddInventoryItemDialog({ onAddItem }: AddInventoryItemDialogProp
                 min="0"
                 value={newItem.quantity}
                 onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })}
+                className="h-12 sm:h-10 text-base sm:text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -76,7 +79,7 @@ export function AddInventoryItemDialog({ onAddItem }: AddInventoryItemDialogProp
                 value={newItem.unit}
                 onValueChange={(value) => setNewItem({ ...newItem, unit: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-12 sm:h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -90,7 +93,7 @@ export function AddInventoryItemDialog({ onAddItem }: AddInventoryItemDialogProp
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Min Quantity</label>
               <Input
@@ -99,6 +102,7 @@ export function AddInventoryItemDialog({ onAddItem }: AddInventoryItemDialogProp
                 min="0"
                 value={newItem.minQuantity}
                 onChange={(e) => setNewItem({ ...newItem, minQuantity: Number(e.target.value) })}
+                className="h-12 sm:h-10 text-base sm:text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -110,6 +114,7 @@ export function AddInventoryItemDialog({ onAddItem }: AddInventoryItemDialogProp
                 step="0.01"
                 value={newItem.price}
                 onChange={(e) => setNewItem({ ...newItem, price: Number(e.target.value) })}
+                className="h-12 sm:h-10 text-base sm:text-sm"
               />
             </div>
           </div>
@@ -120,7 +125,7 @@ export function AddInventoryItemDialog({ onAddItem }: AddInventoryItemDialogProp
               value={newItem.category}
               onValueChange={(value) => setNewItem({ ...newItem, category: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-12 sm:h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -133,7 +138,9 @@ export function AddInventoryItemDialog({ onAddItem }: AddInventoryItemDialogProp
             </Select>
           </div>
 
-          <Button type="submit" className="w-full">Add Item</Button>
+          <Button type="submit" className="w-full h-12 sm:h-10 text-base sm:text-sm">
+            Add Item
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
