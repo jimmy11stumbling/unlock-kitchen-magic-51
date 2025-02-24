@@ -8,7 +8,7 @@ import { CalendarIcon, UserCog, ShieldAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember } from "@/types/staff";
-import { hasAdminAccess } from "@/hooks/dashboard/staff/services/queries/staffQueries";
+import { hasAdminAccess } from "@/hooks/dashboard/staff/services/queries";
 
 interface StaffListProps {
   staff: StaffMember[];

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +11,7 @@ import {
   updateStaffMemberInfo,
   searchStaffMembers,
   getStaffByDepartment 
-} from "../services/queries/staffQueries";
+} from "../services/queries";
 
 export const useStaffManagement = () => {
   const { toast } = useToast();

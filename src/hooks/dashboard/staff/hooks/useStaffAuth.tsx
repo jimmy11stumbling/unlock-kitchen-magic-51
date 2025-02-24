@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember } from "@/types/staff";
-import { hasAdminAccess, getStaffPermissions } from "../services/queries/staffQueries";
+import { hasAdminAccess, getStaffPermissions } from "../services/queries";
 
 export const useStaffAuth = (currentUser: StaffMember | null) => {
   const { toast } = useToast();
