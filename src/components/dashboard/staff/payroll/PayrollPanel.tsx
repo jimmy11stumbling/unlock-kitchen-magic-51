@@ -3,11 +3,11 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import type { StaffMember } from "@/types/staff";
+import type { StaffMember, PayrollEntry } from "@/types/staff";
 import { PayrollTabs } from "./components/PayrollTabs";
 import { PayrollTabContent } from "./components/PayrollTabContent";
 
-const MOCK_PAYROLL_HISTORY = [
+const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
   {
     id: 1,
     staffId: 1,
@@ -25,7 +25,7 @@ const MOCK_PAYROLL_HISTORY = [
       other: 50
     },
     netPay: 1375,
-    status: "paid",
+    status: "paid" as const,
     paymentDate: "2024-03-20",
     paymentMethod: "direct_deposit"
   },
@@ -46,7 +46,7 @@ const MOCK_PAYROLL_HISTORY = [
       other: 0
     },
     netPay: 1063,
-    status: "paid",
+    status: "paid" as const,
     paymentDate: "2024-03-20",
     paymentMethod: "direct_deposit"
   }
