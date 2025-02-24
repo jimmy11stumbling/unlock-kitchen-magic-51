@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,12 @@ interface OrderDetailsProps {
   onSendToKitchen: (orderId: number) => void;
 }
 
+interface Ingredient {
+  id: number;
+  name: string;
+  current_stock: number;
+}
+
 export const OrderDetails = ({
   order,
   menuItems,
@@ -29,6 +36,7 @@ export const OrderDetails = ({
   const [selectedState, setSelectedState] = useState<string>("California");
   const [menuCategory, setMenuCategory] = useState<MenuItem["category"]>("main");
   const [availableItems, setAvailableItems] = useState<MenuItem[]>(menuItems);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const states = getAvailableStates();
   
   const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -38,8 +46,31 @@ export const OrderDetails = ({
   const filteredMenuItems = availableItems.filter(item => item.category === menuCategory);
 
   useEffect(() => {
+    const fetchIngredients = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('ingredients')
+          .select('*')
+          .order('name');
+        
+        if (error) throw error;
+        if (data) setIngredients(data);
+      } catch (error) {
+        console.error('Error fetching ingredients:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch ingredients",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchIngredients();
+  }, [toast]);
+
+  useEffect(() => {
     checkInventoryAvailability();
-  }, [menuItems]);
+  }, [menuItems, ingredients]);
 
   const checkInventoryAvailability = async () => {
     try {
