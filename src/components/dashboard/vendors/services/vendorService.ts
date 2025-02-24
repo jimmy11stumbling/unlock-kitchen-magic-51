@@ -1,7 +1,16 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import type { Vendor, Expense, AccountingSummary } from "@/types/vendor";
 import type { Database } from "@/integrations/supabase/types";
+
+export interface Vendor {
+  id: number;
+  name: string;
+  contactEmail: string;
+  contactPhone: string;
+  address: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 type FinancialTransaction = Database["public"]["Tables"]["financial_transactions"]["Row"];
 type FinancialTransactionInsert = Database["public"]["Tables"]["financial_transactions"]["Insert"];
@@ -9,26 +18,12 @@ type FinancialTransactionInsert = Database["public"]["Tables"]["financial_transa
 const mapTransactionToVendor = (transaction: FinancialTransaction): Vendor => ({
   id: Number(transaction.id),
   name: transaction.description || '',
-  email: '',
-  phone: '',
+  contactEmail: '',
+  contactPhone: '',
   address: '',
-  taxId: transaction.reference_number || '',
-  status: 'active',
-  paymentTerms: transaction.payment_method,
-  notes: '',
-  createdAt: transaction.created_at || '',
-  updatedAt: transaction.updated_at || ''
-});
-
-const mapVendorToTransaction = (vendor: Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>): FinancialTransactionInsert => ({
-  amount: 0,
-  category_id: '',
-  date: new Date().toISOString(),
-  description: vendor.name,
-  payment_method: vendor.paymentTerms as Database["public"]["Enums"]["payment_method"],
-  type: 'expense',
-  reference_number: vendor.taxId,
-  created_by: ''
+  description: transaction.notes || '',
+  createdAt: transaction.created_at,
+  updatedAt: transaction.updated_at
 });
 
 export const vendorService = {
@@ -40,98 +35,45 @@ export const vendorService = {
     
     return (data || []).map(mapTransactionToVendor);
   },
-
-  async addVendor(vendor: Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vendor> {
-    const { data } = await supabase
-      .from('financial_transactions')
-      .insert([mapVendorToTransaction(vendor)])
-      .select()
-      .single();
-    
-    if (!data) throw new Error('No data returned from insert');
-    
-    return mapTransactionToVendor(data);
-  },
-
-  async updateVendor(id: string, updates: Partial<Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Vendor> {
-    const updateData: Partial<FinancialTransactionInsert> = {
-      description: updates.name,
-      payment_method: updates.paymentTerms as Database["public"]["Enums"]["payment_method"],
-      reference_number: updates.taxId
-    };
-
-    const { data } = await supabase
-      .from('financial_transactions')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (!data) throw new Error('No data returned from update');
-    
-    return mapTransactionToVendor(data);
-  },
-
-  async getExpenses(): Promise<Expense[]> {
-    const { data } = await supabase
+  async getExpenses(): Promise<FinancialTransaction[]> {
+    const { data, error } = await supabase
       .from('financial_transactions')
       .select('*')
       .eq('type', 'expense');
-    
-    return (data || []).map(item => ({
-      id: Number(item.id),
-      vendorId: 0,
-      amount: item.amount,
-      date: item.date,
-      category: '',
-      description: item.description || '',
-      paymentMethod: item.payment_method,
-      receiptUrl: undefined,
-      taxDeductible: false,
-      status: 'pending',
-      createdAt: item.created_at || '',
-      updatedAt: item.updated_at || ''
-    }));
+
+    if (error) {
+      console.error("Error fetching expenses:", error);
+      return [];
+    }
+
+    return data || [];
   },
 
-  async addExpense(expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> {
-    const { data } = await supabase
-      .from('financial_transactions')
-      .insert([{
-        amount: expense.amount,
-        category_id: '',
-        date: expense.date,
-        description: expense.description,
-        payment_method: expense.paymentMethod as Database["public"]["Enums"]["payment_method"],
-        type: 'expense',
-        created_by: '',
-        reference_number: ''
-      }])
-      .select()
-      .single();
-    
-    if (!data) throw new Error('No data returned from insert');
-    
-    return {
-      id: Number(data.id),
-      vendorId: 0,
-      amount: data.amount,
-      date: data.date,
-      category: '',
-      description: data.description || '',
-      paymentMethod: data.payment_method,
-      receiptUrl: undefined,
-      taxDeductible: false,
-      status: 'pending',
-      createdAt: data.created_at || '',
-      updatedAt: data.updated_at || ''
-    };
-  },
+  async getAccountingSummary(): Promise<{
+    totalExpenses: number;
+    totalPaid: number;
+    totalPending: number;
+    taxDeductibleAmount: number;
+    expensesByCategory: { [category: string]: number };
+    expensesByVendor: { [vendor: string]: number };
+    monthlyTotals: { [month: string]: number };
+  }> {
+    const { data, error } = await supabase.rpc('get_accounting_summary');
 
-  async getAccountingSummary(): Promise<AccountingSummary> {
-    const expenses = await this.getExpenses();
-    
-    const summary: AccountingSummary = {
+    if (error) {
+      console.error("Error fetching accounting summary:", error);
+      return {
+        totalExpenses: 0,
+        totalPaid: 0,
+        totalPending: 0,
+        taxDeductibleAmount: 0,
+        expensesByCategory: {},
+        expensesByVendor: {},
+        monthlyTotals: {}
+      };
+    }
+
+    return data?.[0] || {
       totalExpenses: 0,
       totalPaid: 0,
       totalPending: 0,
@@ -140,29 +82,63 @@ export const vendorService = {
       expensesByVendor: {},
       monthlyTotals: {}
     };
+  },
 
-    expenses.forEach((expense) => {
-      summary.totalExpenses += expense.amount;
-      if (expense.status === 'paid') {
-        summary.totalPaid += expense.amount;
-      } else if (expense.status === 'pending') {
-        summary.totalPending += expense.amount;
-      }
-      if (expense.taxDeductible) {
-        summary.taxDeductibleAmount += expense.amount;
-      }
+  async addVendor(vendor: Omit<Vendor, 'id'>): Promise<Vendor | null> {
+    const transactionInsert: FinancialTransactionInsert = {
+      type: 'expense',
+      description: vendor.name,
+      amount: 0,
+      date: new Date().toISOString(),
+      notes: vendor.description || '',
+    };
 
-      summary.expensesByCategory[expense.category] = 
-        (summary.expensesByCategory[expense.category] || 0) + expense.amount;
+    const { data, error } = await supabase
+      .from('financial_transactions')
+      .insert([transactionInsert])
+      .select()
+      .single();
 
-      summary.expensesByVendor[expense.vendorId] = 
-        (summary.expensesByVendor[expense.vendorId] || 0) + expense.amount;
+    if (error) {
+      console.error("Error adding vendor:", error);
+      return null;
+    }
 
-      const month = expense.date.substring(0, 7);
-      summary.monthlyTotals[month] = 
-        (summary.monthlyTotals[month] || 0) + expense.amount;
-    });
+    return mapTransactionToVendor(data);
+  },
 
-    return summary;
-  }
+  async updateVendor(id: string, updates: Partial<Vendor>): Promise<Vendor | null> {
+    const transactionUpdates: Partial<FinancialTransactionInsert> = {
+      description: updates.name,
+      notes: updates.description,
+    };
+
+    const { data, error } = await supabase
+      .from('financial_transactions')
+      .update(transactionUpdates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating vendor:", error);
+      return null;
+    }
+
+    return mapTransactionToVendor(data);
+  },
+
+  async deleteVendor(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('financial_transactions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error deleting vendor:", error);
+      return false;
+    }
+
+    return true;
+  },
 };

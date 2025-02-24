@@ -53,7 +53,7 @@ export const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMem
   const bankInfo = parseJsonField<{
     accountNumber?: string;
     routingNumber?: string;
-    accountType?: string;
+    accountType?: "checking" | "savings";
   }>(dbStaff.bank_info);
 
   const emergencyContact = parseJsonField<{

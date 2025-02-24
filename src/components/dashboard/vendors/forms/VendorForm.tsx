@@ -1,3 +1,4 @@
+
 import { vendorService } from "../services/vendorService";
 import {
   Form,
@@ -7,12 +8,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -28,9 +29,9 @@ const formSchema = z.object({
     message: 'Address must be at least 5 characters.',
   }),
   description: z.string().optional(),
-})
+});
 
-interface VendorFormProps {
+export interface VendorFormProps {
   vendor?: {
     id: number;
     name: string;
@@ -40,9 +41,10 @@ interface VendorFormProps {
     description?: string;
   };
   onSuccess?: () => void;
+  onClose?: () => void;
 }
 
-export const VendorForm = ({ vendor, onSuccess }: VendorFormProps) => {
+export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,9 +54,9 @@ export const VendorForm = ({ vendor, onSuccess }: VendorFormProps) => {
       address: vendor?.address || '',
       description: vendor?.description || '',
     },
-  })
+  });
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       if (vendor) {
         await vendorService.updateVendor(vendor.id.toString(), data);
@@ -62,6 +64,7 @@ export const VendorForm = ({ vendor, onSuccess }: VendorFormProps) => {
         await vendorService.addVendor(data);
       }
       onSuccess?.();
+      onClose?.();
     } catch (error) {
       console.error('Error submitting vendor form:', error);
     }
@@ -150,8 +153,15 @@ export const VendorForm = ({ vendor, onSuccess }: VendorFormProps) => {
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <div className="flex justify-end gap-4">
+          {onClose && (
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit">Submit</Button>
+        </div>
       </form>
     </Form>
-  )
-}
+  );
+};
