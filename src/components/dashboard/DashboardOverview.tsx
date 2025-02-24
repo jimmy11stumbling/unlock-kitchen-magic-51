@@ -70,12 +70,15 @@ export const DashboardOverview = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <DateRangeSelector
-          startDate={startDate}
-          endDate={endDate}
-          onRangeChange={handleDateRangeChange}
-        />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-2xl font-semibold">Overview</h2>
+        <div className="w-full sm:w-auto">
+          <DateRangeSelector
+            startDate={startDate}
+            endDate={endDate}
+            onRangeChange={handleDateRangeChange}
+          />
+        </div>
       </div>
 
       <KeyMetrics 
