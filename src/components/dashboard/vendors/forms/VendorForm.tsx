@@ -17,14 +17,15 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 
+// Update the schema to match Vendor type requirements
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().min(10, "Phone number must be at least 10 digits").optional().or(z.literal("")),
-  address: z.string().min(5, "Address must be at least 5 characters").optional().or(z.literal("")),
-  taxId: z.string().optional().or(z.literal("")),
+  email: z.string(),
+  phone: z.string(),
+  address: z.string(),
+  taxId: z.string(),
   paymentTerms: z.enum(["cash", "card", "bank_transfer", "check"]),
-  notes: z.string().optional().or(z.literal(""))
+  notes: z.string()
 });
 
 export interface VendorFormProps {
@@ -51,20 +52,25 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
+      const vendorData: Omit<Vendor, "id" | "createdAt" | "updatedAt"> = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        taxId: data.taxId,
+        paymentTerms: data.paymentTerms,
+        notes: data.notes,
+        status: 'active'
+      };
+
       if (vendor) {
-        await vendorService.updateVendor(vendor.id.toString(), {
-          ...data,
-          status: 'active'
-        });
+        await vendorService.updateVendor(vendor.id.toString(), vendorData);
         toast({
           title: "Vendor updated",
           description: "The vendor has been successfully updated.",
         });
       } else {
-        await vendorService.addVendor({
-          ...data,
-          status: 'active'
-        });
+        await vendorService.addVendor(vendorData);
         toast({
           title: "Vendor added",
           description: "The new vendor has been successfully added.",
@@ -104,7 +110,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email *</FormLabel>
               <FormControl>
                 <Input type="email" placeholder="vendor@example.com" {...field} />
               </FormControl>
@@ -117,7 +123,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone</FormLabel>
+              <FormLabel>Phone *</FormLabel>
               <FormControl>
                 <Input type="tel" placeholder="Phone number" {...field} />
               </FormControl>
@@ -130,7 +136,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Address</FormLabel>
+              <FormLabel>Address *</FormLabel>
               <FormControl>
                 <Input placeholder="Business address" {...field} />
               </FormControl>
@@ -143,7 +149,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
           name="taxId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tax ID</FormLabel>
+              <FormLabel>Tax ID *</FormLabel>
               <FormControl>
                 <Input placeholder="Tax identification number" {...field} />
               </FormControl>
@@ -179,7 +185,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>Notes *</FormLabel>
               <FormControl>
                 <Input placeholder="Additional notes" {...field} />
               </FormControl>
