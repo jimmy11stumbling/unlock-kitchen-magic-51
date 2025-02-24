@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
+import type { KitchenOrder, KitchenOrderItem } from "@/types/kitchen";
 
 export function KitchenDashboard() {
   const [alerts, setAlerts] = useState<string[]>([]);
