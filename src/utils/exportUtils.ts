@@ -126,27 +126,17 @@ export const importFromCSV = async (file: File): Promise<InventoryItem[]> => {
 };
 
 export const exportInventory = (data: InventoryItem[], filename: string, format: ExportFormat) => {
-  try {
-    if (format === 'csv') {
-      exportToCSV(data, filename);
-    } else {
-      exportToPDF(data, filename);
-    }
-  } catch (error) {
-    console.error('Export error:', error);
-    throw new Error('Failed to export inventory');
+  if (format === 'csv') {
+    exportToCSV(data, filename);
+  } else {
+    exportToPDF(data, filename);
   }
 };
 
-export const exportReport = async (data: any[], filename: string, format: ExportFormat) => {
-  try {
-    if (format === 'csv') {
-      exportToCSV(data, filename);
-    } else {
-      exportToPDF(data, filename);
-    }
-  } catch (error) {
-    console.error('Export error:', error);
-    throw new Error('Failed to export report');
+export const exportReport = (data: DailyReport[], filename: string, format: ExportFormat) => {
+  if (format === 'csv') {
+    exportToCSV(data, filename);
+  } else {
+    exportToPDF(data, filename);
   }
 };
