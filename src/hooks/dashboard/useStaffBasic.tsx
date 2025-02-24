@@ -1,49 +1,36 @@
 
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useStaffAuth } from "./staff/hooks/useStaffAuth";
 import { useStaffManagement } from "./staff/hooks/useStaffManagement";
+import { useShiftManagement } from "./staff/useShiftManagement";
+import { usePerformanceManagement } from "./staff/usePerformanceManagement";
 import type { StaffMember } from "@/types/staff";
 
-export const useStaffBasic = () => {
-  const { staff, loading, addStaffMember, updateStaffStatus, updateStaffInfo } = useStaffManagement();
-  const { shifts, addShift } = useShiftManagement();
-  const { updateStaffPerformance, updateStaffSchedule, updateCertifications } = usePerformanceManagement();
+export const useStaffBasic = (currentUser: StaffMember | null = null) => {
+  const auth = useStaffAuth(currentUser);
+  const management = useStaffManagement();
 
-  const calculateAttendance = (staffId: number): number => {
-    const member = staff.find(m => m.id === staffId);
-    if (!member) return 0;
+  useEffect(() => {
+    management.fetchStaff();
 
-    const scheduledDays = Object.values(member.schedule).filter(day => day !== "OFF").length;
-    const totalPossibleDays = 7;
-    
-    return Math.round((scheduledDays / totalPossibleDays) * 100);
-  };
+    const channel = supabase
+      .channel('staff-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'staff_members' },
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          management.fetchStaff();
+      })
+      .subscribe();
 
-  const calculateWeeklyHours = (staffId: number): number => {
-    const member = staff.find(m => m.id === staffId);
-    if (!member?.schedule) return 0;
-
-    return Object.values(member.schedule)
-      .filter(time => time !== "OFF")
-      .reduce((total, time) => {
-        const [start, end] = time.split("-");
-        const startHour = parseInt(start.split(":")[0]);
-        const endHour = parseInt(end.split(":")[0]);
-        return total + (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);
-      }, 0);
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return {
-    staff,
-    loading,
-    shifts,
-    addStaffMember,
-    updateStaffStatus,
-    addShift,
-    updateStaffInfo,
-    updateStaffSchedule,
-    updateStaffPerformance,
-    updateCertifications,
-    calculateAttendance,
-    calculateWeeklyHours,
+    ...auth,
+    ...management,
   };
 };
