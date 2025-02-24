@@ -37,18 +37,19 @@ const mapTransactionToExpense = (transaction: FinancialTransaction): Expense => 
 
 export const vendorService = {
   async getVendors(): Promise<Vendor[]> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('financial_transactions')
       .select('*')
       .eq('type', 'expense');
     
+    if (error) throw error;
     return (data || []).map(mapTransactionToVendor);
   },
 
   async addVendor(vendor: Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vendor> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('financial_transactions')
-      .insert([{
+      .insert({
         amount: 0,
         category_id: '',
         date: new Date().toISOString(),
@@ -57,17 +58,18 @@ export const vendorService = {
         type: 'expense',
         reference_number: vendor.taxId,
         created_by: ''
-      }])
-      .select()
+      })
+      .select('*')
       .single();
     
+    if (error) throw error;
     if (!data) throw new Error('No data returned from insert');
     
     return mapTransactionToVendor(data);
   },
 
   async updateVendor(id: string, updates: Partial<Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Vendor> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('financial_transactions')
       .update({
         description: updates.name,
@@ -75,27 +77,29 @@ export const vendorService = {
         reference_number: updates.taxId
       })
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
     
+    if (error) throw error;
     if (!data) throw new Error('No data returned from update');
     
     return mapTransactionToVendor(data);
   },
 
   async getExpenses(): Promise<Expense[]> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('financial_transactions')
       .select('*')
       .eq('type', 'expense');
     
+    if (error) throw error;
     return (data || []).map(mapTransactionToExpense);
   },
 
   async addExpense(expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('financial_transactions')
-      .insert([{
+      .insert({
         amount: expense.amount,
         category_id: expense.category,
         date: expense.date,
@@ -104,10 +108,11 @@ export const vendorService = {
         type: 'expense',
         created_by: '',
         reference_number: ''
-      }])
-      .select()
+      })
+      .select('*')
       .single();
     
+    if (error) throw error;
     if (!data) throw new Error('No data returned from insert');
     
     return mapTransactionToExpense(data);
