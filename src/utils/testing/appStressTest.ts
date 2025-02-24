@@ -201,21 +201,35 @@ export const runStressTest = async () => {
     // Test 10: System Performance Metrics
     console.log("\n📊 Testing System Performance...");
     const startTime = new Date();
-    const { data: metrics, error: metricsError } = await Promise.all([
+    const [
+      ordersCount,
+      kitchenOrdersCount,
+      staffCount,
+      ingredientsCount
+    ] = await Promise.all([
       supabase.from('orders').select('count').single(),
       supabase.from('kitchen_orders').select('count').single(),
       supabase.from('staff_members').select('count').single(),
       supabase.from('ingredients').select('count').single()
     ]);
 
-    if (metricsError) {
-      console.error("❌ Performance metrics test failed:", metricsError.message);
+    if (ordersCount.error || kitchenOrdersCount.error || staffCount.error || ingredientsCount.error) {
+      console.error("❌ Performance metrics test failed:", 
+        ordersCount.error || 
+        kitchenOrdersCount.error || 
+        staffCount.error || 
+        ingredientsCount.error
+      );
     } else {
       const endTime = new Date();
       const queryTime = endTime.getTime() - startTime.getTime();
       console.log("✅ Performance Metrics:");
       console.log(`   - Database query time: ${queryTime}ms`);
       console.log(`   - System response: ${queryTime < 1000 ? 'Good' : 'Slow'}`);
+      console.log(`   - Total orders: ${ordersCount.data?.count || 0}`);
+      console.log(`   - Kitchen orders: ${kitchenOrdersCount.data?.count || 0}`);
+      console.log(`   - Staff members: ${staffCount.data?.count || 0}`);
+      console.log(`   - Inventory items: ${ingredientsCount.data?.count || 0}`);
     }
 
     console.log("\n✨ System stress test completed!");
