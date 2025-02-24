@@ -5,7 +5,6 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
-import { AIAssistant } from "@/components/AIAssistant";
 import { Features } from "@/components/Features";
 
 function App() {
@@ -20,7 +19,6 @@ function App() {
         <Route path="/dashboard/:tab" element={<Dashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <AIAssistant />
     </Router>
   );
 }
