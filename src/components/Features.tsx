@@ -46,13 +46,19 @@ export const Features = ({ showViewAllButton = false }: { showViewAllButton?: bo
       icon: <Settings className="h-8 w-8 text-primary" />,
       title: "Inventory Control",
       description: "Automated stock tracking, supplier management, and low-stock alerts.",
-      image: "/photo-1553272725-086100aecf5e" // Restaurant storage/inventory
+      image: "/photo-1487058792275-0ad4aaf24ca7" // Software interface
     },
     {
       icon: <Inbox className="h-8 w-8 text-primary" />,
       title: "Employee Portal",
       description: "Dedicated staff interface for schedules, payroll, and internal communications.",
-      image: "/photo-1600880292203-757bb62b4baf" // Restaurant team meeting
+      image: "/photo-1488972685288-c3fd157d7c7a" // Modern office space
+    },
+    {
+      icon: <Users className="h-8 w-8 text-primary" />,
+      title: "Team Collaboration",
+      description: "Built-in tools for seamless communication and task management across departments.",
+      image: "/photo-1519389950473-47ba0277781c" // Team collaboration
     }
   ];
 
@@ -72,8 +78,8 @@ export const Features = ({ showViewAllButton = false }: { showViewAllButton?: bo
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.slice(0, 4).map((feature, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.slice(6, 9).map((feature, index) => (
               <div 
                 key={feature.title}
                 className="p-6 rounded-lg glass-card hover:bg-black/50 transition-all duration-300 animate-in stagger-2"
