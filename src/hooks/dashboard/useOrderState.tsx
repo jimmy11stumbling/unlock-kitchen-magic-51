@@ -3,8 +3,13 @@ import { useState, useEffect } from "react";
 import type { KitchenOrder, Order, OrderItem } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestResponse } from "@supabase/supabase-js";
 
-// Define the database schema type
+// Define base types for database
+type Json = string | number | boolean | { [key: string]: Json } | Json[];
+type OrderStatus = "pending" | "preparing" | "ready" | "delivered";
+
+// Define the database schema types
 interface DatabaseOrderItem {
   id: number;
   name: string;
@@ -12,25 +17,25 @@ interface DatabaseOrderItem {
   price: number;
 }
 
-interface DatabaseOrder {
-  id: number;
-  table_number: number;
-  server_name: string;
-  status: "pending" | "preparing" | "ready" | "delivered";
-  items: DatabaseOrderItem[];
-  total: number;
-  timestamp: string;
-  special_instructions: string;
-  guest_count: number;
-  estimated_prep_time: number;
+interface SupabaseOrder {
   created_at: string;
-  updated_at: string;
+  estimated_prep_time: number;
+  guest_count: number;
+  id: number;
+  items: Json;
   payment_method: string;
   payment_status: string;
+  server_name: string;
+  special_instructions: string;
+  status: string;
+  table_number: number;
+  timestamp: string;
+  total: number;
+  updated_at: string;
 }
 
-// Define the type for creating a new order
-type NewDatabaseOrder = Omit<Required<DatabaseOrder>, 'id'>;
+// Type for inserting a new order
+type NewSupabaseOrder = Omit<SupabaseOrder, 'id'>;
 
 export const useOrderState = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -58,33 +63,36 @@ export const useOrderState = () => {
     };
   }, []);
 
+  const transformDatabaseOrder = (dbOrder: SupabaseOrder): Order => ({
+    id: dbOrder.id,
+    tableNumber: dbOrder.table_number,
+    items: Array.isArray(dbOrder.items) 
+      ? (dbOrder.items as DatabaseOrderItem[]).map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        }))
+      : [],
+    status: dbOrder.status as OrderStatus,
+    total: dbOrder.total,
+    timestamp: dbOrder.timestamp,
+    serverName: dbOrder.server_name,
+    specialInstructions: dbOrder.special_instructions,
+    guestCount: dbOrder.guest_count,
+    estimatedPrepTime: dbOrder.estimated_prep_time
+  });
+
   const fetchOrders = async () => {
     try {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .order('timestamp', { ascending: false });
+        .order('timestamp', { ascending: false }) as PostgrestResponse<SupabaseOrder>;
 
       if (error) throw error;
 
-      const transformedOrders: Order[] = (data || []).map((dbOrder: DatabaseOrder) => ({
-        id: dbOrder.id,
-        tableNumber: dbOrder.table_number,
-        items: dbOrder.items.map(item => ({
-          id: item.id,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        status: dbOrder.status,
-        total: dbOrder.total,
-        timestamp: dbOrder.timestamp,
-        serverName: dbOrder.server_name,
-        specialInstructions: dbOrder.special_instructions,
-        guestCount: dbOrder.guest_count,
-        estimatedPrepTime: dbOrder.estimated_prep_time
-      }));
-
+      const transformedOrders = (data || []).map(transformDatabaseOrder);
       setOrders(transformedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -100,7 +108,7 @@ export const useOrderState = () => {
 
   const addOrder = async (tableId: number, serverName: string) => {
     try {
-      const newOrderData: NewDatabaseOrder = {
+      const newOrderData: NewSupabaseOrder = {
         table_number: tableId,
         server_name: serverName,
         status: "pending",
@@ -120,22 +128,12 @@ export const useOrderState = () => {
         .from('orders')
         .insert(newOrderData)
         .select()
-        .single();
+        .single() as PostgrestResponse<SupabaseOrder>;
 
       if (error) throw error;
+      if (!data) throw new Error('No data returned from insert');
 
-      const transformedOrder: Order = {
-        id: data.id,
-        tableNumber: data.table_number,
-        items: [],
-        status: data.status,
-        total: data.total,
-        timestamp: data.timestamp,
-        serverName: data.server_name,
-        specialInstructions: data.special_instructions,
-        guestCount: data.guest_count,
-        estimatedPrepTime: data.estimated_prep_time
-      };
+      const transformedOrder = transformDatabaseOrder(data);
       
       toast({
         title: "Order Created",
@@ -153,10 +151,10 @@ export const useOrderState = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId: number, status: Order['status']) => {
+  const updateOrderStatus = async (orderId: number, status: OrderStatus) => {
     try {
       const updateData = {
-        status: status as DatabaseOrder['status'],
+        status,
         updated_at: new Date().toISOString()
       };
 
