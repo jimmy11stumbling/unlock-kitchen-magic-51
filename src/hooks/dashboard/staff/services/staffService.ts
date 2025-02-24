@@ -44,7 +44,8 @@ const mockStaffData: DatabaseStaffMember[] = [
     employment_status: "full_time",
     hire_date: "2023-01-15",
     benefits: {},
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    tax_id: "123-45-6789" // Added required tax_id field
   }
 ];
 
@@ -133,7 +134,8 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
         hourly_rate: data.hourlyRate || 0,
         overtime_rate: data.overtimeRate || 0,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        tax_id: "" // Added required tax_id field
       };
       mockStaffData.push(newStaff);
       return newStaff;
@@ -175,7 +177,8 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       hire_date: new Date().toISOString(),
       benefits: {},
       hourly_rate: data.hourlyRate || 0,
-      overtime_rate: data.overtimeRate || 0
+      overtime_rate: data.overtimeRate || 0,
+      tax_id: "" // Added required tax_id field
     };
 
     const { data: newStaff, error } = await supabase
