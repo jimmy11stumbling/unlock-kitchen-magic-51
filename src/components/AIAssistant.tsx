@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,12 +42,18 @@ export const AIAssistant = () => {
       console.log('Sending request to generate-response function');
       console.log('Current messages:', [...messages, userMessage]);
 
-      const { data, error } = await supabase.functions.invoke('generate-response', {
-        body: { 
-          messages: [...messages, userMessage],
-          system: "You are Claude, an AI assistant for a restaurant management system. You help users understand our pricing plans, features, and how to use the system effectively. Be friendly, knowledgeable, and always try to provide specific, actionable information."
+      const { data, error } = await supabase.functions.invoke(
+        'generate-response',
+        {
+          body: { 
+            messages: [...messages, userMessage],
+            system: "You are Claude, an AI assistant for a restaurant management system. You help users understand our pricing plans, features, and how to use the system effectively. Be friendly, knowledgeable, and always try to provide specific, actionable information."
+          },
+          headers: {
+            apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1Y2h2d3pzeWZtenF5eXl3YmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkwNjUyMTQsImV4cCI6MjA1NDY0MTIxNH0.vS05Lyx_xs_ZcPKWzPCyGbJ6R8yqAADcFZeFPYg2CSI"
+          }
         }
-      });
+      );
 
       console.log('Response from generate-response function:', { data, error });
 
