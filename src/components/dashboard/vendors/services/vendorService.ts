@@ -3,31 +3,32 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Vendor, Expense, AccountingSummary } from "@/types/vendor";
 import type { Database } from "@/integrations/supabase/types";
 
-type VendorRow = Database["public"]["Tables"]["financial_transactions"]["Row"];
-type VendorInsert = Database["public"]["Tables"]["financial_transactions"]["Insert"];
+type FinancialTransaction = Database["public"]["Tables"]["financial_transactions"]["Row"];
+type FinancialTransactionInsert = Database["public"]["Tables"]["financial_transactions"]["Insert"];
 
-const mapTransactionToVendor = (item: VendorRow): Vendor => ({
-  id: Number(item.id),
-  name: item.category,
+const mapTransactionToVendor = (transaction: FinancialTransaction): Vendor => ({
+  id: Number(transaction.id),
+  name: transaction.description || '',
   email: '',
   phone: '',
-  address: item.description || '',
-  taxId: '',
+  address: '',
+  taxId: transaction.reference_number || '',
   status: 'active',
-  paymentTerms: item.payment_method || '',
-  notes: item.notes || '',
-  createdAt: item.created_at || '',
-  updatedAt: item.created_at || ''
+  paymentTerms: transaction.payment_method,
+  notes: '',
+  createdAt: transaction.created_at || '',
+  updatedAt: transaction.updated_at || ''
 });
 
-const mapVendorToTransaction = (vendor: Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>): VendorInsert => ({
-  category: vendor.name,
-  description: vendor.address,
-  payment_method: vendor.paymentTerms,
-  notes: vendor.notes,
-  type: 'expense',
+const mapVendorToTransaction = (vendor: Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>): FinancialTransactionInsert => ({
   amount: 0,
-  user_id: ''
+  category_id: '',
+  date: new Date().toISOString(),
+  description: vendor.name,
+  payment_method: vendor.paymentTerms as Database["public"]["Enums"]["payment_method"],
+  type: 'expense',
+  reference_number: vendor.taxId,
+  created_by: ''
 });
 
 export const vendorService = {
@@ -35,8 +36,7 @@ export const vendorService = {
     const { data } = await supabase
       .from('financial_transactions')
       .select('*')
-      .eq('type', 'expense')
-      .order('category');
+      .eq('type', 'expense');
     
     return (data || []).map(mapTransactionToVendor);
   },
@@ -53,15 +53,16 @@ export const vendorService = {
     return mapTransactionToVendor(data);
   },
 
-  async updateVendor(id: number, updates: Partial<Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Vendor> {
+  async updateVendor(id: string, updates: Partial<Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Vendor> {
+    const updateData: Partial<FinancialTransactionInsert> = {
+      description: updates.name,
+      payment_method: updates.paymentTerms as Database["public"]["Enums"]["payment_method"],
+      reference_number: updates.taxId
+    };
+
     const { data } = await supabase
       .from('financial_transactions')
-      .update({
-        category: updates.name,
-        description: updates.address,
-        payment_method: updates.paymentTerms,
-        notes: updates.notes
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -81,15 +82,15 @@ export const vendorService = {
       id: Number(item.id),
       vendorId: 0,
       amount: item.amount,
-      date: item.date || '',
-      category: item.category || '',
+      date: item.date,
+      category: '',
       description: item.description || '',
-      paymentMethod: item.payment_method || '',
+      paymentMethod: item.payment_method,
       receiptUrl: undefined,
       taxDeductible: false,
       status: 'pending',
       createdAt: item.created_at || '',
-      updatedAt: item.created_at || ''
+      updatedAt: item.updated_at || ''
     }));
   },
 
@@ -98,12 +99,13 @@ export const vendorService = {
       .from('financial_transactions')
       .insert([{
         amount: expense.amount,
+        category_id: '',
         date: expense.date,
-        category: expense.category,
         description: expense.description,
-        payment_method: expense.paymentMethod,
+        payment_method: expense.paymentMethod as Database["public"]["Enums"]["payment_method"],
         type: 'expense',
-        user_id: ''
+        created_by: '',
+        reference_number: ''
       }])
       .select()
       .single();
@@ -114,15 +116,15 @@ export const vendorService = {
       id: Number(data.id),
       vendorId: 0,
       amount: data.amount,
-      date: data.date || '',
-      category: data.category || '',
+      date: data.date,
+      category: '',
       description: data.description || '',
-      paymentMethod: data.payment_method || '',
+      paymentMethod: data.payment_method,
       receiptUrl: undefined,
       taxDeductible: false,
       status: 'pending',
       createdAt: data.created_at || '',
-      updatedAt: data.created_at || ''
+      updatedAt: data.updated_at || ''
     };
   },
 
