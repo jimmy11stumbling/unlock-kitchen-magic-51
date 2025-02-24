@@ -1,7 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
+import { runKitchenTests } from "./modules/kitchenTests";
+import { runPaymentTests } from "./modules/paymentTests";
+import { runSubscriptionTests } from "./modules/subscriptionTests";
+import { runStaffTests } from "./modules/staffTests";
 
 export const runStressTest = async () => {
   console.log("Starting comprehensive system stress test...");
+  const results: Record<string, boolean> = {};
   
   try {
     // Test 1: Table Management System
@@ -262,7 +267,13 @@ export const runStressTest = async () => {
       console.log("   - Tier distribution:", tierDistribution);
     }
 
-    // Test 13: System Performance Metrics
+    // Run modularized tests
+    results['kitchen'] = await runKitchenTests();
+    results['payments'] = await runPaymentTests();
+    results['subscriptions'] = await runSubscriptionTests();
+    results['staff'] = await runStaffTests();
+
+    // System Performance Metrics
     console.log("\n📊 Testing System Performance...");
     const startTime = new Date();
     const [
@@ -284,6 +295,7 @@ export const runStressTest = async () => {
         staffCount.error || 
         ingredientsCount.error
       );
+      results['performance'] = false;
     } else {
       const endTime = new Date();
       const queryTime = endTime.getTime() - startTime.getTime();
@@ -294,9 +306,14 @@ export const runStressTest = async () => {
       console.log(`   - Kitchen orders: ${kitchenOrdersCount.data?.count || 0}`);
       console.log(`   - Staff members: ${staffCount.data?.count || 0}`);
       console.log(`   - Inventory items: ${ingredientsCount.data?.count || 0}`);
+      results['performance'] = true;
     }
 
     console.log("\n✨ System stress test completed!");
+    console.log("\nTest Results Summary:");
+    Object.entries(results).forEach(([test, passed]) => {
+      console.log(`${passed ? '✅' : '❌'} ${test} tests: ${passed ? 'PASSED' : 'FAILED'}`);
+    });
     
   } catch (error) {
     console.error("❌ Critical system test failure:", error);
