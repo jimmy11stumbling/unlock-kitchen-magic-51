@@ -23,6 +23,13 @@ export interface MenuItemIngredient {
   ingredients?: Ingredient;
 }
 
+// Interface for the data structure returned from the join query
+interface MenuItemIngredientJoin {
+  quantity: number;
+  ingredient_id: number;
+  ingredients: Ingredient;
+}
+
 interface PrepDetails {
   steps: Array<{ duration: number }>;
   equipment_needed: string[];
@@ -147,7 +154,7 @@ export const useIngredientManagement = () => {
       if (ingredientsResult.error) throw new Error(ingredientsResult.error.message);
 
       const menuItem = menuItemResult.data;
-      const ingredients = ingredientsResult.data as MenuItemIngredient[];
+      const ingredients = ingredientsResult.data as MenuItemIngredientJoin[];
 
       if (!menuItem || !ingredients) return DEFAULT_PREP_TIME;
 
