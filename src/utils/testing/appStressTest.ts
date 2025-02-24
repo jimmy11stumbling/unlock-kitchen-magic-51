@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const runStressTest = async () => {
@@ -198,7 +197,72 @@ export const runStressTest = async () => {
         sum + (s.supplier_ingredients?.length || 0), 0)}`);
     }
 
-    // Test 10: System Performance Metrics
+    // Test 10: Waste Management System
+    console.log("\n🗑️ Testing Waste Management System...");
+    const { data: wasteLogs, error: wasteError } = await supabase
+      .from('waste_logs')
+      .select(`
+        *,
+        ingredients (name)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (wasteError) {
+      console.error("❌ Waste management test failed:", wasteError.message);
+    } else {
+      const totalWasteCost = wasteLogs?.reduce((sum, log) => sum + (log.cost || 0), 0);
+      console.log("✅ Waste Management Status:");
+      console.log(`   - Total waste entries: ${wasteLogs?.length}`);
+      console.log(`   - Total waste cost: $${totalWasteCost?.toFixed(2)}`);
+    }
+
+    // Test 11: Purchase Order System
+    console.log("\n📝 Testing Purchase Order System...");
+    const { data: purchaseOrders, error: poError } = await supabase
+      .from('purchase_orders')
+      .select(`
+        *,
+        purchase_order_items (
+          *,
+          ingredients (name)
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (poError) {
+      console.error("❌ Purchase order system test failed:", poError.message);
+    } else {
+      const pendingOrders = purchaseOrders?.filter(po => po.status === 'pending').length;
+      const totalValue = purchaseOrders?.reduce((sum, po) => sum + (po.total_amount || 0), 0);
+      console.log("✅ Purchase Order System Status:");
+      console.log(`   - Total orders: ${purchaseOrders?.length}`);
+      console.log(`   - Pending orders: ${pendingOrders}`);
+      console.log(`   - Total value: $${totalValue?.toFixed(2)}`);
+    }
+
+    // Test 12: Loyalty Points System
+    console.log("\n💎 Testing Loyalty Points System...");
+    const { data: loyaltyPoints, error: loyaltyError } = await supabase
+      .from('loyalty_points')
+      .select('*')
+      .order('points', { ascending: false });
+
+    if (loyaltyError) {
+      console.error("❌ Loyalty system test failed:", loyaltyError.message);
+    } else {
+      const totalPoints = loyaltyPoints?.reduce((sum, lp) => sum + (lp.points || 0), 0);
+      const tierDistribution = loyaltyPoints?.reduce((acc, lp) => {
+        acc[lp.tier] = (acc[lp.tier] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      console.log("✅ Loyalty System Status:");
+      console.log(`   - Total members: ${loyaltyPoints?.length}`);
+      console.log(`   - Total points: ${totalPoints}`);
+      console.log("   - Tier distribution:", tierDistribution);
+    }
+
+    // Test 13: System Performance Metrics
     console.log("\n📊 Testing System Performance...");
     const startTime = new Date();
     const [
