@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useInventoryData } from "@/hooks/dashboard/useInventoryData";
@@ -90,6 +89,7 @@ export function InventoryDashboard() {
         autoRefresh={autoRefresh}
         onAutoRefreshToggle={setAutoRefresh}
         onAddItem={addItem}
+        inventoryItems={inventoryItems}
       />
 
       <InventoryStats 
