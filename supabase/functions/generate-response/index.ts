@@ -16,9 +16,36 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, system } = await req.json();
-    console.log('Received request with messages:', messages);
-    console.log('System prompt:', system);
+    const { analysisType, data } = await req.json();
+    console.log(`Received ${analysisType} analysis request:`, data);
+
+    let systemPrompt = "";
+    let userPrompt = "";
+
+    switch (analysisType) {
+      case "menu-optimization":
+        systemPrompt = "You are a restaurant analytics expert focusing on menu optimization and pricing strategies.";
+        userPrompt = `Analyze this menu performance data: ${JSON.stringify(data)}. 
+                     Provide specific recommendations for menu optimization, pricing adjustments, and potential new items based on trends.`;
+        break;
+      case "staffing-analysis":
+        systemPrompt = "You are a restaurant staffing and scheduling optimization expert.";
+        userPrompt = `Based on this staffing and customer traffic data: ${JSON.stringify(data)}.
+                     Provide detailed recommendations for optimal staff scheduling and coverage.`;
+        break;
+      case "inventory-prediction":
+        systemPrompt = "You are an inventory management and prediction expert for restaurants.";
+        userPrompt = `Using this inventory and sales data: ${JSON.stringify(data)}.
+                     Predict future inventory needs and suggest optimal ordering patterns.`;
+        break;
+      case "customer-insights":
+        systemPrompt = "You are a customer behavior and feedback analysis expert for restaurants.";
+        userPrompt = `Analyze this customer feedback and sales data: ${JSON.stringify(data)}.
+                     Provide insights on customer preferences and satisfaction trends.`;
+        break;
+      default:
+        throw new Error("Invalid analysis type specified");
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -30,11 +57,13 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'claude-3-opus-20240229',
         max_tokens: 1000,
-        messages: messages.map((msg: any) => ({
-          role: msg.role,
-          content: msg.content
-        })),
-        system: system || "You are a helpful AI assistant that helps users with their questions."
+        messages: [
+          {
+            role: "user",
+            content: userPrompt
+          }
+        ],
+        system: systemPrompt
       })
     });
 
@@ -54,10 +83,10 @@ serve(async (req) => {
       throw new Error('Unexpected response format from Claude API');
     }
 
-    const message = data.content[0].text;
+    const analysis = data.content[0].text;
     
     return new Response(
-      JSON.stringify({ message }),
+      JSON.stringify({ analysis }),
       { 
         headers: { 
           ...corsHeaders,
@@ -66,7 +95,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in generate-response function:', error);
+    console.error('Error in analytics function:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message || 'An unexpected error occurred',
