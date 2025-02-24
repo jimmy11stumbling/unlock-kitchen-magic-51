@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,7 @@ export function KitchenDashboard() {
     };
 
     updatePrepTimes();
-    const interval = setInterval(updatePrepTimes, 300000);
+    const interval = setInterval(updatePrepTimes, 300000); // Update every 5 minutes
     return () => clearInterval(interval);
   }, []);
 

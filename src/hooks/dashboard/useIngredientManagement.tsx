@@ -21,6 +21,11 @@ export interface MenuItemIngredient {
   unit: string;
 }
 
+interface PrepDetails {
+  steps: Array<{ duration: number }>;
+  equipment_needed: string[];
+}
+
 export const useIngredientManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -84,8 +89,8 @@ export const useIngredientManagement = () => {
 
     if (!menuItem || !ingredients) return 15; // Default prep time
 
-    const steps = menuItem.prep_details?.steps || [];
-    const baseTime = steps.reduce((total: number, step: any) => total + (step.duration || 0), 0);
+    const prepDetails = menuItem.prep_details as PrepDetails;
+    const baseTime = prepDetails.steps?.reduce((total: number, step) => total + (step.duration || 0), 0) || 0;
     
     // Add complexity factor based on number of ingredients
     const complexityFactor = Math.ceil(ingredients.length / 3) * 5;
