@@ -768,6 +768,7 @@ export type Database = {
           description: string | null
           id: number
           image_url: string | null
+          ingredient_requirements: Json | null
           name: string
           order_count: number | null
           prep_details: Json | null
@@ -783,6 +784,7 @@ export type Database = {
           description?: string | null
           id?: number
           image_url?: string | null
+          ingredient_requirements?: Json | null
           name: string
           order_count?: number | null
           prep_details?: Json | null
@@ -798,6 +800,7 @@ export type Database = {
           description?: string | null
           id?: number
           image_url?: string | null
+          ingredient_requirements?: Json | null
           name?: string
           order_count?: number | null
           prep_details?: Json | null
