@@ -15,15 +15,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email().optional(),
-  phone: z.string().min(10).optional(),
-  address: z.string().min(5).optional(),
-  taxId: z.string().optional(),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").optional().or(z.literal("")),
+  address: z.string().min(5, "Address must be at least 5 characters").optional().or(z.literal("")),
+  taxId: z.string().optional().or(z.literal("")),
   paymentTerms: z.enum(["cash", "card", "bank_transfer", "check"]),
-  notes: z.string().optional()
+  notes: z.string().optional().or(z.literal(""))
 });
 
 export interface VendorFormProps {
@@ -33,6 +34,8 @@ export interface VendorFormProps {
 }
 
 export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
+  const { toast } = useToast();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,31 +53,33 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
     try {
       if (vendor) {
         await vendorService.updateVendor(vendor.id.toString(), {
-          name: data.name,
-          email: data.email || '',
-          phone: data.phone || '',
-          address: data.address || '',
-          taxId: data.taxId || '',
-          paymentTerms: data.paymentTerms,
-          notes: data.notes || '',
+          ...data,
           status: 'active'
+        });
+        toast({
+          title: "Vendor updated",
+          description: "The vendor has been successfully updated.",
         });
       } else {
         await vendorService.addVendor({
-          name: data.name,
-          email: data.email || '',
-          phone: data.phone || '',
-          address: data.address || '',
-          taxId: data.taxId || '',
-          status: 'active',
-          paymentTerms: data.paymentTerms,
-          notes: data.notes || ''
+          ...data,
+          status: 'active'
+        });
+        toast({
+          title: "Vendor added",
+          description: "The new vendor has been successfully added.",
         });
       }
+      form.reset();
       onSuccess?.();
       onClose?.();
     } catch (error) {
       console.error('Error submitting vendor form:', error);
+      toast({
+        title: "Error",
+        description: "There was a problem saving the vendor. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -86,9 +91,9 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Name *</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Vendor name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -101,7 +106,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" {...field} />
+                <Input type="email" placeholder="vendor@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -114,7 +119,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
             <FormItem>
               <FormLabel>Phone</FormLabel>
               <FormControl>
-                <Input type="tel" {...field} />
+                <Input type="tel" placeholder="Phone number" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -127,7 +132,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Business address" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -140,7 +145,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
             <FormItem>
               <FormLabel>Tax ID</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Tax identification number" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -151,20 +156,20 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
           name="paymentTerms"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Payment Terms</FormLabel>
-              <FormControl>
-                <Select onValueChange={field.onChange} value={field.value}>
+              <FormLabel>Payment Terms *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select payment terms" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="check">Check</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="card">Card</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="check">Check</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -176,7 +181,7 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Additional notes" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -188,7 +193,9 @@ export const VendorForm = ({ vendor, onSuccess, onClose }: VendorFormProps) => {
               Cancel
             </Button>
           )}
-          <Button type="submit">Submit</Button>
+          <Button type="submit">
+            {vendor ? 'Update Vendor' : 'Add Vendor'}
+          </Button>
         </div>
       </form>
     </Form>
