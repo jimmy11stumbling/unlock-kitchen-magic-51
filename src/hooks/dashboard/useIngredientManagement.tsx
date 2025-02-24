@@ -26,6 +26,23 @@ interface PrepDetails {
   equipment_needed: string[];
 }
 
+const isValidPrepDetails = (data: unknown): data is PrepDetails => {
+  if (typeof data !== 'object' || !data) return false;
+  
+  const details = data as Record<string, unknown>;
+  return (
+    Array.isArray(details.steps) &&
+    Array.isArray(details.equipment_needed) &&
+    details.steps.every(step => 
+      typeof step === 'object' && 
+      step !== null && 
+      'duration' in step && 
+      typeof step.duration === 'number'
+    ) &&
+    details.equipment_needed.every(item => typeof item === 'string')
+  );
+};
+
 export const useIngredientManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -89,8 +106,10 @@ export const useIngredientManagement = () => {
 
     if (!menuItem || !ingredients) return 15; // Default prep time
 
-    const prepDetails = menuItem.prep_details as PrepDetails;
-    const baseTime = prepDetails.steps?.reduce((total: number, step) => total + (step.duration || 0), 0) || 0;
+    const prepDetails = menuItem.prep_details;
+    if (!isValidPrepDetails(prepDetails)) return 15; // Default prep time if invalid data
+    
+    const baseTime = prepDetails.steps.reduce((total: number, step) => total + (step.duration || 0), 0);
     
     // Add complexity factor based on number of ingredients
     const complexityFactor = Math.ceil(ingredients.length / 3) * 5;
