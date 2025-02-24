@@ -18,7 +18,17 @@ export function Hero() {
 
       <div className="container relative z-10 px-4 md:px-6">
         <div className="flex flex-col items-center space-y-8 text-center">
-          <div className="space-y-2">
+          {/* Logo Section */}
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-24 h-24 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20 flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
+              <ChefHat className="w-12 h-12 text-primary" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+              MaestroAI
+            </span>
+          </div>
+          
+          <div className="space-y-4">
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
               Intelligent Restaurant Management
             </h1>
@@ -26,6 +36,7 @@ export function Hero() {
               Transform your restaurant operations with AI-powered automation. From kitchen to table, MaestroAI orchestrates everything.
             </p>
           </div>
+
           <div className="space-x-4">
             <Button asChild size="lg" className="gap-2">
               <Link to="/dashboard">
@@ -39,6 +50,7 @@ export function Hero() {
               </Link>
             </Button>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
             {[
               {
