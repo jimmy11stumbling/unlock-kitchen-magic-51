@@ -149,6 +149,7 @@ export interface SalesData {
   revenue: number;
   costs: number;
   profit: number;
+  order_count?: number;
 }
 
 export interface PaymentTransaction {
