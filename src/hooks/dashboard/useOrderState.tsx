@@ -11,7 +11,6 @@ export const useOrderState = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Subscribe to order updates
     const channel = supabase
       .channel('orders')
       .on(
@@ -19,13 +18,11 @@ export const useOrderState = () => {
         { event: '*', schema: 'public', table: 'orders' },
         (payload) => {
           console.log('Order update received:', payload);
-          // Refresh orders
           fetchOrders();
         }
       )
       .subscribe();
 
-    // Initial fetch
     fetchOrders();
 
     return () => {
@@ -41,7 +38,22 @@ export const useOrderState = () => {
         .order('timestamp', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+
+      // Transform the data to match the Order type
+      const transformedOrders: Order[] = (data || []).map(order => ({
+        id: order.id,
+        tableNumber: order.table_number,
+        items: order.items || [],
+        status: order.status,
+        total: order.total,
+        timestamp: order.timestamp,
+        serverName: order.server_name,
+        specialInstructions: order.special_instructions,
+        guestCount: order.guest_count,
+        estimatedPrepTime: order.estimated_prep_time
+      }));
+
+      setOrders(transformedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
@@ -56,29 +68,46 @@ export const useOrderState = () => {
 
   const addOrder = async (tableId: number, serverName: string) => {
     try {
+      const newOrder = {
+        table_number: tableId,
+        server_name: serverName,
+        status: 'pending' as const,
+        items: [],
+        total: 0,
+        timestamp: new Date().toISOString(),
+        guest_count: 1, // Default value
+        estimated_prep_time: 15, // Default value in minutes
+        special_instructions: '',
+      };
+
       const { data, error } = await supabase
         .from('orders')
-        .insert([
-          {
-            table_id: tableId,
-            server_name: serverName,
-            status: 'pending',
-            items: [],
-            total: 0,
-            timestamp: new Date().toISOString(),
-          },
-        ])
+        .insert([newOrder])
         .select()
         .single();
 
       if (error) throw error;
+
+      // Transform the response to match Order type
+      const transformedOrder: Order = {
+        id: data.id,
+        tableNumber: data.table_number,
+        items: data.items || [],
+        status: data.status,
+        total: data.total,
+        timestamp: data.timestamp,
+        serverName: data.server_name,
+        specialInstructions: data.special_instructions,
+        guestCount: data.guest_count,
+        estimatedPrepTime: data.estimated_prep_time
+      };
       
       toast({
         title: "Order Created",
         description: `New order created for table ${tableId}`,
       });
       
-      return data;
+      return transformedOrder;
     } catch (error) {
       console.error('Error creating order:', error);
       toast({
@@ -102,6 +131,9 @@ export const useOrderState = () => {
         title: "Order Updated",
         description: `Order status updated to ${status}`,
       });
+
+      // Refresh orders after update
+      fetchOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
       toast({
@@ -112,18 +144,34 @@ export const useOrderState = () => {
     }
   };
 
-  const updateKitchenOrderStatus = async (orderId: number, status: KitchenOrder['items'][0]['status']) => {
+  const updateKitchenOrderStatus = async (orderId: number, itemStatus: KitchenOrder['items'][0]['status']) => {
     try {
-      const { error } = await supabase
+      const { data: existingOrder, error: fetchError } = await supabase
         .from('kitchen_orders')
-        .update({ status })
+        .select('*')
+        .eq('order_id', orderId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const updatedItems = existingOrder.items.map((item: any) => ({
+        ...item,
+        status: itemStatus
+      }));
+
+      const { error: updateError } = await supabase
+        .from('kitchen_orders')
+        .update({ 
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        })
         .eq('order_id', orderId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       toast({
         title: "Kitchen Order Updated",
-        description: `Kitchen order status updated to ${status}`,
+        description: `Kitchen order status updated to ${itemStatus}`,
       });
     } catch (error) {
       console.error('Error updating kitchen order status:', error);
