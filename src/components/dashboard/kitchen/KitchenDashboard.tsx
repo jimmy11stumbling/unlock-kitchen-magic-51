@@ -6,11 +6,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useIngredientManagement } from '@/hooks/dashboard/useIngredientManagement';
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import type { KitchenOrder } from "@/types/staff";
 
 export function KitchenDashboard() {
   const [alerts, setAlerts] = useState<string[]>([]);
-  const { ingredients, checkLowStock, calculatePrepTime } = useIngredientManagement();
-  
+  const [activeOrders, setActiveOrders] = useState<KitchenOrder[]>([]);
+  const { ingredients, checkLowStock } = useIngredientManagement();
+  const { toast } = useToast();
+
   useEffect(() => {
     const lowStockItems = checkLowStock();
     if (lowStockItems.length > 0) {
@@ -21,14 +28,77 @@ export function KitchenDashboard() {
   }, [ingredients]);
 
   useEffect(() => {
-    const updatePrepTimes = async () => {
-      console.log('Updating prep times based on ingredient availability');
+    // Fetch initial kitchen orders
+    const fetchKitchenOrders = async () => {
+      const { data, error } = await supabase
+        .from('kitchen_orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching kitchen orders:', error);
+        return;
+      }
+
+      setActiveOrders(data || []);
     };
 
-    updatePrepTimes();
-    const interval = setInterval(updatePrepTimes, 300000); // Update every 5 minutes
-    return () => clearInterval(interval);
+    fetchKitchenOrders();
+
+    // Subscribe to new orders and order updates
+    const channel = supabase
+      .channel('kitchen-updates')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'kitchen_orders' },
+        (payload) => {
+          console.log('Kitchen order update:', payload);
+          fetchKitchenOrders(); // Refresh orders when changes occur
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  const updateOrderStatus = async (orderId: number, itemId: number, newStatus: string) => {
+    try {
+      const order = activeOrders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const updatedItems = order.items.map(item => 
+        item.menuItemId === itemId ? { ...item, status: newStatus } : item
+      );
+
+      const allItemsReady = updatedItems.every(item => item.status === 'ready');
+
+      const { error } = await supabase
+        .from('kitchen_orders')
+        .update({ 
+          items: updatedItems,
+          status: allItemsReady ? 'ready' : 'preparing'
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      if (allItemsReady) {
+        toast({
+          title: "Order Ready",
+          description: `Order #${orderId} is ready for service`,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update order status",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -42,6 +112,69 @@ export function KitchenDashboard() {
                 <AlertTitle>Stock Alert</AlertTitle>
                 <AlertDescription>{alert}</AlertDescription>
               </Alert>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="col-span-full p-6">
+          <h2 className="text-xl font-semibold mb-4">Active Orders</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {activeOrders.map((order) => (
+              <Card key={order.id} className="p-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-semibold">Order #{order.orderId}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Sent: {new Date(order.created_at).toLocaleTimeString()}
+                    </p>
+                  </div>
+                  <Badge variant={order.priority === 'rush' ? 'destructive' : 'default'}>
+                    {order.priority}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2">
+                  {order.items.map((item) => (
+                    <div key={item.menuItemId} className="flex items-center justify-between bg-muted p-2 rounded">
+                      <div>
+                        <span className="font-medium">
+                          {item.quantity}x {item.name || `Item #${item.menuItemId}`}
+                        </span>
+                        {item.modifications.length > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            {item.modifications.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant={item.status === 'preparing' ? 'default' : 'outline'}
+                          onClick={() => updateOrderStatus(order.id, item.menuItemId, 'preparing')}
+                        >
+                          <Clock className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={item.status === 'ready' ? 'default' : 'outline'}
+                          onClick={() => updateOrderStatus(order.id, item.menuItemId, 'ready')}
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {order.notes && (
+                  <div className="mt-2">
+                    <Badge variant="outline" className="w-full justify-start gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      {order.notes}
+                    </Badge>
+                  </div>
+                )}
+              </Card>
             ))}
           </div>
         </Card>
@@ -63,13 +196,6 @@ export function KitchenDashboard() {
                 />
               </div>
             ))}
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Active Orders</h2>
-          <div className="space-y-4">
-            {/* Active orders would be mapped here */}
           </div>
         </Card>
       </div>
