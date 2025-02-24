@@ -9,12 +9,12 @@ import { AlertsPanel } from "@/components/dashboard/overview/AlertsPanel";
 import { TopSellingItems } from "@/components/dashboard/overview/TopSellingItems";
 import { LoadingState } from "@/components/dashboard/overview/LoadingState";
 import { ErrorBoundary } from "@/components/dashboard/overview/ErrorBoundary";
+import { NotificationsBulletin } from "@/components/dashboard/overview/NotificationsBulletin";
 import { Card } from "@/components/ui/card";
 
 const Overview = () => {
   const { salesData, staff, orders, menuItems, reservations, inventory } = useDashboardState();
   
-  // Set up auto-refresh every 30 seconds
   useDataRefresh(30000);
 
   const getActiveOrders = () => orders.filter(order => 
@@ -32,7 +32,7 @@ const Overview = () => {
   return (
     <ErrorBoundary>
       <Suspense fallback={<LoadingState />}>
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-6 animate-fade-in">
           <KeyMetrics 
             salesData={salesData}
             staff={staff}
@@ -40,31 +40,40 @@ const Overview = () => {
             reservations={reservations}
           />
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <RevenueChart data={salesData} />
-            <OrdersChart data={salesData} />
+          <div className="grid gap-6 md:grid-cols-12">
+            <div className="md:col-span-8 space-y-6">
+              <RevenueChart data={salesData} />
+              <OrdersChart data={salesData} />
+            </div>
+            <div className="md:col-span-4">
+              <NotificationsBulletin />
+            </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <AlertsPanel 
-              inventory={inventory}
-              reservations={reservations}
-              activeOrders={getActiveOrders()}
-              lowStockItems={getLowStockItems()}
-              pendingReservations={getPendingReservations()}
-            />
-            <TopSellingItems menuItems={menuItems} />
+          <div className="grid gap-6 md:grid-cols-12">
+            <div className="md:col-span-4">
+              <AlertsPanel 
+                inventory={inventory}
+                reservations={reservations}
+                activeOrders={getActiveOrders()}
+                lowStockItems={getLowStockItems()}
+                pendingReservations={getPendingReservations()}
+              />
+            </div>
+            <div className="md:col-span-8">
+              <TopSellingItems menuItems={menuItems} />
+            </div>
           </div>
 
           <Card className="p-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3">
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">Active Staff</h3>
                 <div className="space-y-1">
                   {staff
                     .filter(member => member.status === "active")
                     .map(member => (
-                      <div key={member.id} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded-lg">
+                      <div key={member.id} className="flex justify-between items-center p-2 hover:bg-muted/50 rounded-lg transition-colors">
                         <span>{member.name}</span>
                         <span className="text-sm text-muted-foreground">{member.role}</span>
                       </div>
@@ -78,7 +87,7 @@ const Overview = () => {
                   {orders
                     .slice(-5)
                     .map(order => (
-                      <div key={order.id} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded-lg">
+                      <div key={order.id} className="flex justify-between items-center p-2 hover:bg-muted/50 rounded-lg transition-colors">
                         <span>Table {order.tableNumber}</span>
                         <span className="text-sm text-muted-foreground">${order.total}</span>
                       </div>
@@ -93,7 +102,7 @@ const Overview = () => {
                     .filter(res => res.status === "confirmed")
                     .slice(0, 5)
                     .map(res => (
-                      <div key={res.id} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded-lg">
+                      <div key={res.id} className="flex justify-between items-center p-2 hover:bg-muted/50 rounded-lg transition-colors">
                         <span>{res.customerName}</span>
                         <span className="text-sm text-muted-foreground">
                           Table {res.tableNumber}

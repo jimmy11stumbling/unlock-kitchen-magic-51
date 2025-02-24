@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ChartTooltip } from "./ChartTooltip";
 import type { SalesData } from "@/types/staff";
+import { format } from "date-fns";
 
 interface OrdersChartProps {
   data: SalesData[];
@@ -23,13 +24,16 @@ export const OrdersChart = ({ data }: OrdersChartProps) => {
       </div>
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 25 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1A1F2C" opacity={0.1} />
             <XAxis 
               dataKey="date" 
-              tickFormatter={(date) => new Date(date).toLocaleDateString()}
+              tickFormatter={(date) => format(new Date(date), "MMM d")}
               stroke="#9b87f5"
               tick={{ fill: '#9b87f5' }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
             />
             <YAxis 
               stroke="#9b87f5"
