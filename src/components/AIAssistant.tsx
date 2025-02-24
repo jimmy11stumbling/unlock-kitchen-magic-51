@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,9 +45,6 @@ export const AIAssistant = () => {
         body: { 
           messages: [...messages, userMessage],
           system: "You are Claude, an AI assistant for a restaurant management system. You help users understand our pricing plans, features, and how to use the system effectively. Be friendly, knowledgeable, and always try to provide specific, actionable information."
-        },
-        headers: {
-          Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`
         }
       });
 
