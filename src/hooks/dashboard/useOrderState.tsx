@@ -4,6 +4,23 @@ import type { KitchenOrder, Order, OrderItem } from "@/types/staff";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface DatabaseOrder {
+  id: number;
+  table_number: number;
+  server_name: string;
+  status: Order['status'];
+  items: any[];
+  total: number;
+  timestamp: string;
+  special_instructions?: string;
+  guest_count?: number;
+  estimated_prep_time?: number;
+  created_at?: string;
+  updated_at?: string;
+  payment_method?: string;
+  payment_status?: string;
+}
+
 export const useOrderState = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
@@ -39,17 +56,16 @@ export const useOrderState = () => {
 
       if (error) throw error;
 
-      // Transform the data to match the Order type
-      const transformedOrders: Order[] = (data || []).map(order => ({
+      const transformedOrders: Order[] = (data || []).map((order: DatabaseOrder) => ({
         id: order.id,
         tableNumber: order.table_number,
-        items: Array.isArray(order.items) ? order.items.map((item: any) => ({
+        items: Array.isArray(order.items) ? order.items.map(item => ({
           id: item.id || Date.now(),
           name: item.name,
           quantity: item.quantity,
           price: item.price,
         })) : [],
-        status: order.status as Order['status'],
+        status: order.status,
         total: order.total,
         timestamp: order.timestamp,
         serverName: order.server_name,
@@ -73,21 +89,25 @@ export const useOrderState = () => {
 
   const addOrder = async (tableId: number, serverName: string) => {
     try {
-      const newOrder = {
+      const newOrderData: Omit<DatabaseOrder, 'id'> = {
         table_number: tableId,
         server_name: serverName,
-        status: 'pending' as const,
-        items: [] as OrderItem[],
+        status: 'pending',
+        items: [],
         total: 0,
         timestamp: new Date().toISOString(),
         guest_count: 1,
         estimated_prep_time: 15,
         special_instructions: '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        payment_method: 'pending',
+        payment_status: 'pending'
       };
 
       const { data, error } = await supabase
         .from('orders')
-        .insert([newOrder])
+        .insert([newOrderData])
         .select()
         .single();
 
@@ -96,8 +116,8 @@ export const useOrderState = () => {
       const transformedOrder: Order = {
         id: data.id,
         tableNumber: data.table_number,
-        items: [] as OrderItem[],
-        status: data.status as Order['status'],
+        items: [],
+        status: data.status,
         total: data.total,
         timestamp: data.timestamp,
         serverName: data.server_name,
@@ -124,9 +144,14 @@ export const useOrderState = () => {
 
   const updateOrderStatus = async (orderId: number, status: Order['status']) => {
     try {
+      const updateData = {
+        status,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('orders')
-        .update({ status })
+        .update(updateData)
         .eq('id', orderId);
 
       if (error) throw error;
@@ -161,7 +186,7 @@ export const useOrderState = () => {
         throw new Error('Invalid kitchen order data');
       }
 
-      const updatedItems = existingOrder.items.map((item) => ({
+      const updatedItems = existingOrder.items.map(item => ({
         ...item,
         status: itemStatus
       }));
