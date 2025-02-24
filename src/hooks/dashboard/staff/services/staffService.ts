@@ -5,9 +5,14 @@ import type { DatabaseStaffMember, DatabaseStaffMemberInsert } from "../types/da
 
 const createStaffMembersTable = async () => {
   try {
-    await supabase.from('staff_members').select('*').limit(1);
+    const { error } = await supabase.rpc('init_staff_table');
+    if (error) {
+      console.error('Error creating staff table:', error);
+      throw error;
+    }
   } catch (error) {
     console.error('Error in createStaffMembersTable:', error);
+    throw error;
   }
 };
 
@@ -22,7 +27,7 @@ export const fetchStaffMembers = async () => {
 
     if (fetchError) {
       console.error('Error fetching staff:', fetchError);
-      return [];
+      throw fetchError;
     }
 
     if (!staffData) return [];
@@ -30,25 +35,35 @@ export const fetchStaffMembers = async () => {
     return staffData;
   } catch (error) {
     console.error('Error in fetchStaffMembers:', error);
-    return [];
+    throw error;
   }
 };
 
 export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">) => {
   try {
+    await createStaffMembersTable();
+
     const staffData: DatabaseStaffMemberInsert = {
-      name: data.name,
-      role: data.role,
+      name: data.name || '',
+      role: data.role || 'server',
       email: data.email || '',
       phone: data.phone || '',
       status: 'active',
       salary: data.salary || 0,
       department: data.department || '',
       certifications: data.certifications || [],
-      performance_rating: 0,
+      performance_rating: data.performanceRating || 0,
       shift: data.shift || 'day',
       address: data.address || '',
-      schedule: data.schedule,
+      schedule: typeof data.schedule === 'object' ? data.schedule : {
+        monday: "OFF",
+        tuesday: "OFF",
+        wednesday: "OFF",
+        thursday: "OFF",
+        friday: "OFF",
+        saturday: "OFF",
+        sunday: "OFF"
+      },
       bank_info: {
         accountNumber: data.bankInfo?.accountNumber || '',
         routingNumber: data.bankInfo?.routingNumber || '',
@@ -59,12 +74,12 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
         phone: data.emergencyContact?.phone || '',
         relationship: data.emergencyContact?.relationship || ''
       },
-      notes: '',
+      notes: data.notes || '',
       employment_status: 'full_time',
       hire_date: new Date().toISOString(),
       benefits: {},
-      hourly_rate: 0,
-      overtime_rate: 0
+      hourly_rate: data.hourlyRate || 0,
+      overtime_rate: data.overtimeRate || 0
     };
 
     const { data: newStaff, error } = await supabase
@@ -75,7 +90,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
 
     if (error) {
       console.error('Error creating staff member:', error);
-      throw error;
+      throw new Error(`Failed to create staff member: ${error.message}`);
     }
 
     if (!newStaff) {
@@ -90,25 +105,39 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
 };
 
 export const updateStaffMemberStatus = async (staffId: number, newStatus: StaffMember["status"]) => {
-  const { error } = await supabase
-    .from('staff_members')
-    .update({ status: newStatus })
-    .eq('id', staffId);
+  try {
+    await createStaffMembersTable();
 
-  if (error) {
-    console.error('Error updating staff status:', error);
+    const { error } = await supabase
+      .from('staff_members')
+      .update({ status: newStatus })
+      .eq('id', staffId);
+
+    if (error) {
+      console.error('Error updating staff status:', error);
+      throw new Error(`Failed to update staff status: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('Error in updateStaffMemberStatus:', error);
     throw error;
   }
 };
 
 export const updateStaffMemberInfo = async (staffId: number, updates: Partial<DatabaseStaffMember>) => {
-  const { error } = await supabase
-    .from('staff_members')
-    .update(updates)
-    .eq('id', staffId);
+  try {
+    await createStaffMembersTable();
 
-  if (error) {
-    console.error('Error updating staff info:', error);
+    const { error } = await supabase
+      .from('staff_members')
+      .update(updates)
+      .eq('id', staffId);
+
+    if (error) {
+      console.error('Error updating staff info:', error);
+      throw new Error(`Failed to update staff info: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('Error in updateStaffMemberInfo:', error);
     throw error;
   }
 };
