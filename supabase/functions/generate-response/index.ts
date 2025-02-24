@@ -14,82 +14,64 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
     const claudeApiKey = Deno.env.get('CLAUDE_API_KEY');
-
+    
     if (!claudeApiKey) {
       console.error('Claude API key not configured');
-      return new Response(
-        JSON.stringify({ 
-          error: 'Claude API key not configured' 
-        }), 
-        { 
-          status: 500,
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          } 
-        }
-      );
+      throw new Error('Claude API key not configured');
     }
 
-    console.log('Sending request to Claude API with messages:', messages);
+    const { messages, system } = await req.json();
+    console.log('Received request with messages:', messages);
+    console.log('System prompt:', system);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${claudeApiKey}`,
-        'anthropic-version': '2024-02-15-preview',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-api-key': claudeApiKey,
+        'anthropic-version': '2024-02-15-preview'
       },
       body: JSON.stringify({
-        messages: messages.map(msg => ({
+        model: 'claude-3-opus-20240229',
+        max_tokens: 1000,
+        messages: messages.map((msg: any) => ({
           role: msg.role,
           content: msg.content
         })),
-        model: "claude-3-opus-20240229",
-        max_tokens: 1000,
-        system: "You are a helpful AI assistant that helps users with their restaurant management system. Be concise but friendly in your responses."
-      }),
+        system: system || "You are a helpful AI assistant that helps users with their questions."
+      })
     });
 
+    console.log('Claude API Response Status:', response.status);
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Claude API error response:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData
-      });
-      
+      const errorData = await response.json();
+      console.error('Claude API Error:', errorData);
       throw new Error(`Claude API error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log('Claude API response:', data);
+    console.log('Claude API Response:', data);
 
     if (!data.content || !data.content[0] || !data.content[0].text) {
       console.error('Unexpected response structure:', data);
       throw new Error('Unexpected response format from Claude API');
     }
 
-    const responseMessage = data.content[0].text;
-    console.log('Sending response message:', responseMessage);
+    const message = data.content[0].text;
     
     return new Response(
-      JSON.stringify({ 
-        message: responseMessage 
-      }),
+      JSON.stringify({ message }),
       { 
         headers: { 
           ...corsHeaders,
-          'Content-Type': 'application/json' 
+          'Content-Type': 'application/json'
         } 
       }
     );
   } catch (error) {
     console.error('Error in generate-response function:', error);
-    
-    // Return a properly formatted error response
     return new Response(
       JSON.stringify({ 
         error: error.message || 'An unexpected error occurred',
@@ -99,7 +81,7 @@ serve(async (req) => {
         status: 500,
         headers: { 
           ...corsHeaders,
-          'Content-Type': 'application/json' 
+          'Content-Type': 'application/json'
         }
       }
     );

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,11 +16,19 @@ export const AIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
-    content: "Hello! I'm your AI assistant powered by Claude. How can I help you today?"
+    content: "Hello! I'm your AI assistant powered by Claude. How can I help you with your restaurant management needs today?"
   }]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -31,12 +39,13 @@ export const AIAssistant = () => {
     setIsLoading(true);
 
     try {
-      console.log('Sending request to generate-response function with messages:', [...messages, userMessage]);
+      console.log('Sending request to generate-response function');
+      console.log('Current messages:', [...messages, userMessage]);
 
       const { data, error } = await supabase.functions.invoke('generate-response', {
         body: { 
           messages: [...messages, userMessage],
-          system: "You are a helpful AI assistant for a restaurant management system. Help users with their questions about managing their restaurant, menus, staff, and other related topics."
+          system: "You are Claude, an AI assistant for a restaurant management system. You help users understand our pricing plans, features, and how to use the system effectively. Be friendly, knowledgeable, and always try to provide specific, actionable information."
         }
       });
 
@@ -68,6 +77,7 @@ export const AIAssistant = () => {
       }
 
       if (data?.message) {
+        console.log('Received AI response:', data.message);
         const assistantMessage = {
           role: "assistant" as const,
           content: data.message
@@ -82,7 +92,8 @@ export const AIAssistant = () => {
         error,
         timestamp: new Date().toISOString(),
         lastMessage: userMessage,
-        errorType: error instanceof Error ? error.constructor.name : typeof error
+        errorType: error instanceof Error ? error.constructor.name : typeof error,
+        stack: error instanceof Error ? error.stack : undefined
       });
 
       setMessages(prev => [...prev, {
@@ -132,7 +143,7 @@ export const AIAssistant = () => {
             </Button>
           </div>
 
-          <ScrollArea className="h-[400px] p-4">
+          <ScrollArea className="h-[400px] p-4" ref={scrollAreaRef}>
             <div className="space-y-4">
               {messages.map((message, i) => (
                 <div
@@ -152,6 +163,13 @@ export const AIAssistant = () => {
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] rounded-xl p-3 bg-secondary/50 backdrop-blur-sm mr-12">
+                    <span className="animate-pulse">Thinking...</span>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
 
