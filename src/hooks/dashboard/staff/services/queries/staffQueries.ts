@@ -2,8 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { checkTableExists } from "../utils/supabaseUtils";
 import { mockStaffData } from "../mockData/mockStaffData";
-import type { DatabaseStaffMember } from "../../types/databaseTypes";
+import type { DatabaseStaffMember, DatabaseStaffMemberInsert } from "../../types/databaseTypes";
 import type { StaffMember } from "@/types/staff";
+import type { Database } from "@/integrations/supabase/types";
+
+type EmploymentStatus = Database["public"]["Enums"]["employment_status"];
 
 export const fetchStaffMembers = async (): Promise<DatabaseStaffMember[]> => {
   try {
@@ -69,7 +72,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       return newStaff;
     }
 
-    const staffData = {
+    const staffData: DatabaseStaffMemberInsert = {
       name: data.name,
       role: data.role,
       email: data.email,
@@ -85,7 +88,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       bank_info: data.bankInfo,
       emergency_contact: data.emergencyContact,
       notes: data.notes,
-      employment_status: 'full_time',
+      employment_status: 'full_time' as EmploymentStatus,
       hire_date: data.startDate,
       hourly_rate: data.hourlyRate || 0,
       overtime_rate: data.overtimeRate || 0
@@ -93,7 +96,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
 
     const { data: newStaff, error } = await supabase
       .from('staff_members')
-      .insert([staffData])
+      .insert(staffData)
       .select()
       .single();
 
