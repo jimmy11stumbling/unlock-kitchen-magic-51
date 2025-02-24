@@ -52,19 +52,19 @@ export const vendorService = {
       .from('financial_transactions')
       .insert({
         amount: 0,
-        category_id: uuidv4(), // Generate a valid UUID for category_id
+        category_id: uuidv4(),
         date: new Date().toISOString(),
         description: vendor.name,
         payment_method: vendor.paymentTerms,
         type: 'expense',
         reference_number: vendor.taxId,
-        created_by: uuidv4() // Generate a valid UUID for created_by
+        created_by: uuidv4()
       })
-      .select('*')
-      .single();
+      .select()
+      .maybeSingle();
     
     if (error) throw error;
-    if (!data) throw new Error('No data returned from insert');
+    if (!data) throw new Error('Failed to create vendor');
     
     return mapTransactionToVendor(data);
   },
@@ -78,11 +78,11 @@ export const vendorService = {
         reference_number: updates.taxId
       })
       .eq('id', id)
-      .select('*')
-      .single();
+      .select()
+      .maybeSingle();
     
     if (error) throw error;
-    if (!data) throw new Error('No data returned from update');
+    if (!data) throw new Error('Vendor not found');
     
     return mapTransactionToVendor(data);
   },
@@ -102,19 +102,19 @@ export const vendorService = {
       .from('financial_transactions')
       .insert({
         amount: expense.amount,
-        category_id: uuidv4(), // Generate a valid UUID for category_id
+        category_id: uuidv4(),
         date: expense.date,
         description: expense.description,
         payment_method: expense.paymentMethod,
         type: 'expense',
-        created_by: uuidv4(), // Generate a valid UUID for created_by
+        created_by: uuidv4(),
         reference_number: ''
       })
-      .select('*')
-      .single();
+      .select()
+      .maybeSingle();
     
     if (error) throw error;
-    if (!data) throw new Error('No data returned from insert');
+    if (!data) throw new Error('Failed to create expense');
     
     return mapTransactionToExpense(data);
   },
