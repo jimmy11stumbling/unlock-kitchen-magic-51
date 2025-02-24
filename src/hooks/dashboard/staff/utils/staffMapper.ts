@@ -1,6 +1,19 @@
 
 import type { StaffMember } from "@/types/staff";
 import type { DatabaseStaffMember } from "../types/databaseTypes";
+import type { Json } from "@/integrations/supabase/types";
+
+const parseJsonField = <T>(json: Json | null): T => {
+  if (!json) return {} as T;
+  if (typeof json === 'string') {
+    try {
+      return JSON.parse(json) as T;
+    } catch {
+      return {} as T;
+    }
+  }
+  return json as T;
+};
 
 export const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMember => {
   // Ensure schedule is properly parsed and has the correct structure
@@ -37,6 +50,18 @@ export const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMem
     };
   }
 
+  const bankInfo = parseJsonField<{
+    accountNumber?: string;
+    routingNumber?: string;
+    accountType?: string;
+  }>(dbStaff.bank_info);
+
+  const emergencyContact = parseJsonField<{
+    name?: string;
+    phone?: string;
+    relationship?: string;
+  }>(dbStaff.emergency_contact);
+
   return {
     id: dbStaff.id,
     name: dbStaff.name,
@@ -46,11 +71,11 @@ export const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMem
     salary: dbStaff.salary || 0,
     email: dbStaff.email || '',
     phone: dbStaff.phone || '',
-    address: '',
+    address: dbStaff.address || '',
     emergencyContact: {
-      name: '',
-      phone: '',
-      relationship: ''
+      name: emergencyContact.name || '',
+      phone: emergencyContact.phone || '',
+      relationship: emergencyContact.relationship || ''
     },
     startDate: dbStaff.created_at || new Date().toISOString(),
     department: dbStaff.department || '',
@@ -59,9 +84,9 @@ export const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMem
     notes: dbStaff.notes || '',
     schedule: schedule,
     bankInfo: {
-      accountNumber: dbStaff.bank_info?.accountNumber || '',
-      routingNumber: dbStaff.bank_info?.routingNumber || '',
-      accountType: dbStaff.bank_info?.accountType || 'checking'
+      accountNumber: bankInfo.accountNumber || '',
+      routingNumber: bankInfo.routingNumber || '',
+      accountType: bankInfo.accountType || 'checking'
     }
   };
 };

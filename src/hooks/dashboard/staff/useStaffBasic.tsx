@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -230,8 +229,7 @@ export const useStaffBasic = () => {
       setLoading(true);
       setError(null);
       const data = await fetchStaffMembers();
-      const mappedStaff = data.map(mapDatabaseToStaffMember);
-      setStaff(mappedStaff);
+      setStaff(data.map((item: DatabaseStaffMember) => mapDatabaseToStaffMember(item)));
     } catch (error) {
       console.error('Error fetching staff:', error);
       setError('Failed to fetch staff members');

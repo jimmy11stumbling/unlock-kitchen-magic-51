@@ -1,105 +1,157 @@
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import type { Vendor } from "@/types/vendor";
 import { vendorService } from "../services/vendorService";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: 'Vendor name must be at least 2 characters.',
+  }),
+  contactEmail: z.string().email({
+    message: 'Please enter a valid email address.',
+  }),
+  contactPhone: z.string().min(10, {
+    message: 'Phone number must be at least 10 characters.',
+  }),
+  address: z.string().min(5, {
+    message: 'Address must be at least 5 characters.',
+  }),
+  description: z.string().optional(),
+})
 
 interface VendorFormProps {
-  vendor?: Vendor;
-  onClose: () => void;
-  onSubmit: () => void;
+  vendor?: {
+    id: number;
+    name: string;
+    contactEmail: string;
+    contactPhone: string;
+    address: string;
+    description?: string;
+  };
+  onSuccess?: () => void;
 }
 
-export const VendorForm = ({ vendor, onClose, onSubmit }: VendorFormProps) => {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: vendor?.name || "",
-    email: vendor?.email || "",
-    phone: vendor?.phone || "",
-    address: vendor?.address || "",
-    taxId: vendor?.taxId || "",
-    paymentTerms: vendor?.paymentTerms || "",
-    notes: vendor?.notes || "",
-    status: vendor?.status || "active"
-  });
+export const VendorForm = ({ vendor, onSuccess }: VendorFormProps) => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: vendor?.name || '',
+      contactEmail: vendor?.contactEmail || '',
+      contactPhone: vendor?.contactPhone || '',
+      address: vendor?.address || '',
+      description: vendor?.description || '',
+    },
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleSubmit = async (data: any) => {
     try {
       if (vendor) {
-        await vendorService.updateVendor(vendor.id, formData);
-        toast({ title: "Vendor updated successfully" });
+        await vendorService.updateVendor(vendor.id.toString(), data);
       } else {
-        await vendorService.addVendor(formData);
-        toast({ title: "Vendor added successfully" });
+        await vendorService.addVendor(data);
       }
-      onSubmit();
-      onClose();
+      onSuccess?.();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save vendor",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      console.error('Error submitting vendor form:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        placeholder="Vendor Name"
-        value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        required
-      />
-      <Input
-        type="email"
-        placeholder="Email"
-        value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        required
-      />
-      <Input
-        placeholder="Phone"
-        value={formData.phone}
-        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-      />
-      <Textarea
-        placeholder="Address"
-        value={formData.address}
-        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-      />
-      <Input
-        placeholder="Tax ID"
-        value={formData.taxId}
-        onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
-      />
-      <Input
-        placeholder="Payment Terms"
-        value={formData.paymentTerms}
-        onChange={(e) => setFormData({ ...formData, paymentTerms: e.target.value })}
-      />
-      <Textarea
-        placeholder="Notes"
-        value={formData.notes}
-        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-      />
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : vendor ? "Update Vendor" : "Add Vendor"}
-        </Button>
-      </div>
-    </form>
-  );
-};
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Vendor Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Acme Corp" {...field} />
+              </FormControl>
+              <FormDescription>
+                This is the name of the vendor.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="contactEmail"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Email</FormLabel>
+              <FormControl>
+                <Input placeholder="mail@example.com" type="email" {...field} />
+              </FormControl>
+              <FormDescription>
+                This is the vendor's contact email address.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="contactPhone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Phone</FormLabel>
+              <FormControl>
+                <Input placeholder="555-555-5555" type="tel" {...field} />
+              </FormControl>
+              <FormDescription>
+                This is the vendor's contact phone number.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Input placeholder="123 Main St" {...field} />
+              </FormControl>
+              <FormDescription>
+                This is the vendor's address.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Input placeholder="Description" {...field} />
+              </FormControl>
+              <FormDescription>
+                This is the vendor's description.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit">Submit</Button>
+      </form>
+    </Form>
+  )
+}
