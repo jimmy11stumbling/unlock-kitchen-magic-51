@@ -21,11 +21,3 @@ export interface PayrollEntry {
   paymentMethod: 'direct_deposit' | 'check';
   checkNumber?: string;
 }
-
-export interface PayStub {
-  id: number;
-  payrollEntryId: number;
-  staffId: number;
-  generatedDate: string;
-  documentUrl: string;
-}

@@ -4,6 +4,7 @@ import type { KitchenOrder } from '@/types';
 import type { Database } from '@/types/database';
 
 type KitchenOrderRow = Database['public']['Tables']['kitchen_orders']['Row'];
+type Json = Database['public']['Tables']['kitchen_orders']['Row']['items'];
 
 export const orderService = {
   fetchOrders: async () => {

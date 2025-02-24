@@ -17,6 +17,10 @@ export interface Order {
   specialInstructions?: string;
   guestCount: number;
   estimatedPrepTime: number;
+  created_at: string;
+  updated_at: string;
+  payment_method: string;
+  payment_status: string;
 }
 
 export interface PaymentTransaction {

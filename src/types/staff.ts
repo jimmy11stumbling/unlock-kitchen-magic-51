@@ -1,62 +1,53 @@
 
-export type StaffRole = 'manager' | 'chef' | 'server' | 'host' | 'bartender';
-export type StaffStatus = 'active' | 'on_break' | 'off_duty';
-
-export interface PayrollSettings {
-  payPeriod: 'weekly' | 'biweekly' | 'monthly';
-  paymentMethod: 'direct_deposit' | 'check';
-  taxWithholding: {
-    federal: number;
-    state: number;
-    local: number;
-  };
-  benefits: {
-    insurance: number;
-    retirement: number;
-  };
+export interface CustomerFeedback {
+  id: number;
+  orderId: number;
+  rating: number;
+  comment?: string;
+  date: string;
+  resolved: boolean;
 }
 
-export interface StaffMember {
+export interface Promotion {
   id: number;
   name: string;
-  role: StaffRole;
-  status: StaffStatus;
-  shift: string;
-  salary: number;
-  hourlyRate?: number;
-  overtimeRate?: number;
-  email: string;
-  phone: string;
-  address: string;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
+  description: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
   startDate: string;
-  department: string;
-  certifications: string[];
-  performanceRating: number;
-  notes: string;
-  schedule: {
-    monday: string;
-    tuesday: string;
-    wednesday: string;
-    thursday: string;
-    friday: string;
-    saturday: string;
-    sunday: string;
+  endDate: string;
+  active: boolean;
+  applicableItems: number[];
+}
+
+export interface PayrollEntry {
+  id: number;
+  staffId: number;
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  regularHours: number;
+  overtimeHours: number;
+  regularRate: number;
+  overtimeRate: number;
+  grossPay: number;
+  deductions: {
+    tax: number;
+    insurance: number;
+    retirement: number;
+    other: number;
   };
-  bankInfo: {
-    accountNumber: string;
-    routingNumber: string;
-    accountType: "checking" | "savings";
-  };
-  payrollSettings?: PayrollSettings;
-  taxInfo?: {
-    ssn: string;
-    w4Status: string;
-    allowances: number;
-    additionalWithholding: number;
-  };
+  netPay: number;
+  status: 'pending' | 'processed' | 'paid';
+  paymentDate: string;
+  paymentMethod: 'direct_deposit' | 'check';
+  checkNumber?: string;
+}
+
+export interface Shift {
+  id: number;
+  staffId: number;
+  startTime: string;
+  endTime: string;
+  date: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
 }
