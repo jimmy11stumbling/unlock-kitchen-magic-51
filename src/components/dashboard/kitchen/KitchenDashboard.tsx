@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +32,10 @@ export function KitchenDashboard() {
     const fetchKitchenOrders = async () => {
       const { data: ordersData, error } = await supabase
         .from('kitchen_orders')
-        .select('*');
+        .select('*') as { 
+          data: Database['public']['Tables']['kitchen_orders']['Row'][] | null; 
+          error: Error | null 
+        };
 
       if (error) {
         console.error('Error fetching kitchen orders:', error);
@@ -41,28 +45,28 @@ export function KitchenDashboard() {
       if (ordersData) {
         const transformedOrders: KitchenOrder[] = ordersData.map(order => ({
           id: order.id,
-          orderId: order.order_id,
+          orderId: order.order_id || 0,
           items: Array.isArray(order.items) ? order.items.map(item => ({
-            menuItemId: item.menuItemId,
+            menuItemId: item.menuItemId || 0,
             itemName: item.itemName || `Item #${item.menuItemId}`,
-            quantity: item.quantity,
+            quantity: item.quantity || 1,
             status: item.status || 'pending',
             startTime: item.startTime,
             completionTime: item.completionTime,
-            cookingStation: item.cookingStation,
-            assignedChef: item.assignedChef,
+            cookingStation: item.cookingStation || '',
+            assignedChef: item.assignedChef || '',
             modifications: item.modifications || [],
             allergenAlert: item.allergenAlert || false
           })) : [],
-          priority: order.priority || 'normal',
+          priority: order.priority,
           notes: order.notes || '',
-          coursing: order.coursing || 'standard',
+          coursing: order.coursing,
           created_at: order.created_at,
           updated_at: order.updated_at,
           estimated_delivery_time: order.estimated_delivery_time,
-          table_number: order.table_number,
-          server_name: order.server_name,
-          status: order.status || 'pending'
+          table_number: order.table_number || 0,
+          server_name: order.server_name || '',
+          status: order.status
         }));
 
         setActiveOrders(transformedOrders);

@@ -1,6 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { KitchenOrder } from '@/types';
+import type { Database } from '@/types/database';
+
+type KitchenOrderRow = Database['public']['Tables']['kitchen_orders']['Row'];
 
 export const orderService = {
   fetchOrders: async () => {
@@ -12,13 +15,13 @@ export const orderService = {
       throw error;
     }
 
-    return data;
+    return data as KitchenOrderRow[];
   },
 
   createOrder: async (orderData: Omit<KitchenOrder, 'id'>) => {
-    const orderForDb = {
+    const orderForDb: Database['public']['Tables']['kitchen_orders']['Insert'] = {
       order_id: orderData.orderId,
-      items: orderData.items,
+      items: orderData.items as unknown as Json,
       priority: orderData.priority,
       notes: orderData.notes,
       coursing: orderData.coursing,
@@ -40,13 +43,13 @@ export const orderService = {
       throw error;
     }
 
-    return data;
+    return data as KitchenOrderRow;
   },
 
   updateOrderStatus: async (orderId: number, status: KitchenOrder['status']) => {
     const { error } = await supabase
       .from('kitchen_orders')
-      .update({ status })
+      .update({ status } as Database['public']['Tables']['kitchen_orders']['Update'])
       .eq('id', orderId);
 
     if (error) {
