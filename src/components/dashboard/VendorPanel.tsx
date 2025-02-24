@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import { VendorList } from "./vendors/VendorList";
 import { ExpenseTable } from "./vendors/ExpenseTable";
 import { AccountingSummary } from "./vendors/AccountingSummary";
 import { VendorForm } from "./vendors/forms/VendorForm";
-import { exportReport } from "@/utils/exportUtils";
+import { exportData } from "@/utils/exportUtils";
 
 export const VendorPanel = () => {
   const { toast } = useToast();
@@ -42,8 +43,10 @@ export const VendorPanel = () => {
 
   const handleExport = async () => {
     try {
-      await exportReport(expenses || [], 'vendor-expenses', 'csv');
-      toast({ title: "Export completed successfully" });
+      if (expenses) {
+        exportData(expenses, 'vendor-expenses', 'csv');
+        toast({ title: "Export completed successfully" });
+      }
     } catch (error) {
       toast({
         title: "Export failed",

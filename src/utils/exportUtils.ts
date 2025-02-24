@@ -140,3 +140,11 @@ export const exportReport = (data: DailyReport[], filename: string, format: Expo
     exportToPDF(data, filename);
   }
 };
+
+export const exportData = <T extends Record<string, any>>(data: T[], filename: string, format: ExportFormat) => {
+  if (format === 'csv') {
+    exportToCSV(data, filename);
+  } else {
+    exportToPDF(data, filename);
+  }
+};
