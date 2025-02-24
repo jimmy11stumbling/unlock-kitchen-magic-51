@@ -91,7 +91,9 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       employment_status: 'full_time' as EmploymentStatus,
       hire_date: data.startDate,
       hourly_rate: data.hourlyRate || 0,
-      overtime_rate: data.overtimeRate || 0
+      overtime_rate: data.overtimeRate || 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     const { data: newStaff, error } = await supabase
@@ -128,7 +130,10 @@ export const updateStaffMemberStatus = async (staffId: number, newStatus: StaffM
 
     const { error } = await supabase
       .from('staff_members')
-      .update({ status: newStatus })
+      .update({ 
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', staffId);
 
     if (error) throw error;
@@ -151,9 +156,14 @@ export const updateStaffMemberInfo = async (staffId: number, updates: Partial<Da
       return;
     }
 
+    const updateData = {
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+
     const { error } = await supabase
       .from('staff_members')
-      .update(updates)
+      .update(updateData)
       .eq('id', staffId);
 
     if (error) throw error;
@@ -163,7 +173,80 @@ export const updateStaffMemberInfo = async (staffId: number, updates: Partial<Da
   }
 };
 
+export const getStaffPermissions = async (staffId: number): Promise<string[]> => {
+  try {
+    const tableExists = await checkTableExists();
+
+    if (!tableExists) {
+      const staff = mockStaffData.find(s => s.id === staffId);
+      return staff?.role === 'manager' ? ['all'] : ['basic'];
+    }
+
+    const { data: staff, error } = await supabase
+      .from('staff_members')
+      .select('role')
+      .eq('id', staffId)
+      .single();
+
+    if (error) throw error;
+    if (!staff) return ['basic'];
+
+    return staff.role === 'manager' ? ['all'] : ['basic'];
+  } catch (error) {
+    console.error('Error fetching staff permissions:', error);
+    return ['basic'];
+  }
+};
+
 export const hasAdminAccess = (staffMember: StaffMember | null): boolean => {
   if (!staffMember) return false;
   return staffMember.role === 'manager';
+};
+
+export const searchStaffMembers = async (query: string): Promise<DatabaseStaffMember[]> => {
+  try {
+    const tableExists = await checkTableExists();
+
+    if (!tableExists) {
+      return mockStaffData.filter(staff => 
+        staff.name.toLowerCase().includes(query.toLowerCase()) ||
+        staff.email.toLowerCase().includes(query.toLowerCase()) ||
+        staff.department.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    const { data: staffData, error } = await supabase
+      .from('staff_members')
+      .select('*')
+      .or(`name.ilike.%${query}%,email.ilike.%${query}%,department.ilike.%${query}%`)
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    return staffData || [];
+  } catch (error) {
+    console.error('Error searching staff members:', error);
+    return [];
+  }
+};
+
+export const getStaffByDepartment = async (department: string): Promise<DatabaseStaffMember[]> => {
+  try {
+    const tableExists = await checkTableExists();
+
+    if (!tableExists) {
+      return mockStaffData.filter(staff => staff.department === department);
+    }
+
+    const { data: staffData, error } = await supabase
+      .from('staff_members')
+      .select('*')
+      .eq('department', department)
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    return staffData || [];
+  } catch (error) {
+    console.error('Error fetching staff by department:', error);
+    return [];
+  }
 };
