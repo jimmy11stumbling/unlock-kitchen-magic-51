@@ -1,17 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Define valid table names as a const to ensure type safety
-const TABLES_TO_TEST = [
-  'orders',
-  'menu_items',
-  'tables',
-  'staff_members'
-] as const;
-
-// Create a type from our table names
-type TableName = typeof TABLES_TO_TEST[number];
-
 export const runConnectivityTests = async () => {
   console.log("\n🌐 Testing System Connectivity...");
   
@@ -49,12 +38,13 @@ export const runConnectivityTests = async () => {
     console.log(`   - Status: ${realtimeSuccess ? 'Connected' : 'Failed'}`);
 
     // Test API endpoints
+    const endpoints = ['orders', 'menu_items', 'tables', 'staff_members'];
     const apiResults = await Promise.all(
-      TABLES_TO_TEST.map(async (tableName) => {
+      endpoints.map(async (endpoint) => {
         const start = new Date().getTime();
-        const { error } = await supabase.from(tableName).select('count');
+        const { error } = await supabase.from(endpoint).select('count');
         const latency = new Date().getTime() - start;
-        return { endpoint: tableName, success: !error, latency };
+        return { endpoint, success: !error, latency };
       })
     );
 
