@@ -1,72 +1,29 @@
 
-import type { Order, MenuItem, KitchenOrder } from "@/types/staff";
+import type { Order, MenuItem } from "@/types/staff";
+import { calculateMetrics } from "../performance/metricsTracker";
 
-export const calculateOrderTotal = (items: Order['items']) => {
-  return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+export const calculateOrderTotal = (items: MenuItem[], tip: number = 0, taxRate: number = 0.08) => {
+  const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+  const tax = subtotal * taxRate;
+  return {
+    subtotal,
+    tax,
+    tip,
+    total: subtotal + tax + tip
+  };
 };
 
-export const estimatePreparationTime = (
-  items: Order['items'],
-  menuItems: MenuItem[]
-): number => {
-  const itemPrepTimes = items.map(item => {
-    const menuItem = menuItems.find(m => m.id === item.id);
-    return ((menuItem?.preparationTime || 15) * item.quantity);
-  });
-
-  return Math.max(...itemPrepTimes);
-};
-
-export const validateOrderItems = (
-  items: Order['items'],
-  menuItems: MenuItem[]
-): { isValid: boolean; errors: string[] } => {
+export const validateOrder = (order: Order): string[] => {
   const errors: string[] = [];
-
-  for (const item of items) {
-    const menuItem = menuItems.find(m => m.id === item.id);
-    
-    if (!menuItem) {
-      errors.push(`Menu item not found: ${item.name}`);
-      continue;
-    }
-
-    if (!menuItem.available) {
-      errors.push(`Item not available: ${item.name}`);
-    }
-
-    if (item.quantity <= 0) {
-      errors.push(`Invalid quantity for item: ${item.name}`);
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+  
+  if (!order.tableNumber) errors.push("Table number is required");
+  if (!order.items?.length) errors.push("Order must contain at least one item");
+  if (order.guestCount < 1) errors.push("Guest count must be at least 1");
+  
+  return errors;
 };
 
-export const createKitchenOrder = (
-  order: Order,
-  menuItems: MenuItem[]
-): KitchenOrder => {
-  return {
-    id: order.id,
-    orderId: order.id,
-    items: order.items.map(item => ({
-      menuItemId: item.id,
-      quantity: item.quantity,
-      status: "pending",
-      cookingStation: menuItems.find(m => m.id === item.id)?.category === "main" ? "hot" : "cold",
-      assignedChef: "",
-      modifications: [],
-      allergenAlert: menuItems.find(m => m.id === item.id)?.allergens.length > 0
-    })),
-    priority: order.estimatedPrepTime > 30 ? "high" : "normal",
-    notes: order.specialInstructions || "",
-    coursing: "standard",
-    estimatedDeliveryTime: new Date(
-      Date.now() + (order.estimatedPrepTime * 60 * 1000)
-    ).toISOString(),
-  };
+export const orderMetrics = (orders: Order[]) => {
+  const totals = orders.map(o => o.total);
+  return calculateMetrics(totals);
 };
