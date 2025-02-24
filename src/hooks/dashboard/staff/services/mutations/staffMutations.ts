@@ -1,92 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { checkTableExists } from "../utils/supabaseUtils";
+import { mockStaffData } from "../mockData/mockStaffData";
 import type { StaffMember } from "@/types/staff";
-import type { DatabaseStaffMember, DatabaseStaffMemberInsert } from "../types/databaseTypes";
-
-// Mock data to use when table doesn't exist
-const mockStaffData: DatabaseStaffMember[] = [
-  {
-    id: 1,
-    name: "John Smith",
-    role: "manager",
-    status: "active",
-    shift: "Morning",
-    salary: 65000,
-    hourly_rate: 31.25,
-    overtime_rate: 46.88,
-    email: "john.smith@restaurant.com",
-    phone: "555-0101",
-    address: "123 Main St",
-    emergency_contact: {
-      name: "Jane Smith",
-      phone: "555-0102",
-      relationship: "spouse"
-    },
-    created_at: "2023-01-15",
-    department: "management",
-    certifications: ["ServSafe Manager", "Food Handler", "Alcohol Service"],
-    performance_rating: 4.8,
-    notes: "Regional manager for downtown locations",
-    schedule: {
-      monday: "9:00-17:00",
-      tuesday: "9:00-17:00",
-      wednesday: "9:00-17:00",
-      thursday: "9:00-17:00",
-      friday: "9:00-17:00",
-      saturday: "OFF",
-      sunday: "OFF"
-    },
-    bank_info: {
-      accountNumber: "****1234",
-      routingNumber: "****5678",
-      accountType: "checking"
-    },
-    employment_status: "full_time",
-    hire_date: "2023-01-15",
-    benefits: {},
-    updated_at: new Date().toISOString(),
-    tax_id: "123-45-6789" // Added required tax_id field
-  }
-];
-
-const checkTableExists = async () => {
-  try {
-    const { data: existingTable, error: checkError } = await supabase
-      .from('staff_members')
-      .select('id')
-      .limit(1);
-
-    return !checkError;
-  } catch (error) {
-    return false;
-  }
-};
-
-export const fetchStaffMembers = async () => {
-  try {
-    const tableExists = await checkTableExists();
-
-    if (!tableExists) {
-      console.warn('Staff members table does not exist, using mock data');
-      return mockStaffData;
-    }
-
-    const { data: staffData, error: fetchError } = await supabase
-      .from('staff_members')
-      .select('*')
-      .order('id', { ascending: true });
-
-    if (fetchError) {
-      console.error('Error fetching staff:', fetchError);
-      throw fetchError;
-    }
-
-    return staffData || [];
-  } catch (error) {
-    console.error('Error in fetchStaffMembers:', error);
-    return mockStaffData;
-  }
-};
+import type { DatabaseStaffMember, DatabaseStaffMemberInsert } from "../../types/databaseTypes";
 
 export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">) => {
   try {
@@ -135,7 +52,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
         overtime_rate: data.overtimeRate || 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        tax_id: "" // Added required tax_id field
+        tax_id: ""
       };
       mockStaffData.push(newStaff);
       return newStaff;
@@ -178,7 +95,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       benefits: {},
       hourly_rate: data.hourlyRate || 0,
       overtime_rate: data.overtimeRate || 0,
-      tax_id: "" // Added required tax_id field
+      tax_id: ""
     };
 
     const { data: newStaff, error } = await supabase
