@@ -16,7 +16,7 @@ export const AIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
-    content: "Hello! I'm your AI assistant. How can I help you today?"
+    content: "Hello! I'm your AI assistant powered by Claude. How can I help you today?"
   }]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -31,14 +31,16 @@ export const AIAssistant = () => {
     setIsLoading(true);
 
     try {
-      // Log request details for debugging
-      console.log('Sending request to AI assistant with messages:', [...messages, userMessage]);
+      console.log('Sending request to generate-response function with messages:', [...messages, userMessage]);
 
       const { data, error } = await supabase.functions.invoke('generate-response', {
         body: { 
-          messages: [...messages, userMessage]
+          messages: [...messages, userMessage],
+          system: "You are a helpful AI assistant for a restaurant management system. Help users with their questions about managing their restaurant, menus, staff, and other related topics."
         }
       });
+
+      console.log('Response from generate-response function:', { data, error });
 
       if (error) {
         console.error('Supabase Function Error:', {
@@ -48,7 +50,6 @@ export const AIAssistant = () => {
           context: error.context
         });
         
-        // Provide specific error messages based on error type
         let errorMessage = "Failed to get a response. Please try again.";
         if (error.status === 429) {
           errorMessage = "Too many requests. Please wait a moment and try again.";
@@ -65,9 +66,6 @@ export const AIAssistant = () => {
         });
         throw error;
       }
-
-      // Log successful response
-      console.log('AI assistant response:', data);
 
       if (data?.message) {
         const assistantMessage = {
@@ -87,7 +85,6 @@ export const AIAssistant = () => {
         errorType: error instanceof Error ? error.constructor.name : typeof error
       });
 
-      // Add error message to chat for transparency
       setMessages(prev => [...prev, {
         role: "assistant",
         content: "I encountered an error processing your request. Please try again or rephrase your question."
@@ -95,7 +92,7 @@ export const AIAssistant = () => {
 
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: "There was a problem getting a response. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -113,7 +110,7 @@ export const AIAssistant = () => {
   return (
     <>
       <Button
-        className="floating-assistant assistant-button"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
         onClick={() => setIsOpen(true)}
         aria-label="Open AI Assistant"
       >
@@ -121,8 +118,8 @@ export const AIAssistant = () => {
       </Button>
 
       {isOpen && (
-        <div className="assistant-panel fixed bottom-24 right-8 w-[500px] bg-background/95 backdrop-blur-lg border border-border/50 rounded-xl shadow-2xl p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="fixed bottom-24 right-8 w-[400px] bg-background/95 backdrop-blur-lg border border-border/50 rounded-xl shadow-2xl">
+          <div className="flex justify-between items-center p-4 border-b">
             <h3 className="text-lg font-semibold">AI Assistant</h3>
             <Button
               variant="ghost"
@@ -135,8 +132,8 @@ export const AIAssistant = () => {
             </Button>
           </div>
 
-          <ScrollArea className="h-[400px] mb-6 pr-4">
-            <div className="space-y-6">
+          <ScrollArea className="h-[400px] p-4">
+            <div className="space-y-4">
               {messages.map((message, i) => (
                 <div
                   key={i}
@@ -145,7 +142,7 @@ export const AIAssistant = () => {
                   }`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-xl p-4 ${
+                    className={`max-w-[85%] rounded-xl p-3 ${
                       message.role === "user"
                         ? "bg-primary text-primary-foreground ml-12"
                         : "bg-secondary/50 backdrop-blur-sm mr-12"
@@ -158,24 +155,26 @@ export const AIAssistant = () => {
             </div>
           </ScrollArea>
 
-          <div className="flex gap-3">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
-              className="flex-1 bg-secondary/50 border-secondary/50 backdrop-blur-sm"
-              disabled={isLoading}
-            />
-            <Button 
-              onClick={handleSend} 
-              disabled={isLoading}
-              size="icon"
-              className="shrink-0"
-              aria-label="Send message"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+          <div className="p-4 border-t">
+            <div className="flex gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                className="flex-1"
+                disabled={isLoading}
+              />
+              <Button 
+                onClick={handleSend} 
+                disabled={isLoading}
+                size="icon"
+                className="shrink-0"
+                aria-label="Send message"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}
