@@ -9,7 +9,8 @@ interface OrdersChartProps {
 }
 
 export const OrdersChart = ({ data }: OrdersChartProps) => {
-  const totalOrders = data.reduce((sum, item) => sum + item.orders, 0);
+  // Using order_count instead of orders
+  const totalOrders = data.reduce((sum, item) => sum + (item.order_count || 0), 0);
   const avgOrdersPerDay = totalOrders / data.length;
 
   return (
@@ -33,7 +34,7 @@ export const OrdersChart = ({ data }: OrdersChartProps) => {
             <Tooltip content={<ChartTooltip valuePrefix="" />} />
             <Legend />
             <Bar 
-              dataKey="orders" 
+              dataKey="order_count" 
               name="Orders"
               fill="#82ca9d" 
               radius={[4, 4, 0, 0]}

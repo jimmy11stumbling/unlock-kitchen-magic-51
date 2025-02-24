@@ -113,7 +113,7 @@ export const AlertsPanel = ({
               key={item.id}
               icon={Package}
               title={`${item.name} Low in Stock`}
-              description={`Current stock: ${item.current_stock} ${item.unit}`}
+              description={`Current stock: ${item.quantity} ${item.unit}`}
               priority="normal"
               id={`stock-${item.id}`}
             />
