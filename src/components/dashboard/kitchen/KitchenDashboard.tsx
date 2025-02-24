@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,24 @@ import { Clock, AlertTriangle, ChefHat, Utensils, RefreshCcw } from "lucide-reac
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { KitchenOrder, MenuItem } from "@/types/staff";
+
+interface KitchenOrderResponse {
+  id: number;
+  order_id: number;
+  items: Array<{
+    menuItemId: number;
+    quantity: number;
+    status: "pending" | "preparing" | "ready" | "delivered";
+    cookingStation: string;
+    allergenAlert: boolean;
+  }>;
+  priority: "normal" | "high" | "rush";
+  notes: string | null;
+  coursing: string;
+  estimated_delivery_time: string;
+  table_number: number;
+  menu_items: MenuItem[];
+}
 
 export function KitchenDashboard() {
   const { toast } = useToast();
@@ -26,19 +44,19 @@ export function KitchenDashboard() {
 
       if (error) throw error;
 
-      return (data || []).map(order => ({
+      return (data as KitchenOrderResponse[]).map(order => ({
         id: order.id,
         orderId: order.order_id,
-        items: order.items.map((item: any) => ({
+        items: order.items.map(item => ({
           ...item,
-          menuItem: order.menu_items.find((mi: MenuItem) => mi.id === item.menuItemId)
+          menuItem: order.menu_items.find(mi => mi.id === item.menuItemId)
         })),
         priority: order.priority,
         notes: order.notes || "",
         coursing: order.coursing,
         estimatedDeliveryTime: order.estimated_delivery_time,
         tableNumber: order.table_number
-      })) as KitchenOrder[];
+      }));
     },
     refetchInterval: autoRefresh ? 10000 : false
   });
@@ -164,7 +182,9 @@ export function KitchenDashboard() {
                               {item.quantity}x
                             </Badge>
                             <div>
-                              <span className="font-medium">{item.menuItem?.name || `Item #${item.menuItemId}`}</span>
+                              <span className="font-medium">
+                                {item.menuItem?.name || `Item #${item.menuItemId}`}
+                              </span>
                               {item.cookingStation && (
                                 <p className="text-sm text-muted-foreground">
                                   Station: {item.cookingStation}
