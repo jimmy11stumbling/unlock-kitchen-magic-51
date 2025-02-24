@@ -6,7 +6,8 @@ import { PricingTier } from "@/components/pricing/PricingTier";
 import { PricingHeader } from "@/components/pricing/PricingHeader";
 import { PricingFooter } from "@/components/pricing/PricingFooter";
 import { PricingComparison } from "@/components/pricing/PricingComparison";
-import type { PricingTierData } from "@/types/pricing";
+import { PricingCalculator } from "@/components/pricing/PricingCalculator";
+import type { PricingTierData, PlanType } from "@/types/pricing";
 
 const pricingTiers: PricingTierData[] = [
   {
@@ -49,9 +50,16 @@ const pricingTiers: PricingTierData[] = [
 
 const Pricing = () => {
   const [showSetup, setShowSetup] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
 
   const handleGetStarted = () => {
     setShowSetup(true);
+  };
+
+  const handlePlanSelect = (plan: PlanType) => {
+    setSelectedPlan(plan);
+    const element = document.getElementById(`plan-${plan}`);
+    element?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -65,6 +73,10 @@ const Pricing = () => {
         >
           Simple, Transparent Pricing
         </h1>
+
+        <div className="max-w-xl mx-auto mb-16">
+          <PricingCalculator onPlanSelect={handlePlanSelect} />
+        </div>
         
         <div 
           className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16"
@@ -72,16 +84,25 @@ const Pricing = () => {
           aria-label="Pricing tiers"
         >
           {pricingTiers.map((tier) => (
-            <PricingTier
+            <div
               key={tier.name}
-              {...tier}
-              onGetStarted={handleGetStarted}
-            />
+              id={`plan-${tier.name.toLowerCase()}`}
+              className={`transition-all duration-300 transform ${
+                selectedPlan === tier.name.toLowerCase()
+                  ? 'scale-105 ring-2 ring-primary rounded-lg'
+                  : 'scale-100'
+              }`}
+            >
+              <PricingTier
+                {...tier}
+                onGetStarted={handleGetStarted}
+              />
+            </div>
           ))}
         </div>
 
-        <section className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-semibold text-center mb-8">
+        <section className="max-w-5xl mx-auto mb-16">
+          <h2 className="text-2xl font-semibold text-center mb-8 animate-fade-in">
             Compare Features
           </h2>
           <PricingComparison />
