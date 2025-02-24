@@ -1,4 +1,4 @@
-
+import { Order, SalesData, MenuItem, Reservation, InventoryItem } from "@/types";
 import { DateRangeSelector } from "./DateRangeSelector";
 import { useState, useEffect } from "react";
 import { KeyMetrics } from "./overview/KeyMetrics";
@@ -8,7 +8,7 @@ import { AlertsPanel } from "./overview/AlertsPanel";
 import { TopSellingItems } from "./overview/TopSellingItems";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import type { StaffMember, Order, SalesData, MenuItem, Reservation, InventoryItem } from "@/types/staff";
+import type { StaffMember } from "@/types/staff";
 
 interface DashboardOverviewProps {
   salesData: SalesData[];
@@ -32,7 +32,6 @@ export const DashboardOverview = ({
   const [endDate, setEndDate] = useState<Date>();
   const [filteredSalesData, setFilteredSalesData] = useState<SalesData[]>(salesData);
 
-  // This effect filters the sales data whenever dates change
   useEffect(() => {
     const filtered = salesData.filter((data) => {
       const date = new Date(data.date);

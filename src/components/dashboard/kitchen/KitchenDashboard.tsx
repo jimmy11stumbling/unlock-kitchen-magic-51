@@ -10,6 +10,7 @@ import { Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import type { KitchenOrder, KitchenOrderItem } from "@/types";
+import type { Database } from '@/types/database';
 
 export function KitchenDashboard() {
   const [alerts, setAlerts] = useState<string[]>([]);
@@ -30,21 +31,7 @@ export function KitchenDashboard() {
     const fetchKitchenOrders = async () => {
       const { data: ordersData, error } = await supabase
         .from('kitchen_orders')
-        .select(`
-          id,
-          order_id,
-          items,
-          priority,
-          notes,
-          coursing,
-          created_at,
-          updated_at,
-          estimated_delivery_time,
-          table_number,
-          server_name,
-          status
-        `)
-        .order('created_at', { ascending: false });
+        .select('*');
 
       if (error) {
         console.error('Error fetching kitchen orders:', error);
@@ -52,35 +39,31 @@ export function KitchenDashboard() {
       }
 
       if (ordersData) {
-        const transformedOrders: KitchenOrder[] = ordersData.map(order => {
-          const items = (typeof order.items === 'string' ? JSON.parse(order.items) : order.items) as KitchenOrderItem[];
-          
-          return {
-            id: order.id,
-            orderId: order.order_id,
-            items: items.map(item => ({
-              menuItemId: item.menuItemId,
-              itemName: item.itemName || `Item #${item.menuItemId}`, // Fallback for missing names
-              quantity: item.quantity,
-              status: item.status || 'pending',
-              startTime: item.startTime,
-              completionTime: item.completionTime,
-              cookingStation: item.cookingStation,
-              assignedChef: item.assignedChef,
-              modifications: item.modifications || [],
-              allergenAlert: item.allergenAlert || false
-            })),
-            priority: (order.priority as KitchenOrder['priority']) || 'normal',
-            notes: order.notes || '',
-            coursing: (order.coursing as KitchenOrder['coursing']) || 'standard',
-            created_at: order.created_at,
-            updated_at: order.updated_at,
-            estimated_delivery_time: order.estimated_delivery_time,
-            table_number: order.table_number,
-            server_name: order.server_name,
-            status: (order.status as KitchenOrder['status']) || 'pending'
-          };
-        });
+        const transformedOrders: KitchenOrder[] = ordersData.map(order => ({
+          id: order.id,
+          orderId: order.order_id,
+          items: Array.isArray(order.items) ? order.items.map(item => ({
+            menuItemId: item.menuItemId,
+            itemName: item.itemName || `Item #${item.menuItemId}`,
+            quantity: item.quantity,
+            status: item.status || 'pending',
+            startTime: item.startTime,
+            completionTime: item.completionTime,
+            cookingStation: item.cookingStation,
+            assignedChef: item.assignedChef,
+            modifications: item.modifications || [],
+            allergenAlert: item.allergenAlert || false
+          })) : [],
+          priority: order.priority || 'normal',
+          notes: order.notes || '',
+          coursing: order.coursing || 'standard',
+          created_at: order.created_at,
+          updated_at: order.updated_at,
+          estimated_delivery_time: order.estimated_delivery_time,
+          table_number: order.table_number,
+          server_name: order.server_name,
+          status: order.status || 'pending'
+        }));
 
         setActiveOrders(transformedOrders);
       }
@@ -155,7 +138,6 @@ export function KitchenDashboard() {
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Kitchen Alerts Section */}
         <Card className="col-span-full p-6">
           <h2 className="text-xl font-semibold mb-4">Kitchen Alerts</h2>
           <div className="space-y-4">
@@ -169,7 +151,6 @@ export function KitchenDashboard() {
           </div>
         </Card>
 
-        {/* Active Orders Section */}
         <Card className="col-span-full p-6">
           <h2 className="text-xl font-semibold mb-4">Active Orders</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -257,7 +238,6 @@ export function KitchenDashboard() {
           </div>
         </Card>
 
-        {/* Ingredient Status Section */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Ingredient Status</h2>
           <div className="space-y-4">

@@ -6,20 +6,7 @@ export const orderService = {
   fetchOrders: async () => {
     const { data, error } = await supabase
       .from('kitchen_orders')
-      .select(`
-        id,
-        order_id,
-        items,
-        priority,
-        notes,
-        coursing,
-        created_at,
-        updated_at,
-        estimated_delivery_time,
-        table_number,
-        server_name,
-        status
-      `);
+      .select('*');
 
     if (error) {
       throw error;
@@ -29,9 +16,23 @@ export const orderService = {
   },
 
   createOrder: async (orderData: Omit<KitchenOrder, 'id'>) => {
+    const orderForDb = {
+      order_id: orderData.orderId,
+      items: orderData.items,
+      priority: orderData.priority,
+      notes: orderData.notes,
+      coursing: orderData.coursing,
+      created_at: orderData.created_at,
+      updated_at: orderData.updated_at,
+      estimated_delivery_time: orderData.estimated_delivery_time,
+      table_number: orderData.table_number,
+      server_name: orderData.server_name,
+      status: orderData.status
+    };
+
     const { data, error } = await supabase
       .from('kitchen_orders')
-      .insert([orderData])
+      .insert([orderForDb])
       .select()
       .single();
 
@@ -64,7 +65,8 @@ export const orderService = {
       throw fetchError;
     }
 
-    const updatedItems = order.items.map((item: any) => ({
+    const items = Array.isArray(order.items) ? order.items : [];
+    const updatedItems = items.map(item => ({
       ...item,
       status: itemStatus,
     }));
