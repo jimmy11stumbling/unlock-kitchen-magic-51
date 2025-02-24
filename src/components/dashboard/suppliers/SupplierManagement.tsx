@@ -24,8 +24,9 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useSupplierManagement } from "@/hooks/dashboard/useSupplierManagement";
 import { SupplierForm } from "./SupplierForm";
+import { SupplierIngredients } from "./SupplierIngredients";
 import type { Supplier } from "@/hooks/dashboard/useSupplierManagement";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const SupplierManagement = () => {
   const { suppliers, isLoading, addSupplier, updateSupplier, deleteSupplier } = useSupplierManagement();

@@ -25,6 +25,7 @@ import type { SupplierIngredient } from "@/hooks/dashboard/useSupplierIngredient
 import type { Ingredient } from "@/hooks/dashboard/useIngredientManagement";
 
 const formSchema = z.object({
+  supplier_id: z.string(),
   ingredient_id: z.number(),
   unit_price: z.number().min(0, "Price must be positive"),
   minimum_order_quantity: z.number().min(1, "Minimum order must be at least 1"),
@@ -44,7 +45,7 @@ export const SupplierIngredientForm = ({
   onSubmit,
   onCancel,
 }: SupplierIngredientFormProps) => {
-  const { data: ingredients = [] } = useQuery({
+  const { data: ingredients = [], isLoading } = useQuery({
     queryKey: ['ingredients'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -60,6 +61,7 @@ export const SupplierIngredientForm = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      supplier_id: supplierId,
       ingredient_id: supplierIngredient?.ingredient_id || 0,
       unit_price: supplierIngredient?.unit_price || 0,
       minimum_order_quantity: supplierIngredient?.minimum_order_quantity || 1,
@@ -67,16 +69,13 @@ export const SupplierIngredientForm = ({
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    onSubmit({
-      ...values,
-      supplier_id: supplierId,
-    });
-  };
+  if (isLoading) {
+    return <div>Loading ingredients...</div>;
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="ingredient_id"

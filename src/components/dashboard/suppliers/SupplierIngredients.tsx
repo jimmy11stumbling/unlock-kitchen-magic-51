@@ -50,21 +50,23 @@ export const SupplierIngredients = ({ suppliers }: SupplierIngredientsProps) => 
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = async (data: Partial<SupplierIngredient>) => {
+  const handleSubmit = (data: any) => {
     if (selectedIngredient) {
-      await updateSupplierIngredient(selectedIngredient.id, data);
+      updateSupplierIngredient(selectedIngredient.id, data);
     } else {
-      await addSupplierIngredient(data as Omit<SupplierIngredient, 'id' | 'created_at' | 'updated_at'>);
+      addSupplierIngredient(data);
     }
     setIsDialogOpen(false);
     setSelectedIngredient(undefined);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this ingredient?")) {
-      await deleteSupplierIngredient(id);
+      deleteSupplierIngredient(id);
     }
   };
+
+  const activeSuppliers = suppliers.filter(s => s.status === 'active');
 
   return (
     <div className="space-y-4">
@@ -77,7 +79,7 @@ export const SupplierIngredients = ({ suppliers }: SupplierIngredientsProps) => 
             <SelectValue placeholder="Select a supplier" />
           </SelectTrigger>
           <SelectContent>
-            {suppliers.map((supplier) => (
+            {activeSuppliers.map((supplier) => (
               <SelectItem key={supplier.id} value={supplier.id}>
                 {supplier.name}
               </SelectItem>
@@ -95,7 +97,9 @@ export const SupplierIngredients = ({ suppliers }: SupplierIngredientsProps) => 
 
       {selectedSupplierId ? (
         isLoading ? (
-          <p className="text-center py-4">Loading ingredients...</p>
+          <div className="flex justify-center py-8">
+            <p className="text-muted-foreground">Loading ingredients...</p>
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -145,9 +149,11 @@ export const SupplierIngredients = ({ suppliers }: SupplierIngredientsProps) => 
           </Table>
         )
       ) : (
-        <p className="text-center py-4 text-muted-foreground">
-          Select a supplier to view their ingredients
-        </p>
+        <div className="flex justify-center py-8">
+          <p className="text-muted-foreground">
+            Select a supplier to view their ingredients
+          </p>
+        </div>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
