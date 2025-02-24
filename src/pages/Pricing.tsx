@@ -5,14 +5,8 @@ import { SetupWizard } from "@/components/setup/SetupWizard";
 import { PricingTier } from "@/components/pricing/PricingTier";
 import { PricingHeader } from "@/components/pricing/PricingHeader";
 import { PricingFooter } from "@/components/pricing/PricingFooter";
-
-interface PricingTierData {
-  name: string;
-  price: string;
-  description: string;
-  features: string[];
-  isPopular?: boolean;
-}
+import { PricingComparison } from "@/components/pricing/PricingComparison";
+import type { PricingTierData } from "@/types/pricing";
 
 const pricingTiers: PricingTierData[] = [
   {
@@ -73,7 +67,7 @@ const Pricing = () => {
         </h1>
         
         <div 
-          className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto"
+          className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16"
           role="region"
           aria-label="Pricing tiers"
         >
@@ -85,6 +79,13 @@ const Pricing = () => {
             />
           ))}
         </div>
+
+        <section className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-semibold text-center mb-8">
+            Compare Features
+          </h2>
+          <PricingComparison />
+        </section>
       </main>
 
       <PricingFooter />
