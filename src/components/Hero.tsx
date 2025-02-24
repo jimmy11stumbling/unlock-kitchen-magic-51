@@ -6,21 +6,20 @@ import { ArrowRight, ChefHat, Utensils, Clock, LineChart } from "lucide-react";
 export function Hero() {
   return (
     <section className="relative w-full py-12 md:py-24 lg:py-32 xl:py-48">
-      {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1556910103-1c02745aae4d"
           alt="Rustic Restaurant Kitchen"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-opacity duration-500"
+          loading="eager"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/90 to-background pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/90 to-background" />
       </div>
 
       <div className="container relative z-10 px-4 md:px-6">
         <div className="flex flex-col items-center space-y-8 text-center">
-          {/* Logo Section */}
           <div className="flex flex-col items-center space-y-4 animate-fade-in">
-            <div className="w-24 h-24 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20 flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
+            <div className="w-24 h-24 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20 flex items-center justify-center transform hover:scale-105 transition-all duration-300 hover:bg-primary/20">
               <ChefHat className="w-12 h-12 text-primary animate-float" />
             </div>
             <span className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-primary to-gray-400 animate-pulse duration-[3000ms] hover:scale-110 transition-transform cursor-default">
@@ -28,23 +27,23 @@ export function Hero() {
             </span>
           </div>
           
-          <div className="space-y-4">
-            <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+          <div className="space-y-4 max-w-3xl mx-auto">
+            <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 animate-fade-in stagger-1">
               Intelligent Restaurant Management
             </h1>
-            <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl dark:text-gray-400">
+            <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl dark:text-gray-400 animate-fade-in stagger-2">
               Transform your restaurant operations with AI-powered automation. From kitchen to table, MaestroAI orchestrates everything.
             </p>
           </div>
 
-          <div className="space-x-4">
-            <Button asChild size="lg" className="gap-2">
+          <div className="space-x-4 animate-fade-in stagger-3">
+            <Button asChild size="lg" className="gap-2 group">
               <Link to="/dashboard">
                 Get Started
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-5 w-5 transform transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline">
+            <Button asChild size="lg" variant="outline" className="hover:bg-primary/10">
               <Link to="/features">
                 Learn More
               </Link>
@@ -69,8 +68,12 @@ export function Hero() {
                 description: "Real-time insights into your restaurant's performance and trends"
               }
             ].map((feature, i) => (
-              <div key={i} className="flex flex-col items-center space-y-2 p-4 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10">
-                <div className="p-2 rounded-full bg-primary/10">
+              <div 
+                key={i} 
+                className="flex flex-col items-center space-y-2 p-4 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10 hover:bg-black/50 transition-all duration-300 animate-fade-in"
+                style={{ animationDelay: `${(i + 4) * 150}ms` }}
+              >
+                <div className="p-2 rounded-full bg-primary/10 transform transition-transform hover:scale-110 hover:bg-primary/20">
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
