@@ -4,15 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, UserCog } from "lucide-react";
+import { CalendarIcon, UserCog, ShieldAlert } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember } from "@/types/staff";
+import { hasAdminAccess } from "@/hooks/dashboard/staff/services/queries/staffQueries";
 
 interface StaffListProps {
   staff: StaffMember[];
   onUpdateStatus: (staffId: number, status: StaffMember["status"]) => void;
   onSelectStaff: (staffId: number) => void;
   calculateAttendance: (staffId: number) => number;
+  currentUser?: StaffMember | null;
 }
 
 export const StaffList = ({
@@ -20,11 +22,22 @@ export const StaffList = ({
   onUpdateStatus,
   onSelectStaff,
   calculateAttendance,
+  currentUser
 }: StaffListProps) => {
   const { toast } = useToast();
+  const isAdmin = hasAdminAccess(currentUser);
 
   const handleStatusUpdate = async (staffId: number, status: StaffMember["status"]) => {
     try {
+      if (!isAdmin) {
+        toast({
+          title: "Access Denied",
+          description: "Only managers can update staff status",
+          variant: "destructive",
+        });
+        return;
+      }
+
       await onUpdateStatus(staffId, status);
       const member = staff.find(m => m.id === staffId);
       toast({
@@ -43,6 +56,15 @@ export const StaffList = ({
 
   const handleStaffSelect = (staffId: number, action: 'schedule' | 'details') => {
     try {
+      if (action === 'details' && !isAdmin) {
+        toast({
+          title: "Access Denied",
+          description: "Only managers can view detailed staff information",
+          variant: "destructive",
+        });
+        return;
+      }
+
       onSelectStaff(staffId);
       const member = staff.find(m => m.id === staffId);
       toast({
@@ -81,7 +103,14 @@ export const StaffList = ({
       <TableBody>
         {staff.map((member) => (
           <TableRow key={member.id}>
-            <TableCell className="font-medium">{member.name}</TableCell>
+            <TableCell className="font-medium">
+              <div className="flex items-center gap-2">
+                {member.role === 'manager' && (
+                  <ShieldAlert className="h-4 w-4 text-primary" title="Manager" />
+                )}
+                {member.name}
+              </div>
+            </TableCell>
             <TableCell>
               <Badge variant="outline">{member.role}</Badge>
             </TableCell>
@@ -91,6 +120,7 @@ export const StaffList = ({
                 onValueChange={(value: StaffMember["status"]) =>
                   handleStatusUpdate(member.id, value)
                 }
+                disabled={!isAdmin}
               >
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Select status" />
@@ -128,6 +158,7 @@ export const StaffList = ({
                   size="sm"
                   onClick={() => handleStaffSelect(member.id, 'details')}
                   className="flex items-center gap-2"
+                  disabled={!isAdmin}
                 >
                   <UserCog className="h-4 w-4" />
                   Details

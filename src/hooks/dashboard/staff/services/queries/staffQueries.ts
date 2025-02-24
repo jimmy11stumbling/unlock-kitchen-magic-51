@@ -57,10 +57,11 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
         employment_status: 'full_time',
         hire_date: data.startDate,
         benefits: {},
-        hourly_rate: data.hourlyRate,
-        overtime_rate: data.overtimeRate,
+        hourly_rate: data.hourlyRate || 0,
+        overtime_rate: data.overtimeRate || 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        access_level: data.role === 'manager' ? 'admin' : 'staff',
         tax_id: ""
       };
       mockStaffData.push(newStaff);
@@ -72,8 +73,24 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       .insert([{
         name: data.name,
         role: data.role,
+        email: data.email,
+        phone: data.phone,
         status: 'active',
-        // ... other fields mapping
+        salary: data.salary,
+        department: data.department,
+        certifications: data.certifications,
+        performance_rating: data.performanceRating,
+        shift: data.shift,
+        address: data.address,
+        schedule: data.schedule,
+        bank_info: data.bankInfo,
+        emergency_contact: data.emergencyContact,
+        notes: data.notes,
+        employment_status: 'full_time',
+        hire_date: data.startDate,
+        hourly_rate: data.hourlyRate || 0,
+        overtime_rate: data.overtimeRate || 0,
+        access_level: data.role === 'manager' ? 'admin' : 'staff'
       }])
       .select()
       .single();
@@ -136,4 +153,9 @@ export const updateStaffMemberInfo = async (staffId: number, updates: Partial<Da
     console.error('Error updating staff info:', error);
     throw error;
   }
+};
+
+export const hasAdminAccess = (staffMember: StaffMember | null): boolean => {
+  if (!staffMember) return false;
+  return staffMember.role === 'manager';
 };
