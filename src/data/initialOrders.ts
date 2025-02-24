@@ -1,4 +1,3 @@
-
 import type { Order, KitchenOrder } from "@/types/staff";
 
 export const initialOrders: Order[] = [
@@ -42,6 +41,7 @@ export const initialKitchenOrders: KitchenOrder[] = [
     items: [
       {
         menuItemId: 1,
+        itemName: "Truffle Wagyu Burger",
         quantity: 2,
         status: "preparing",
         startTime: new Date(Date.now() - 900000).toISOString(),
@@ -52,6 +52,7 @@ export const initialKitchenOrders: KitchenOrder[] = [
       },
       {
         menuItemId: 3,
+        itemName: "Lobster Bisque",
         quantity: 1,
         status: "pending",
         startTime: new Date().toISOString(),
@@ -62,6 +63,7 @@ export const initialKitchenOrders: KitchenOrder[] = [
       },
       {
         menuItemId: 6,
+        itemName: "Signature Martini",
         quantity: 2,
         status: "ready",
         startTime: new Date(Date.now() - 600000).toISOString(),
@@ -75,36 +77,11 @@ export const initialKitchenOrders: KitchenOrder[] = [
     priority: "high",
     notes: "Dairy allergy - use alternatives where possible",
     coursing: "standard",
-    estimatedDeliveryTime: new Date(Date.now() + 1200000).toISOString()
-  },
-  {
-    id: 2,
-    orderId: 2,
-    items: [
-      {
-        menuItemId: 2,
-        quantity: 1,
-        status: "preparing",
-        startTime: new Date().toISOString(),
-        cookingStation: "cold-line",
-        assignedChef: "James Wilson",
-        modifications: ["Extra feta on side"],
-        allergenAlert: false
-      },
-      {
-        menuItemId: 4,
-        quantity: 2,
-        status: "pending",
-        startTime: new Date().toISOString(),
-        cookingStation: "cold-line",
-        assignedChef: "James Wilson",
-        modifications: ["Spicy"],
-        allergenAlert: false
-      }
-    ],
-    priority: "rush",
-    notes: "VIP Guest - Priority Service",
-    coursing: "standard",
-    estimatedDeliveryTime: new Date(Date.now() + 900000).toISOString()
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    estimated_delivery_time: new Date(Date.now() + 1200000).toISOString(),
+    table_number: 5,
+    server_name: "Sofia Chen",
+    status: "preparing"
   }
 ];

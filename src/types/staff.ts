@@ -198,19 +198,8 @@ export interface DailyReport {
 export interface KitchenOrder {
   id: number;
   orderId: number;
-  items: {
-    menuItemId: number;
-    itemName: string;
-    quantity: number;
-    status: "pending" | "preparing" | "ready" | "delivered";
-    startTime?: string;
-    completionTime?: string;
-    cookingStation: string;
-    assignedChef: string;
-    modifications: string[];
-    allergenAlert: boolean;
-  }[];
-  priority: "normal" | "rush";
+  items: KitchenOrderItem[];
+  priority: "normal" | "rush" | "high";
   notes: string;
   coursing: "standard" | "appetizers first" | "serve together";
   created_at: string;
@@ -219,6 +208,19 @@ export interface KitchenOrder {
   table_number: number;
   server_name: string;
   status: "pending" | "preparing" | "ready" | "delivered";
+}
+
+export interface KitchenOrderItem {
+  menuItemId: number;
+  itemName: string;
+  quantity: number;
+  status: "pending" | "preparing" | "ready" | "delivered";
+  startTime?: string;
+  completionTime?: string;
+  cookingStation: string;
+  assignedChef: string;
+  modifications: string[];
+  allergenAlert: boolean;
 }
 
 export interface CustomerFeedback {

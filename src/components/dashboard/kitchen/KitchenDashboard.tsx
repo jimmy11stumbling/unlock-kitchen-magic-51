@@ -7,10 +7,10 @@ import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useIngredientManagement } from '@/hooks/dashboard/useIngredientManagement';
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, AlertTriangle, Users, UtensilsCrossed } from "lucide-react";
+import { Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import type { KitchenOrder } from "@/types/staff";
+import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
 
 export function KitchenDashboard() {
   const [alerts, setAlerts] = useState<string[]>([]);
@@ -29,9 +29,22 @@ export function KitchenDashboard() {
 
   useEffect(() => {
     const fetchKitchenOrders = async () => {
-      const { data, error } = await supabase
+      const { data: ordersData, error } = await supabase
         .from('kitchen_orders')
-        .select('*')
+        .select(`
+          id,
+          order_id,
+          items,
+          priority,
+          notes,
+          coursing,
+          created_at,
+          updated_at,
+          estimated_delivery_time,
+          table_number,
+          server_name,
+          status
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -39,34 +52,39 @@ export function KitchenDashboard() {
         return;
       }
 
-      // Transform the data to match KitchenOrder type
-      const transformedOrders: KitchenOrder[] = (data || []).map(order => ({
-        id: order.id,
-        orderId: order.order_id,
-        items: order.items.map((item: any) => ({
-          menuItemId: item.menuItemId,
-          itemName: item.itemName,
-          quantity: item.quantity,
-          status: item.status,
-          startTime: item.startTime,
-          completionTime: item.completionTime,
-          cookingStation: item.cookingStation,
-          assignedChef: item.assignedChef,
-          modifications: item.modifications || [],
-          allergenAlert: item.allergenAlert || false
-        })),
-        priority: order.priority,
-        notes: order.notes,
-        coursing: order.coursing,
-        created_at: order.created_at,
-        updated_at: order.updated_at,
-        estimated_delivery_time: order.estimated_delivery_time,
-        table_number: order.table_number,
-        server_name: order.server_name,
-        status: order.status
-      }));
+      if (ordersData) {
+        const transformedOrders: KitchenOrder[] = ordersData.map(order => {
+          const items = (typeof order.items === 'string' ? JSON.parse(order.items) : order.items) as KitchenOrderItem[];
+          
+          return {
+            id: order.id,
+            orderId: order.order_id,
+            items: items.map(item => ({
+              menuItemId: item.menuItemId,
+              itemName: item.itemName || `Item #${item.menuItemId}`, // Fallback for missing names
+              quantity: item.quantity,
+              status: item.status || 'pending',
+              startTime: item.startTime,
+              completionTime: item.completionTime,
+              cookingStation: item.cookingStation,
+              assignedChef: item.assignedChef,
+              modifications: item.modifications || [],
+              allergenAlert: item.allergenAlert || false
+            })),
+            priority: (order.priority as KitchenOrder['priority']) || 'normal',
+            notes: order.notes || '',
+            coursing: (order.coursing as KitchenOrder['coursing']) || 'standard',
+            created_at: order.created_at,
+            updated_at: order.updated_at,
+            estimated_delivery_time: order.estimated_delivery_time,
+            table_number: order.table_number,
+            server_name: order.server_name,
+            status: (order.status as KitchenOrder['status']) || 'pending'
+          };
+        });
 
-      setActiveOrders(transformedOrders);
+        setActiveOrders(transformedOrders);
+      }
     };
 
     fetchKitchenOrders();

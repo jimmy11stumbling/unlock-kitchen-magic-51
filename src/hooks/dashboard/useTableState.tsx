@@ -76,17 +76,23 @@ export const useTableState = () => {
       orderId: order.id,
       items: order.items.map(item => ({
         menuItemId: item.id,
+        itemName: item.name,
         quantity: item.quantity,
         status: "pending",
-        cookingStation: "main",
-        assignedChef: "",
+        cookingStation: "main", // Default value, should be determined by menu item type
+        assignedChef: "", // Will be assigned by kitchen staff
         modifications: [],
-        allergenAlert: false,
+        allergenAlert: false
       })),
       priority: "normal",
-      notes: "",
+      notes: order.specialInstructions || "",
       coursing: "standard",
-      estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString(), // 30 minutes from now
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      estimated_delivery_time: new Date(Date.now() + (30 * 60000)).toISOString(), // 30 minutes from now
+      table_number: order.tableNumber,
+      server_name: order.serverName,
+      status: "pending"
     };
 
     setKitchenOrders([...kitchenOrders, kitchenOrder]);
