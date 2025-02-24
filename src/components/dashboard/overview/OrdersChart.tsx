@@ -9,7 +9,6 @@ interface OrdersChartProps {
 }
 
 export const OrdersChart = ({ data }: OrdersChartProps) => {
-  // Using order_count instead of orders
   const totalOrders = data.reduce((sum, item) => sum + (item.order_count || 0), 0);
   const avgOrdersPerDay = totalOrders / data.length;
 
@@ -25,19 +24,25 @@ export const OrdersChart = ({ data }: OrdersChartProps) => {
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#1A1F2C" opacity={0.1} />
             <XAxis 
               dataKey="date" 
               tickFormatter={(date) => new Date(date).toLocaleDateString()}
+              stroke="#9b87f5"
+              tick={{ fill: '#9b87f5' }}
             />
-            <YAxis />
+            <YAxis 
+              stroke="#9b87f5"
+              tick={{ fill: '#9b87f5' }}
+            />
             <Tooltip content={<ChartTooltip valuePrefix="" />} />
-            <Legend />
+            <Legend wrapperStyle={{ color: '#9b87f5' }} />
             <Bar 
               dataKey="order_count" 
               name="Orders"
-              fill="#82ca9d" 
+              fill="#8B5CF6" 
               radius={[4, 4, 0, 0]}
+              maxBarSize={50}
             />
           </BarChart>
         </ResponsiveContainer>

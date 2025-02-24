@@ -25,31 +25,36 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#1A1F2C" opacity={0.1} />
             <XAxis 
               dataKey="date" 
               tickFormatter={(date) => new Date(date).toLocaleDateString()}
+              stroke="#9b87f5"
+              tick={{ fill: '#9b87f5' }}
             />
-            <YAxis />
+            <YAxis 
+              stroke="#9b87f5"
+              tick={{ fill: '#9b87f5' }}
+            />
             <Tooltip content={<ChartTooltip />} />
-            <Legend />
+            <Legend wrapperStyle={{ color: '#9b87f5' }} />
             <Line 
               type="monotone" 
               dataKey="revenue" 
               name="Revenue"
-              stroke="#8884d8" 
-              strokeWidth={2}
+              stroke="#D946EF" 
+              strokeWidth={3}
               dot={false}
-              activeDot={{ r: 8 }}
+              activeDot={{ r: 8, fill: "#D946EF" }}
             />
             <Line 
               type="monotone" 
               dataKey="profit" 
               name="Profit"
-              stroke="#82ca9d" 
-              strokeWidth={2}
+              stroke="#0EA5E9" 
+              strokeWidth={3}
               dot={false}
-              activeDot={{ r: 8 }}
+              activeDot={{ r: 8, fill: "#0EA5E9" }}
             />
           </LineChart>
         </ResponsiveContainer>
