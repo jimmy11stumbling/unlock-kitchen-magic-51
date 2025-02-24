@@ -1,5 +1,13 @@
 
-import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import type { Expense } from "@/types/vendor";
 
 interface ExpenseTableProps {
@@ -14,31 +22,45 @@ export const ExpenseTable = ({ expenses, searchTerm }: ExpenseTableProps) => {
   );
 
   return (
-    <div className="rounded-md border">
-      {filteredExpenses.length === 0 ? (
-        <div className="p-4">
-          <p className="text-sm text-muted-foreground">
-            {searchTerm ? "No expenses match your search." : "No expenses recorded. Add expenses to track your vendor payments."}
-          </p>
-        </div>
-      ) : (
-        <div className="divide-y">
-          {filteredExpenses.map((expense) => (
-            <div key={expense.id} className="p-4 hover:bg-muted/50">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium">{expense.description}</h3>
-                  <p className="text-sm text-muted-foreground">{expense.category}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium">${expense.amount.toFixed(2)}</p>
-                  <p className="text-sm text-muted-foreground">{expense.date}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="border rounded-lg">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Payment Method</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredExpenses.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center">
+                No expenses found
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredExpenses.map((expense) => (
+              <TableRow key={expense.id}>
+                <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
+                <TableCell>{expense.description}</TableCell>
+                <TableCell>{expense.category}</TableCell>
+                <TableCell>${expense.amount.toFixed(2)}</TableCell>
+                <TableCell>
+                  <Badge 
+                    variant={expense.status === 'paid' ? 'default' : 'secondary'}
+                  >
+                    {expense.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{expense.paymentMethod}</TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 };
