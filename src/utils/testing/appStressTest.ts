@@ -4,6 +4,7 @@ import { runPaymentTests } from "./modules/paymentTests";
 import { runSubscriptionTests } from "./modules/subscriptionTests";
 import { runStaffTests } from "./modules/staffTests";
 import { runFinancialTests } from "./modules/financialTests";
+import { runCustomerExperienceTests } from "./modules/customerExperienceTests";
 
 export const runStressTest = async () => {
   console.log("Starting comprehensive system stress test...");
@@ -274,6 +275,7 @@ export const runStressTest = async () => {
     results['subscriptions'] = await runSubscriptionTests();
     results['staff'] = await runStaffTests();
     results['financial'] = await runFinancialTests();
+    results['customer_experience'] = await runCustomerExperienceTests();
 
     // System Performance Metrics
     console.log("\n📊 Testing System Performance...");
