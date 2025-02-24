@@ -346,6 +346,39 @@ export type Database = {
           },
         ]
       }
+      ingredients: {
+        Row: {
+          cost_per_unit: number
+          created_at: string | null
+          current_stock: number
+          id: number
+          minimum_stock: number
+          name: string
+          unit: string
+          updated_at: string | null
+        }
+        Insert: {
+          cost_per_unit?: number
+          created_at?: string | null
+          current_stock?: number
+          id?: number
+          minimum_stock?: number
+          name: string
+          unit: string
+          updated_at?: string | null
+        }
+        Update: {
+          cost_per_unit?: number
+          created_at?: string | null
+          current_stock?: number
+          id?: number
+          minimum_stock?: number
+          name?: string
+          unit?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       kitchen_orders: {
         Row: {
           coursing: string
@@ -538,6 +571,45 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_item_ingredients: {
+        Row: {
+          id: number
+          ingredient_id: number | null
+          menu_item_id: number | null
+          quantity: number
+          unit: string
+        }
+        Insert: {
+          id?: number
+          ingredient_id?: number | null
+          menu_item_id?: number | null
+          quantity: number
+          unit: string
+        }
+        Update: {
+          id?: number
+          ingredient_id?: number | null
+          menu_item_id?: number | null
+          quantity?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_ingredients_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           allergens: string[] | null
@@ -549,6 +621,7 @@ export type Database = {
           image_url: string | null
           name: string
           order_count: number | null
+          prep_details: Json | null
           preparation_time: number | null
           price: number
           updated_at: string | null
@@ -563,6 +636,7 @@ export type Database = {
           image_url?: string | null
           name: string
           order_count?: number | null
+          prep_details?: Json | null
           preparation_time?: number | null
           price: number
           updated_at?: string | null
@@ -577,6 +651,7 @@ export type Database = {
           image_url?: string | null
           name?: string
           order_count?: number | null
+          prep_details?: Json | null
           preparation_time?: number | null
           price?: number
           updated_at?: string | null
