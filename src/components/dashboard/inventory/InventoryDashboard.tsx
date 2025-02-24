@@ -30,10 +30,10 @@ export function InventoryDashboard() {
   const { data: inventoryItems = [], isLoading, refetch } = useQuery({
     queryKey: ['inventory-items'],
     queryFn: async () => {
+      // Using raw query with RPC to get inventory items
       const { data, error } = await supabase
-        .from('inventory_items')
-        .select('*')
-        .order('name');
+        .rpc('get_inventory_items')
+        .select('*');
 
       if (error) throw error;
 
@@ -54,13 +54,13 @@ export function InventoryDashboard() {
 
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ itemId, quantity }: { itemId: number, quantity: number }) => {
+      // Using RPC call to update inventory item quantity
       const { error } = await supabase
-        .from('inventory_items')
-        .update({ 
-          quantity,
-          last_updated: new Date().toISOString()
-        })
-        .eq('id', itemId);
+        .rpc('update_inventory_item_quantity', {
+          p_item_id: itemId,
+          p_quantity: quantity,
+          p_last_updated: new Date().toISOString()
+        });
 
       if (error) throw error;
     },
@@ -89,9 +89,9 @@ export function InventoryDashboard() {
   const getLowStockItems = () => 
     inventoryItems.filter(item => item.quantity <= item.minQuantity);
 
-  const handleUpdateQuantity = (itemId: number, newQuantity: number) => {
-    if (newQuantity >= 0) {
-      updateQuantityMutation.mutate({ itemId, newQuantity });
+  const handleUpdateQuantity = (itemId: number, quantity: number) => {
+    if (quantity >= 0) {
+      updateQuantityMutation.mutate({ itemId, quantity });
     }
   };
 
