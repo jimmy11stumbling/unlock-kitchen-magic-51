@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { RealtimeChannel, PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -48,6 +48,8 @@ interface RealtimePayload {
 const MINIMUM_STOCK_THRESHOLD = 0;
 const MAXIMUM_STOCK_THRESHOLD = 100000;
 const DEFAULT_PREP_TIME = 15;
+const MAX_RETRIES = 3;
+const BASE_RETRY_DELAY = 1000;
 
 const isValidPrepDetails = (data: unknown): data is PrepDetails => {
   if (typeof data !== 'object' || !data) return false;
@@ -67,9 +69,25 @@ const isValidPrepDetails = (data: unknown): data is PrepDetails => {
 };
 
 const isValidStockQuantity = (quantity: number): boolean => {
+  if (typeof quantity !== 'number' || isNaN(quantity)) {
+    return false;
+  }
   return quantity >= MINIMUM_STOCK_THRESHOLD && 
          quantity <= MAXIMUM_STOCK_THRESHOLD &&
          Number.isInteger(quantity);
+};
+
+const handleDatabaseError = (error: PostgrestError): never => {
+  if (error.code === '42P01') {
+    throw new Error('Ingredients table not found. Please ensure the database is properly set up.');
+  }
+  if (error.code === '28P01') {
+    throw new Error('Database connection error. Please check your credentials.');
+  }
+  if (error.code === '23505') {
+    throw new Error('This ingredient already exists.');
+  }
+  throw new Error(`Database error: ${error.message}`);
 };
 
 export const useIngredientManagement = () => {
@@ -77,47 +95,94 @@ export const useIngredientManagement = () => {
   const queryClient = useQueryClient();
   const [realtimeChannel, setRealtimeChannel] = useState<RealtimeChannel | null>(null);
 
-  // Fetch ingredients with error handling and retry
+  // Fetch ingredients with comprehensive error handling and retry logic
   const { 
     data: ingredients = [], 
     isLoading,
-    error: ingredientsError
+    error: ingredientsError,
+    isError
   } = useQuery({
     queryKey: ['ingredients'],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       try {
         const { data, error } = await supabase
           .from('ingredients')
           .select('*')
-          .order('name');
+          .order('name')
+          .abortSignal(signal);
         
-        if (error) throw new Error(error.message);
+        if (error) {
+          return handleDatabaseError(error);
+        }
+
+        if (!data || !Array.isArray(data)) {
+          throw new Error('Invalid data format received from database');
+        }
+
         return data as Ingredient[];
       } catch (err) {
         console.error('Error fetching ingredients:', err);
         throw err;
       }
     },
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
+    retry: MAX_RETRIES,
+    retryDelay: (attemptIndex) => Math.min(BASE_RETRY_DELAY * 2 ** attemptIndex, 30000),
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
   });
 
-  // Update ingredient stock with validation
+  // Update ingredient stock with comprehensive validation and error handling
   const updateStockMutation = useMutation({
     mutationFn: async ({ id, quantity }: { id: number; quantity: number }) => {
+      // Pre-validation
+      if (!id || typeof id !== 'number') {
+        throw new Error('Invalid ingredient ID');
+      }
+
       if (!isValidStockQuantity(quantity)) {
         throw new Error(`Invalid stock quantity. Must be between ${MINIMUM_STOCK_THRESHOLD} and ${MAXIMUM_STOCK_THRESHOLD}`);
       }
 
-      const { data, error } = await supabase
+      // Check if ingredient exists before updating
+      const { data: existingIngredient, error: checkError } = await supabase
         .from('ingredients')
-        .update({ current_stock: quantity })
+        .select('id')
         .eq('id', id)
-        .select()
         .single();
-      
-      if (error) throw new Error(error.message);
-      return data;
+
+      if (checkError) {
+        return handleDatabaseError(checkError);
+      }
+
+      if (!existingIngredient) {
+        throw new Error('Ingredient not found');
+      }
+
+      // Perform update with retry logic
+      let retries = 0;
+      while (retries < MAX_RETRIES) {
+        try {
+          const { data, error } = await supabase
+            .from('ingredients')
+            .update({ 
+              current_stock: quantity,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', id)
+            .select()
+            .single();
+          
+          if (error) {
+            return handleDatabaseError(error);
+          }
+
+          return data;
+        } catch (err) {
+          retries++;
+          if (retries === MAX_RETRIES) throw err;
+          await new Promise(resolve => setTimeout(resolve, BASE_RETRY_DELAY * 2 ** retries));
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] });
@@ -207,6 +272,7 @@ export const useIngredientManagement = () => {
   return {
     ingredients,
     isLoading,
+    isError,
     error: ingredientsError,
     updateStock: (id: number, quantity: number) => updateStockMutation.mutate({ id, quantity }),
     isUpdating: updateStockMutation.isPending,
