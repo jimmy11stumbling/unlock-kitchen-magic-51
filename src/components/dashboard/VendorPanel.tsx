@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -129,7 +128,7 @@ export const VendorPanel = () => {
           </DialogHeader>
           <VendorForm
             onClose={() => setShowAddVendor(false)}
-            onSubmit={handleRefreshData}
+            onSuccess={handleRefreshData}
           />
         </DialogContent>
       </Dialog>

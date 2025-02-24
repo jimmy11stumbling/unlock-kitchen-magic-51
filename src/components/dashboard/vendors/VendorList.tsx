@@ -84,7 +84,7 @@ export const VendorList = ({ vendors, searchTerm, onUpdate }: VendorListProps) =
               setShowVendorForm(false);
               setSelectedVendor(null);
             }}
-            onSubmit={onUpdate}
+            onSuccess={onUpdate}
           />
         </DialogContent>
       </Dialog>
@@ -96,12 +96,12 @@ export const VendorList = ({ vendors, searchTerm, onUpdate }: VendorListProps) =
           </DialogHeader>
           {selectedVendor && (
             <ExpenseForm
-              vendorId={selectedVendor.id}
+              initialVendorId={selectedVendor.id}
               onClose={() => {
                 setShowExpenseForm(false);
                 setSelectedVendor(null);
               }}
-              onSubmit={onUpdate}
+              onSuccess={onUpdate}
             />
           )}
         </DialogContent>

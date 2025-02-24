@@ -29,15 +29,16 @@ const formSchema = z.object({
 
 export interface ExpenseFormProps {
   expense?: Expense;
+  initialVendorId?: number;
   onSuccess?: () => void;
   onClose?: () => void;
 }
 
-export const ExpenseForm = ({ expense, onSuccess, onClose }: ExpenseFormProps) => {
+export const ExpenseForm = ({ expense, initialVendorId, onSuccess, onClose }: ExpenseFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      vendorId: expense?.vendorId || 0,
+      vendorId: initialVendorId || expense?.vendorId || 0,
       amount: expense?.amount || 0,
       date: expense?.date || new Date().toISOString().split('T')[0],
       category: expense?.category || '',
@@ -51,8 +52,14 @@ export const ExpenseForm = ({ expense, onSuccess, onClose }: ExpenseFormProps) =
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       await vendorService.addExpense({
-        ...data,
-        paymentMethod: data.paymentMethod as PaymentMethod
+        vendorId: data.vendorId,
+        amount: data.amount,
+        date: data.date,
+        category: data.category,
+        description: data.description,
+        paymentMethod: data.paymentMethod,
+        taxDeductible: data.taxDeductible,
+        status: data.status,
       });
       onSuccess?.();
       onClose?.();
