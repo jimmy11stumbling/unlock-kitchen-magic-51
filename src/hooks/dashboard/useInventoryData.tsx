@@ -11,7 +11,6 @@ export interface InventoryItem {
   minQuantity: number;
   price: number;
   category: string;
-  // Make these optional since they're not always required
   reorderPoint?: number;
   idealStockLevel?: number;
   description?: string;
@@ -34,6 +33,19 @@ export interface InventoryHistory {
 
 export function useInventoryData(autoRefresh: boolean) {
   const { toast } = useToast();
+
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('id, name')
+        .eq('status', 'active');
+
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const { data: inventoryItems = [], isLoading, refetch } = useQuery({
     queryKey: ['inventory-items'],
@@ -104,6 +116,7 @@ export function useInventoryData(autoRefresh: boolean) {
 
   return {
     inventoryItems,
+    suppliers,
     isLoading,
     updateQuantity: (itemId: number, quantity: number) => {
       if (quantity >= 0) {
