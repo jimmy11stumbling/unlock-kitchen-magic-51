@@ -1,9 +1,10 @@
+
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, LineChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Download, TrendingUp, DollarSign, ShoppingBag, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { SalesData } from "@/types";
+import type { SalesData } from "@/types/staff";
 import { useState } from "react";
 import { exportToCSV } from "@/utils/exportUtils";
 

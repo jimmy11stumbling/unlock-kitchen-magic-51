@@ -1,21 +1,83 @@
 
-import type { Order, MenuItem } from "@/types/staff";
-
-export const estimatePrepTime = (items: MenuItem[]): number => {
-  return items.reduce((total, item) => total + (item.preparationTime || 15), 0);
+const stationMap: Record<number, string> = {
+  1: "grill",
+  2: "cold-line",
+  3: "soup",
+  4: "cold-line",
+  5: "pastry",
+  6: "bar",
+  7: "hot-line",
+  8: "pastry"
 };
 
-export const prioritizeOrders = (orders: Order[]): Order[] => {
-  return [...orders].sort((a, b) => {
-    // VIP orders get highest priority
-    if (a.specialInstructions?.includes('VIP') && !b.specialInstructions?.includes('VIP')) return -1;
-    if (!a.specialInstructions?.includes('VIP') && b.specialInstructions?.includes('VIP')) return 1;
-    
-    // Then sort by estimated prep time
-    return (a.estimatedPrepTime || 0) - (b.estimatedPrepTime || 0);
+const chefMap: Record<string, string> = {
+  "grill": "Isabella Martinez",
+  "hot-line": "Isabella Martinez",
+  "cold-line": "James Wilson",
+  "soup": "James Wilson",
+  "pastry": "Maria Garcia",
+  "bar": "Alex Thompson"
+};
+
+export const determineStation = (itemId: number): string => {
+  return stationMap[itemId] || "misc";
+};
+
+export const assignChef = (itemId: number): string => {
+  return chefMap[determineStation(itemId)] || "Unassigned";
+};
+
+export const calculateEstimatedPrepTime = (
+  items: Array<{ id: number; quantity: number }>,
+  menuItems: any[]
+): number => {
+  return Math.max(
+    ...items.map(item => {
+      const menuItem = menuItems.find(m => m.id === item.id);
+      return (menuItem?.preparationTime || 0) * item.quantity;
+    })
+  );
+};
+
+export const checkAllergenConflicts = (
+  itemId: number,
+  customerAllergies: string[],
+  menuItems: any[]
+): boolean => {
+  const menuItem = menuItems.find(item => item.id === itemId);
+  if (!menuItem) return false;
+  return menuItem.allergens.some(allergen => customerAllergies.includes(allergen));
+};
+
+export const optimizeCourseOrder = (
+  items: Array<{ id: number; quantity: number }>,
+  menuItems: any[]
+): KitchenOrder["coursing"] => {
+  const hasAppetizers = items.some(item => {
+    const menuItem = menuItems.find(m => m.id === item.id);
+    return menuItem?.category === "appetizer";
   });
+
+  const hasDesserts = items.some(item => {
+    const menuItem = menuItems.find(m => m.id === item.id);
+    return menuItem?.category === "dessert";
+  });
+
+  if (hasAppetizers && hasDesserts) {
+    return "appetizers first";
+  } else if (hasDesserts) {
+    return "desserts after clearing mains";
+  }
+  return "standard";
 };
 
-export const checkAllergies = (items: MenuItem[]): string[] => {
-  return Array.from(new Set(items.flatMap(item => item.allergens || [])));
+export const validateOrderCompletion = (items: KitchenOrder["items"]): boolean => {
+  return items.every(item => item.status === "ready");
 };
+
+interface KitchenOrder {
+  items: Array<{
+    status: string;
+  }>;
+  coursing: "standard" | "appetizers first" | "serve together" | "desserts after clearing mains";
+}

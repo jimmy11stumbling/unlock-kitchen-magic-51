@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -5,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { Image, Plus, Table as TableIcon } from "lucide-react";
 import { useState } from "react";
-import type { MenuItem } from "@/types";
+import type { MenuItem } from "@/types/staff";
 import type { MenuPanelProps, MenuItemFormData } from "./menu/types";
 import { MenuItemForm } from "./menu/MenuItemForm";
 import { MenuItemGrid } from "./menu/MenuItemGrid";

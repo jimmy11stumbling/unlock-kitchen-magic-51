@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -100,12 +101,12 @@ export const PayrollPanel = ({
   };
 
   const calculateNetPay = (grossPay: number) => {
-    const taxResults = calculateTax(grossPay, 0.2); // 20% tax rate for example
+    const taxInfo = calculateTax(grossPay, "California"); // Using California as default state
     const standardDeductions = {
       insurance: grossPay * 0.05,
       retirement: grossPay * 0.06,
     };
-    return grossPay - taxResults.tax - standardDeductions.insurance - standardDeductions.retirement;
+    return grossPay - taxInfo.tax - standardDeductions.insurance - standardDeductions.retirement;
   };
 
   const handleGeneratePayroll = async () => {

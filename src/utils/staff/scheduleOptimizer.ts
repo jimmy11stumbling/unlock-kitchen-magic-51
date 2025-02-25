@@ -1,40 +1,66 @@
 
 import type { StaffMember, Shift } from "@/types/staff";
 
-export const optimizeSchedule = (staff: StaffMember[], shifts: Shift[]) => {
-  const schedule: { [key: string]: StaffMember[] } = {};
-  
-  // Group shifts by date
-  shifts.forEach(shift => {
-    if (!schedule[shift.date]) {
-      schedule[shift.date] = [];
-    }
-    
-    // Find available staff for this shift
-    const availableStaff = staff.filter(member => 
-      member.status !== 'off_duty' && 
-      !schedule[shift.date].find(s => s.id === member.id)
-    );
-    
-    // Assign staff based on role requirements
-    if (availableStaff.length > 0) {
-      schedule[shift.date].push(availableStaff[0]);
-    }
-  });
-  
-  return schedule;
+export const checkScheduleConflicts = (
+  staffMember: StaffMember,
+  newShift: Shift
+): boolean => {
+  const existingShift = Object.entries(staffMember.schedule)
+    .find(([day, hours]) => {
+      const shiftDate = new Date(newShift.date).toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+      if (shiftDate.includes(day)) {
+        const [existingStart, existingEnd] = hours.split('-');
+        const newTime = newShift.time;
+        return isTimeConflict(existingStart, existingEnd, newTime);
+      }
+      return false;
+    });
+
+  return !!existingShift;
 };
 
-export const calculateStaffUtilization = (staff: StaffMember[], schedule: { [key: string]: StaffMember[] }) => {
-  const utilization: { [key: number]: number } = {};
-  
-  staff.forEach(member => {
-    const shifts = Object.values(schedule).filter(dayStaff => 
-      dayStaff.find(s => s.id === member.id)
-    ).length;
-    
-    utilization[member.id] = (shifts / Object.keys(schedule).length) * 100;
+export const optimizeStaffSchedule = (
+  staff: StaffMember[],
+  shifts: Shift[]
+): { staffId: number; shiftId: number }[] => {
+  const assignments: { staffId: number; shiftId: number }[] = [];
+  const staffWorkload = new Map<number, number>();
+
+  // Initialize workload tracking
+  staff.forEach(member => staffWorkload.set(member.id, 0));
+
+  // Sort shifts by date
+  const sortedShifts = [...shifts].sort((a, b) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
+  // Assign shifts trying to balance workload
+  sortedShifts.forEach(shift => {
+    const availableStaff = staff.filter(member => 
+      !checkScheduleConflicts(member, shift)
+    );
+
+    if (availableStaff.length > 0) {
+      // Find staff member with lowest current workload
+      const staffChoice = availableStaff.reduce((prev, curr) => {
+        const prevLoad = staffWorkload.get(prev.id) || 0;
+        const currLoad = staffWorkload.get(curr.id) || 0;
+        return prevLoad <= currLoad ? prev : curr;
+      });
+
+      assignments.push({ staffId: staffChoice.id, shiftId: shift.id });
+      staffWorkload.set(staffChoice.id, (staffWorkload.get(staffChoice.id) || 0) + 1);
+    }
   });
-  
-  return utilization;
+
+  return assignments;
+};
+
+const isTimeConflict = (
+  existingStart: string,
+  existingEnd: string,
+  newTime: string
+): boolean => {
+  const [newStart, newEnd] = newTime.split('-');
+  return !(newEnd <= existingStart || newStart >= existingEnd);
 };

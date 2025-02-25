@@ -1,6 +1,7 @@
-import { useState } from 'react';
+
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import type { InventoryItem } from '@/types';
+import type { InventoryItem } from "@/types/staff";
 
 export const useInventoryState = () => {
   const { toast } = useToast();

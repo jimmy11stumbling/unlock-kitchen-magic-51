@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Clock, FileText, Star } from "lucide-react";
-import type { StaffMember } from "@/types";
+import type { StaffMember } from "@/types/staff";
 import { AddStaffDialog } from "./staff/AddStaffDialog";
 import { StaffList } from "./staff/StaffList";
 import { ScheduleManager } from "./staff/ScheduleManager";
@@ -44,9 +44,7 @@ export const StaffPanel = ({
     return Object.values(member.schedule)
       .filter(time => time !== "OFF")
       .reduce((total, time) => {
-        if (!time) return total;
         const [start, end] = time.split("-");
-        if (!start || !end) return total;
         const startHour = parseInt(start.split(":")[0]);
         const endHour = parseInt(end.split(":")[0]);
         return total + (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);

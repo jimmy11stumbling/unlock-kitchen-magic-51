@@ -1,19 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from "@/integrations/supabase/client";
-import type { KitchenOrder, Ingredient } from "@/types";
-import { AlertSection } from './AlertSection';
-import { OrderCard } from './OrderCard';
-import { IngredientStatus } from './IngredientStatus';
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useIngredientManagement } from '@/hooks/dashboard/useIngredientManagement';
+import { Progress } from "@/components/ui/progress";
 
 export function KitchenDashboard() {
   const [alerts, setAlerts] = useState<string[]>([]);
-  const [activeOrders, setActiveOrders] = useState<KitchenOrder[]>([]);
-  const { ingredients, checkLowStock } = useIngredientManagement();
-  const { toast } = useToast();
-
+  const { ingredients, checkLowStock, calculatePrepTime } = useIngredientManagement();
+  
   useEffect(() => {
     const lowStockItems = checkLowStock();
     if (lowStockItems.length > 0) {
@@ -24,123 +21,57 @@ export function KitchenDashboard() {
   }, [ingredients]);
 
   useEffect(() => {
-    const fetchKitchenOrders = async () => {
-      const { data: ordersData, error } = await supabase
-        .from('kitchen_orders')
-        .select('*');
-
-      if (error) {
-        console.error('Error fetching kitchen orders:', error);
-        return;
-      }
-
-      if (ordersData) {
-        const transformedOrders: KitchenOrder[] = ordersData.map(order => ({
-          id: order.id,
-          orderId: order.order_id || 0,
-          items: typeof order.items === 'string' 
-            ? JSON.parse(order.items)
-            : order.items,
-          priority: order.priority,
-          notes: order.notes || '',
-          coursing: order.coursing,
-          created_at: order.created_at,
-          updated_at: order.updated_at,
-          estimated_delivery_time: order.estimated_delivery_time,
-          table_number: order.table_number || 0,
-          server_name: order.server_name || '',
-          status: order.status
-        }));
-
-        setActiveOrders(transformedOrders);
-      }
+    const updatePrepTimes = async () => {
+      console.log('Updating prep times based on ingredient availability');
     };
 
-    fetchKitchenOrders();
-
-    const channel = supabase
-      .channel('kitchen-updates')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'kitchen_orders' },
-        () => {
-          fetchKitchenOrders();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    updatePrepTimes();
+    const interval = setInterval(updatePrepTimes, 300000); // Update every 5 minutes
+    return () => clearInterval(interval);
   }, []);
-
-  const updateOrderStatus = async (orderId: number, itemId: number, newStatus: string) => {
-    try {
-      const order = activeOrders.find(o => o.id === orderId);
-      if (!order) return;
-
-      const updatedItems = order.items.map(item => 
-        item.menuItemId === itemId ? { ...item, status: newStatus } : item
-      );
-
-      const allItemsReady = updatedItems.every(item => item.status === 'ready');
-
-      const { error } = await supabase
-        .from('kitchen_orders')
-        .update({ 
-          items: updatedItems,
-          status: allItemsReady ? 'ready' : 'preparing'
-        })
-        .eq('id', orderId);
-
-      if (error) throw error;
-
-      if (allItemsReady) {
-        toast({
-          title: "Order Ready",
-          description: `Order #${orderId} is ready for service`,
-        });
-      }
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update order status",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'ready': return 'success';
-      case 'preparing': return 'default';
-      case 'pending': return 'secondary';
-      case 'delivered': return 'outline';
-      default: return 'default';
-    }
-  };
 
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <AlertSection alerts={alerts} />
-
         <Card className="col-span-full p-6">
-          <h2 className="text-xl font-semibold mb-4">Active Orders</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {activeOrders.map((order) => (
-              <OrderCard
-                key={order.id}
-                order={order}
-                onUpdateStatus={updateOrderStatus}
-                getStatusBadgeVariant={getStatusBadgeVariant}
-              />
+          <h2 className="text-xl font-semibold mb-4">Kitchen Alerts</h2>
+          <div className="space-y-4">
+            {alerts.map((alert, index) => (
+              <Alert variant="destructive" key={index}>
+                <ExclamationTriangleIcon className="h-4 w-4" />
+                <AlertTitle>Stock Alert</AlertTitle>
+                <AlertDescription>{alert}</AlertDescription>
+              </Alert>
             ))}
           </div>
         </Card>
 
-        <IngredientStatus ingredients={ingredients} />
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Ingredient Status</h2>
+          <div className="space-y-4">
+            {ingredients.map((ingredient) => (
+              <div key={ingredient.id} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{ingredient.name}</span>
+                  <Badge variant={ingredient.current_stock <= ingredient.minimum_stock ? "destructive" : "default"}>
+                    {ingredient.current_stock} {ingredient.unit}
+                  </Badge>
+                </div>
+                <Progress 
+                  value={(ingredient.current_stock / (ingredient.minimum_stock * 2)) * 100} 
+                  className="h-2"
+                />
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Active Orders</h2>
+          <div className="space-y-4">
+            {/* Active orders would be mapped here */}
+          </div>
+        </Card>
       </div>
     </div>
   );
