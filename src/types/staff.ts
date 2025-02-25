@@ -1,4 +1,3 @@
-
 export interface CustomerFeedback {
   id: number;
   orderId: number;
@@ -49,5 +48,6 @@ export interface Shift {
   startTime: string;
   endTime: string;
   date: string;
+  time?: string;
   status: 'scheduled' | 'completed' | 'cancelled';
 }
