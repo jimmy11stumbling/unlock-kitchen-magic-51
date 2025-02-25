@@ -1,17 +1,12 @@
 
 import { useState, useEffect } from 'react';
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
-import { useIngredientManagement } from '@/hooks/dashboard/useIngredientManagement';
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { useToast } from '@/components/ui/use-toast';
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import type { KitchenOrder, KitchenOrderItem } from "@/types";
-import type { Database } from '@/types/database';
+import type { KitchenOrder, Ingredient } from "@/types";
+import { AlertSection } from './AlertSection';
+import { OrderCard } from './OrderCard';
+import { IngredientStatus } from './IngredientStatus';
+import { useIngredientManagement } from '@/hooks/dashboard/useIngredientManagement';
 
 export function KitchenDashboard() {
   const [alerts, setAlerts] = useState<string[]>([]);
@@ -32,10 +27,7 @@ export function KitchenDashboard() {
     const fetchKitchenOrders = async () => {
       const { data: ordersData, error } = await supabase
         .from('kitchen_orders')
-        .select('*') as { 
-          data: Database['public']['Tables']['kitchen_orders']['Row'][] | null; 
-          error: Error | null 
-        };
+        .select('*');
 
       if (error) {
         console.error('Error fetching kitchen orders:', error);
@@ -46,18 +38,9 @@ export function KitchenDashboard() {
         const transformedOrders: KitchenOrder[] = ordersData.map(order => ({
           id: order.id,
           orderId: order.order_id || 0,
-          items: Array.isArray(order.items) ? order.items.map(item => ({
-            menuItemId: item.menuItemId || 0,
-            itemName: item.itemName || `Item #${item.menuItemId}`,
-            quantity: item.quantity || 1,
-            status: item.status || 'pending',
-            startTime: item.startTime,
-            completionTime: item.completionTime,
-            cookingStation: item.cookingStation || '',
-            assignedChef: item.assignedChef || '',
-            modifications: item.modifications || [],
-            allergenAlert: item.allergenAlert || false
-          })) : [],
+          items: typeof order.items === 'string' 
+            ? JSON.parse(order.items)
+            : order.items,
           priority: order.priority,
           notes: order.notes || '',
           coursing: order.coursing,
@@ -80,8 +63,7 @@ export function KitchenDashboard() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'kitchen_orders' },
-        (payload) => {
-          console.log('Kitchen order update:', payload);
+        () => {
           fetchKitchenOrders();
         }
       )
@@ -142,125 +124,23 @@ export function KitchenDashboard() {
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="col-span-full p-6">
-          <h2 className="text-xl font-semibold mb-4">Kitchen Alerts</h2>
-          <div className="space-y-4">
-            {alerts.map((alert, index) => (
-              <Alert variant="destructive" key={index}>
-                <ExclamationTriangleIcon className="h-4 w-4" />
-                <AlertTitle>Stock Alert</AlertTitle>
-                <AlertDescription>{alert}</AlertDescription>
-              </Alert>
-            ))}
-          </div>
-        </Card>
+        <AlertSection alerts={alerts} />
 
         <Card className="col-span-full p-6">
           <h2 className="text-xl font-semibold mb-4">Active Orders</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {activeOrders.map((order) => (
-              <Card key={order.id} className="p-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">Order #{order.orderId}</h3>
-                      <Badge variant={order.priority === 'rush' ? 'destructive' : 'default'}>
-                        {order.priority}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Table {order.table_number} • Server: {order.server_name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Sent: {new Date(order.created_at).toLocaleTimeString()}
-                    </p>
-                  </div>
-                  <Badge variant={getStatusBadgeVariant(order.status)}>
-                    {order.status}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-2">
-                  {order.items.map((item) => (
-                    <div key={item.menuItemId} className="flex items-center justify-between bg-muted p-2 rounded">
-                      <div>
-                        <span className="font-medium">
-                          {item.quantity}x {item.itemName}
-                        </span>
-                        <div className="flex gap-2 mt-1">
-                          {item.cookingStation && (
-                            <Badge variant="outline" className="text-xs">
-                              {item.cookingStation}
-                            </Badge>
-                          )}
-                          {item.allergenAlert && (
-                            <Badge variant="destructive" className="text-xs">
-                              Allergy Alert
-                            </Badge>
-                          )}
-                        </div>
-                        {item.modifications.length > 0 && (
-                          <p className="text-sm text-muted-foreground">
-                            {item.modifications.join(', ')}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant={item.status === 'preparing' ? 'default' : 'outline'}
-                          onClick={() => updateOrderStatus(order.id, item.menuItemId, 'preparing')}
-                        >
-                          <Clock className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={item.status === 'ready' ? 'default' : 'outline'}
-                          onClick={() => updateOrderStatus(order.id, item.menuItemId, 'ready')}
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {order.notes && (
-                  <div className="mt-2">
-                    <Badge variant="outline" className="w-full justify-start gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      {order.notes}
-                    </Badge>
-                  </div>
-                )}
-
-                <div className="text-sm text-muted-foreground mt-2">
-                  Est. Delivery: {new Date(order.estimated_delivery_time).toLocaleTimeString()}
-                </div>
-              </Card>
+              <OrderCard
+                key={order.id}
+                order={order}
+                onUpdateStatus={updateOrderStatus}
+                getStatusBadgeVariant={getStatusBadgeVariant}
+              />
             ))}
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Ingredient Status</h2>
-          <div className="space-y-4">
-            {ingredients.map((ingredient) => (
-              <div key={ingredient.id} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{ingredient.name}</span>
-                  <Badge variant={ingredient.current_stock <= ingredient.minimum_stock ? "destructive" : "default"}>
-                    {ingredient.current_stock} {ingredient.unit}
-                  </Badge>
-                </div>
-                <Progress 
-                  value={(ingredient.current_stock / (ingredient.minimum_stock * 2)) * 100} 
-                  className="h-2"
-                />
-              </div>
-            ))}
-          </div>
-        </Card>
+        <IngredientStatus ingredients={ingredients} />
       </div>
     </div>
   );
