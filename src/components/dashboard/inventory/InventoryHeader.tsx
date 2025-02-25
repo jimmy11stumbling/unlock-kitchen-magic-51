@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -90,7 +89,7 @@ export function InventoryHeader({
       <div className="flex flex-wrap gap-2">
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="w-[120px]">
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Add Item
             </Button>
@@ -121,7 +120,7 @@ export function InventoryHeader({
 
         <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-[120px]">
+            <Button variant="outline">
               <FileUp className="mr-2 h-4 w-4" />
               Import
             </Button>
@@ -146,11 +145,11 @@ export function InventoryHeader({
         </Dialog>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="w-[120px]" onClick={() => handleExport('csv')}>
+          <Button variant="outline" onClick={() => handleExport('csv')}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
-          <Button variant="outline" className="w-[120px]" onClick={() => handleExport('pdf')}>
+          <Button variant="outline" onClick={() => handleExport('pdf')}>
             <Download className="mr-2 h-4 w-4" />
             Export PDF
           </Button>
