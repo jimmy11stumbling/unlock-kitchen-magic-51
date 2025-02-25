@@ -13,16 +13,13 @@ export function InventoryDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("name-asc");
   const [stockFilter, setStockFilter] = useState("all");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   
   const { inventoryItems, isLoading, updateQuantity, addItem } = useInventoryData(autoRefresh);
 
   const maxPrice = useMemo(() => {
     return Math.max(...inventoryItems.map(item => item.price), 0);
   }, [inventoryItems]);
-
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
-
-  const categories = ["all", "produce", "meat", "dairy", "dry goods", "beverages"];
 
   const filteredItems = useMemo(() => {
     let filtered = [...inventoryItems];
@@ -112,14 +109,14 @@ export function InventoryDashboard() {
 
       <Tabs defaultValue="all" className="w-full" onValueChange={setActiveCategory}>
         <TabsList>
-          {categories.map((category) => (
+          {["all", "produce", "meat", "dairy", "dry goods", "beverages"].map((category) => (
             <TabsTrigger key={category} value={category} className="capitalize">
               {category}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {categories.map((category) => (
+        {["all", "produce", "meat", "dairy", "dry goods", "beverages"].map((category) => (
           <TabsContent key={category} value={category}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {isLoading ? (
