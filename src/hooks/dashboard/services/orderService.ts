@@ -37,7 +37,7 @@ export const orderService = {
       .from('kitchen_orders')
       .insert({
         order_id: orderData.orderId,
-        items: orderData.items,
+        items: JSON.stringify(orderData.items),
         priority: orderData.priority,
         notes: orderData.notes,
         coursing: orderData.coursing,
@@ -68,12 +68,15 @@ export const orderService = {
   },
 
   updateKitchenOrder: async (orderId: number, updates: Partial<KitchenOrder>): Promise<KitchenOrder> => {
+    const supabaseUpdates: Partial<SupabaseOrder> = {
+      ...updates,
+      items: updates.items ? JSON.stringify(updates.items) : undefined,
+      updated_at: new Date().toISOString()
+    };
+
     const { data, error } = await supabase
       .from('kitchen_orders')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
+      .update(supabaseUpdates)
       .eq('id', orderId)
       .select()
       .single();
