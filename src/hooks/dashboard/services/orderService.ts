@@ -9,16 +9,16 @@ const transformSupabaseOrder = (order: SupabaseOrder): KitchenOrder => {
   return {
     id: order.id,
     orderId: order.order_id || 0,
-    items: order.items as KitchenOrderItem[],
-    priority: order.priority,
+    items: Array.isArray(order.items) ? order.items : JSON.parse(order.items as string) as KitchenOrderItem[],
+    priority: order.priority as KitchenOrder['priority'],
     notes: order.notes || '',
-    coursing: order.coursing,
+    coursing: order.coursing as KitchenOrder['coursing'],
     created_at: order.created_at,
     updated_at: order.updated_at,
     estimated_delivery_time: order.estimated_delivery_time,
     table_number: order.table_number || 0,
     server_name: order.server_name || '',
-    status: order.status
+    status: order.status as KitchenOrder['status']
   };
 };
 
@@ -58,7 +58,10 @@ export const orderService = {
   updateOrderStatus: async (orderId: number, status: KitchenOrder['status']): Promise<KitchenOrder> => {
     const { data, error } = await supabase
       .from('kitchen_orders')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({ 
+        status, 
+        updated_at: new Date().toISOString() 
+      })
       .eq('id', orderId)
       .select()
       .single();

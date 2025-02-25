@@ -1,29 +1,30 @@
-
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { AlertTriangle, Clock, Package, Calendar, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { InventoryItem, Reservation, Order } from "@/types/staff";
+import { InventoryItem, Reservation, Order } from "@/types";
 import { playAlertSound } from "@/utils/sound";
 
 interface AlertsPanelProps {
   inventory: InventoryItem[];
   reservations: Reservation[];
-  activeOrders: Order[];
+  orders: Order[];
   lowStockItems: InventoryItem[];
   pendingReservations: Reservation[];
 }
 
 export const AlertsPanel = ({ 
+  inventory,
+  reservations,
+  orders,
   lowStockItems,
-  pendingReservations,
-  activeOrders
+  pendingReservations
 }: AlertsPanelProps) => {
   const [readAlerts, setReadAlerts] = useState<Set<string>>(new Set());
   const [lastAlertCount, setLastAlertCount] = useState(0);
   
-  const totalAlerts = lowStockItems.length + pendingReservations.length + activeOrders.length;
+  const totalAlerts = lowStockItems.length + pendingReservations.length + orders.length;
 
   useEffect(() => {
     if (totalAlerts > lastAlertCount) {
@@ -34,7 +35,7 @@ export const AlertsPanel = ({
 
   const markAllAsRead = () => {
     const allAlertIds = [
-      ...activeOrders.map(o => `order-${o.id}`),
+      ...orders.map(o => `order-${o.id}`),
       ...lowStockItems.map(i => `stock-${i.id}`),
       ...pendingReservations.map(r => `res-${r.id}`)
     ];
@@ -97,7 +98,7 @@ export const AlertsPanel = ({
         </div>
         
         <div className="space-y-2">
-          {activeOrders.map(order => (
+          {orders.map(order => (
             <AlertItem
               key={order.id}
               icon={Clock}
