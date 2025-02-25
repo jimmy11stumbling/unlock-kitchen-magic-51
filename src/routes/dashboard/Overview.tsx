@@ -6,7 +6,7 @@ import { useReservations } from "@/hooks/dashboard/useReservations";
 import { useOrders } from "@/hooks/dashboard/useOrders";
 import type { InventoryItem, Reservation } from "@/types";
 
-export const Overview = () => {
+const Overview = () => {
   const { inventory } = useInventory();
   const { reservations } = useReservations();
   const { orders } = useOrders();
@@ -43,3 +43,5 @@ export const Overview = () => {
     </div>
   );
 };
+
+export default Overview;
