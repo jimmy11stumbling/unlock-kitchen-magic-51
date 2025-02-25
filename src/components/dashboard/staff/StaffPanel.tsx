@@ -1,192 +1,56 @@
-import { useState } from 'react';
-import { StaffList } from './StaffList';
-import { ScheduleManager } from './ScheduleManager';
-import { PayrollPanel } from './PayrollPanel';
-import { AddStaffDialog } from './AddStaffDialog';
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Calendar, DollarSign } from "lucide-react";
-import type { StaffMember } from '@/types';
+import { User, Clock, FileText, Star } from "lucide-react";
+import type { StaffMember } from "@/types";
+import { AddStaffDialog } from "./staff/AddStaffDialog";
+import { StaffList } from "./staff/StaffList";
+import { ScheduleManager } from "./staff/ScheduleManager";
+import { Button } from "@/components/ui/button";
 
-export const StaffPanel = () => {
-  const [staff, setStaff] = useState<StaffMember[]>([
-    {
-      id: 1,
-      name: "John Doe",
-      role: "manager",
-      status: "active",
-      salary: 60000,
-      shift: "Morning",
-      email: "john.doe@example.com",
-      phone: "123-456-7890",
-      address: "123 Main St",
-      emergencyContact: {
-        name: "Jane Doe",
-        phone: "987-654-3210",
-        relationship: "Spouse"
-      },
-      startDate: "2022-01-01",
-      department: "Management",
-      certifications: ["ServSafe Manager"],
-      performanceRating: 4,
-      notes: "Excellent manager",
-      schedule: {
-        monday: "9:00-17:00",
-        tuesday: "9:00-17:00",
-        wednesday: "9:00-17:00",
-        thursday: "9:00-17:00",
-        friday: "9:00-17:00",
-        saturday: "OFF",
-        sunday: "OFF"
-      },
-      bankInfo: {
-        accountNumber: "1234567890",
-        routingNumber: "021000021",
-        accountType: "checking"
-      }
-    },
-    {
-      id: 2,
-      name: "Alice Smith",
-      role: "chef",
-      status: "active",
-      salary: 50000,
-      shift: "Evening",
-      email: "alice.smith@example.com",
-      phone: "456-789-0123",
-      address: "456 Elm St",
-      emergencyContact: {
-        name: "Bob Smith",
-        phone: "321-098-7654",
-        relationship: "Spouse"
-      },
-      startDate: "2022-03-15",
-      department: "Kitchen",
-      certifications: ["Certified Chef"],
-      performanceRating: 5,
-      notes: "Exceptional culinary skills",
-      schedule: {
-        monday: "15:00-23:00",
-        tuesday: "15:00-23:00",
-        wednesday: "15:00-23:00",
-        thursday: "OFF",
-        friday: "15:00-23:00",
-        saturday: "15:00-23:00",
-        sunday: "OFF"
-      },
-      bankInfo: {
-        accountNumber: "0987654321",
-        routingNumber: "121000248",
-        accountType: "savings"
-      }
-    },
-    {
-      id: 3,
-      name: "Bob Johnson",
-      role: "server",
-      status: "on_break",
-      salary: 30000,
-      shift: "Morning",
-      email: "bob.johnson@example.com",
-      phone: "789-012-3456",
-      address: "789 Oak St",
-      emergencyContact: {
-        name: "Carol Johnson",
-        phone: "654-321-0987",
-        relationship: "Spouse"
-      },
-      startDate: "2022-05-01",
-      department: "Service",
-      certifications: ["Alcohol Service"],
-      performanceRating: 3,
-      notes: "Reliable server",
-      schedule: {
-        monday: "OFF",
-        tuesday: "9:00-15:00",
-        wednesday: "9:00-15:00",
-        thursday: "9:00-15:00",
-        friday: "OFF",
-        saturday: "9:00-15:00",
-        sunday: "9:00-15:00"
-      },
-      bankInfo: {
-        accountNumber: "5432167890",
-        routingNumber: "071000013",
-        accountType: "checking"
-      }
-    },
-    {
-      id: 4,
-      name: "Eve Williams",
-      role: "host",
-      status: "off_duty",
-      salary: 25000,
-      shift: "Evening",
-      email: "eve.williams@example.com",
-      phone: "012-345-6789",
-      address: "012 Pine St",
-      emergencyContact: {
-        name: "David Williams",
-        phone: "789-654-3210",
-        relationship: "Spouse"
-      },
-      startDate: "2022-07-01",
-      department: "Service",
-      certifications: [],
-      performanceRating: 4,
-      notes: "Friendly and efficient host",
-      schedule: {
-        monday: "17:00-23:00",
-        tuesday: "OFF",
-        wednesday: "17:00-23:00",
-        thursday: "17:00-23:00",
-        friday: "OFF",
-        saturday: "17:00-23:00",
-        sunday: "17:00-23:00"
-      },
-      bankInfo: {
-        accountNumber: "6789054321",
-        routingNumber: "031100061",
-        accountType: "checking"
-      }
-    },
-    {
-      id: 5,
-      name: "Charlie Brown",
-      role: "bartender",
-      status: "active",
-      salary: 35000,
-      shift: "Evening",
-      email: "charlie.brown@example.com",
-      phone: "345-678-9012",
-      address: "345 Cedar St",
-      emergencyContact: {
-        name: "Lucy Brown",
-        phone: "210-987-6543",
-        relationship: "Sibling"
-      },
-      startDate: "2022-09-01",
-      department: "Bar",
-      certifications: ["Bartending Certification"],
-      performanceRating: 5,
-      notes: "Creative and skilled bartender",
-      schedule: {
-        monday: "OFF",
-        tuesday: "18:00-02:00",
-        wednesday: "OFF",
-        thursday: "18:00-02:00",
-        friday: "18:00-02:00",
-        saturday: "18:00-02:00",
-        sunday: "OFF"
-      },
-      bankInfo: {
-        accountNumber: "4321098765",
-        routingNumber: "121301381",
-        accountType: "checking"
-      }
-    }
-  ]);
+interface StaffPanelProps {
+  staff: StaffMember[];
+  onAddStaff: (data: Omit<StaffMember, "id" | "status">) => void;
+  onUpdateStatus: (staffId: number, status: StaffMember["status"]) => void;
+  onAddShift: (staffId: number, date: string, time: string) => void;
+  onUpdateInfo: (staffId: number, updates: Partial<StaffMember>) => void;
+}
+
+export const StaffPanel = ({
+  staff,
+  onAddStaff,
+  onUpdateStatus,
+  onAddShift,
+  onUpdateInfo,
+}: StaffPanelProps) => {
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState("list");
+
+  const calculateAttendance = (staffId: number): number => {
+    const member = staff.find(m => m.id === staffId);
+    if (!member) return 0;
+
+    const scheduledDays = Object.values(member.schedule).filter(day => day !== "OFF").length;
+    const totalPossibleDays = 7;
+    
+    return Math.round((scheduledDays / totalPossibleDays) * 100);
+  };
+
+  const calculateWeeklyHours = (staffId: number): number => {
+    const member = staff.find(m => m.id === staffId);
+    if (!member?.schedule) return 0;
+
+    return Object.values(member.schedule)
+      .filter(time => time !== "OFF")
+      .reduce((total, time) => {
+        if (!time) return total;
+        const [start, end] = time.split("-");
+        if (!start || !end) return total;
+        const startHour = parseInt(start.split(":")[0]);
+        const endHour = parseInt(end.split(":")[0]);
+        return total + (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);
+      }, 0);
+  };
 
   const handleAddStaff = (staffData: Omit<StaffMember, "id" | "status">) => {
     const newStaffMember: StaffMember = {
@@ -224,21 +88,6 @@ export const StaffPanel = () => {
     }));
   };
 
-  const calculateWeeklyHours = (schedule: StaffMember['schedule']) => {
-    if (!schedule) return 0;
-
-    return Object.values(schedule)
-      .filter(time => time !== "OFF")
-      .reduce((total, time) => {
-        const [start, end] = time.toString().split("-");
-        if (!start || !end) return total;
-        
-        const startHour = parseInt(start.split(":")[0]);
-        const endHour = parseInt(end.split(":")[0]);
-        return total + (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);
-      }, 0);
-  };
-
   const handleGeneratePayroll = async (staffId: number, startDate: string, endDate: string) => {
     console.log(`Generating payroll for staff ${staffId} from ${startDate} to ${endDate}`);
   };
@@ -254,23 +103,23 @@ export const StaffPanel = () => {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="staff-list" className="space-y-4">
+      <Tabs defaultValue="list" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="staff-list" className="flex items-center gap-2">
+          <TabsTrigger value="list" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Staff List
           </TabsTrigger>
-          <TabsTrigger value="schedule-manager" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
             Schedule
           </TabsTrigger>
-          <TabsTrigger value="payroll-panel" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
+          <TabsTrigger value="payroll" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
             Payroll
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="staff-list">
+        <TabsContent value="list">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Staff Management</h2>
             <AddStaffDialog onAddStaff={handleAddStaff} />
@@ -279,11 +128,11 @@ export const StaffPanel = () => {
             staff={staff}
             onUpdateStatus={handleUpdateStaffStatus}
             onSelectStaff={setSelectedStaffId}
-            calculateAttendance={() => 80}
+            calculateAttendance={calculateAttendance}
           />
         </TabsContent>
 
-        <TabsContent value="schedule-manager">
+        <TabsContent value="schedule">
           <ScheduleManager
             staff={staff}
             onAddShift={handleAddShift}
@@ -293,7 +142,7 @@ export const StaffPanel = () => {
           />
         </TabsContent>
 
-        <TabsContent value="payroll-panel">
+        <TabsContent value="payroll">
           <PayrollPanel
             staff={staff}
             onGeneratePayroll={handleGeneratePayroll}

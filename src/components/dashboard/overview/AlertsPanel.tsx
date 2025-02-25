@@ -1,9 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { AlertTriangle, Clock, Package, Calendar, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { InventoryItem, Reservation, Order } from "@/types";
+import type { InventoryItem, Reservation, Order } from "@/types";
 import { playAlertSound } from "@/utils/sound";
 
 interface AlertsPanelProps {
