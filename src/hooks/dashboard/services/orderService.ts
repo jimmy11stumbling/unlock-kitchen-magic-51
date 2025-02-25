@@ -1,87 +1,84 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { KitchenOrder } from '@/types';
+import type { KitchenOrder, KitchenOrderItem } from '@/types';
 import type { Database } from '@/types/database';
 
-type KitchenOrderRow = Database['public']['Tables']['kitchen_orders']['Row'];
-type Json = Database['public']['Tables']['kitchen_orders']['Row']['items'];
+type SupabaseOrder = Database['public']['Tables']['kitchen_orders']['Row'];
+
+const transformSupabaseOrder = (order: SupabaseOrder): KitchenOrder => {
+  return {
+    id: order.id,
+    orderId: order.order_id || 0,
+    items: order.items as KitchenOrderItem[],
+    priority: order.priority,
+    notes: order.notes || '',
+    coursing: order.coursing,
+    created_at: order.created_at,
+    updated_at: order.updated_at,
+    estimated_delivery_time: order.estimated_delivery_time,
+    table_number: order.table_number || 0,
+    server_name: order.server_name || '',
+    status: order.status
+  };
+};
 
 export const orderService = {
-  fetchOrders: async () => {
+  fetchOrders: async (): Promise<KitchenOrder[]> => {
     const { data, error } = await supabase
       .from('kitchen_orders')
       .select('*');
 
-    if (error) {
-      throw error;
-    }
-
-    return data as KitchenOrderRow[];
+    if (error) throw error;
+    return (data as SupabaseOrder[]).map(transformSupabaseOrder);
   },
 
-  createOrder: async (orderData: Omit<KitchenOrder, 'id'>) => {
-    const orderForDb: Database['public']['Tables']['kitchen_orders']['Insert'] = {
-      order_id: orderData.orderId,
-      items: orderData.items as unknown as Json,
-      priority: orderData.priority,
-      notes: orderData.notes,
-      coursing: orderData.coursing,
-      created_at: orderData.created_at,
-      updated_at: orderData.updated_at,
-      estimated_delivery_time: orderData.estimated_delivery_time,
-      table_number: orderData.table_number,
-      server_name: orderData.server_name,
-      status: orderData.status
-    };
-
+  createOrder: async (orderData: Omit<KitchenOrder, 'id'>): Promise<KitchenOrder> => {
     const { data, error } = await supabase
       .from('kitchen_orders')
-      .insert([orderForDb])
+      .insert({
+        order_id: orderData.orderId,
+        items: orderData.items,
+        priority: orderData.priority,
+        notes: orderData.notes,
+        coursing: orderData.coursing,
+        created_at: orderData.created_at,
+        updated_at: orderData.updated_at,
+        estimated_delivery_time: orderData.estimated_delivery_time,
+        table_number: orderData.table_number,
+        server_name: orderData.server_name,
+        status: orderData.status
+      })
       .select()
       .single();
 
-    if (error) {
-      throw error;
-    }
-
-    return data as KitchenOrderRow;
+    if (error) throw error;
+    return transformSupabaseOrder(data as SupabaseOrder);
   },
 
-  updateOrderStatus: async (orderId: number, status: KitchenOrder['status']) => {
-    const { error } = await supabase
+  updateOrderStatus: async (orderId: number, status: KitchenOrder['status']): Promise<KitchenOrder> => {
+    const { data, error } = await supabase
       .from('kitchen_orders')
-      .update({ status } as Database['public']['Tables']['kitchen_orders']['Update'])
-      .eq('id', orderId);
-
-    if (error) {
-      throw error;
-    }
-  },
-
-  updateKitchenOrderStatus: async (orderId: number, itemStatus: string) => {
-    const { data: order, error: fetchError } = await supabase
-      .from('kitchen_orders')
-      .select('items')
+      .update({ status, updated_at: new Date().toISOString() })
       .eq('id', orderId)
+      .select()
       .single();
 
-    if (fetchError) {
-      throw fetchError;
-    }
-
-    const items = Array.isArray(order.items) ? order.items : [];
-    const updatedItems = items.map(item => ({
-      ...item,
-      status: itemStatus,
-    }));
-
-    const { error: updateError } = await supabase
-      .from('kitchen_orders')
-      .update({ items: updatedItems })
-      .eq('id', orderId);
-
-    if (updateError) {
-      throw updateError;
-    }
+    if (error) throw error;
+    return transformSupabaseOrder(data as SupabaseOrder);
   },
+
+  updateKitchenOrder: async (orderId: number, updates: Partial<KitchenOrder>): Promise<KitchenOrder> => {
+    const { data, error } = await supabase
+      .from('kitchen_orders')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return transformSupabaseOrder(data as SupabaseOrder);
+  }
 };
