@@ -1,3 +1,3 @@
 
-// Re-export PayrollEntry from staff.ts to maintain compatibility
-export { PayrollEntry } from './staff';
+import type { PayrollEntry } from './staff';
+export type { PayrollEntry };

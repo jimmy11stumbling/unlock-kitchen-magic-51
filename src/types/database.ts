@@ -1,5 +1,24 @@
 
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json = 
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export interface KitchenOrderItem {
+  menuItemId: number;
+  itemName: string;
+  quantity: number;
+  status: 'pending' | 'preparing' | 'ready' | 'delivered';
+  startTime?: string;
+  completionTime?: string;
+  cookingStation: string;
+  assignedChef: string;
+  modifications: string[];
+  allergenAlert: boolean;
+}
 
 export interface Database {
   public: {
@@ -8,7 +27,7 @@ export interface Database {
         Row: {
           id: number;
           order_id: number | null;
-          items: Json;
+          items: KitchenOrderItem[];
           priority: 'normal' | 'rush' | 'high';
           notes: string | null;
           coursing: 'standard' | 'appetizers first' | 'serve together';

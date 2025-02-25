@@ -1,10 +1,9 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
 import { Clock, Check, ChefHat, Flame, Bell, Timer } from "lucide-react";
-import type { KitchenOrder, MenuItem } from "@/types/staff";
+import type { KitchenOrder, MenuItem } from "@/types";
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
