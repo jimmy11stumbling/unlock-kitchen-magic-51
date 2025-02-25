@@ -503,17 +503,23 @@ export type Database = {
           notes: string | null
           order_id: number | null
           priority: string
+          server_name: string | null
+          status: string
+          table_number: number | null
           updated_at: string | null
         }
         Insert: {
-          coursing: string
+          coursing?: string
           created_at?: string | null
           estimated_delivery_time: string
           id?: number
-          items: Json
+          items?: Json
           notes?: string | null
           order_id?: number | null
-          priority: string
+          priority?: string
+          server_name?: string | null
+          status?: string
+          table_number?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -525,6 +531,9 @@ export type Database = {
           notes?: string | null
           order_id?: number | null
           priority?: string
+          server_name?: string | null
+          status?: string
+          table_number?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -768,6 +777,7 @@ export type Database = {
           description: string | null
           id: number
           image_url: string | null
+          ingredient_requirements: Json | null
           name: string
           order_count: number | null
           prep_details: Json | null
@@ -783,6 +793,7 @@ export type Database = {
           description?: string | null
           id?: number
           image_url?: string | null
+          ingredient_requirements?: Json | null
           name: string
           order_count?: number | null
           prep_details?: Json | null
@@ -798,6 +809,7 @@ export type Database = {
           description?: string | null
           id?: number
           image_url?: string | null
+          ingredient_requirements?: Json | null
           name?: string
           order_count?: number | null
           prep_details?: Json | null
