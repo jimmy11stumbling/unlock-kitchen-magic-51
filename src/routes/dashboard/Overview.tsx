@@ -1,9 +1,10 @@
+
 import { AlertsPanel } from "@/components/dashboard/overview/AlertsPanel";
 import { useEffect, useState } from "react";
 import { useInventory } from "@/hooks/dashboard/useInventory";
 import { useReservations } from "@/hooks/dashboard/useReservations";
 import { useOrders } from "@/hooks/dashboard/useOrders";
-import type { InventoryItem, Reservation, Order } from "@/types";
+import type { InventoryItem, Reservation } from "@/types";
 
 export const Overview = () => {
   const { inventory } = useInventory();
