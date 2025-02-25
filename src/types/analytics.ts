@@ -1,4 +1,6 @@
 
+import { MenuItem } from "./menu";
+
 export interface DailyReport {
   date: string;
   totalRevenue: number;
@@ -17,6 +19,7 @@ export interface DailyReport {
 export interface SalesData {
   date: string;
   revenue: number;
+  profit: number;
   orderCount: number;
   averageOrderValue: number;
   peakHours: {

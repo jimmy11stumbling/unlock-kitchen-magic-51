@@ -1,96 +1,35 @@
 
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import type { InventoryItem } from "@/types";
 
-export interface InventoryItem {
-  id: number;
-  name: string;
-  quantity: number;
-  unit: string;
-  minQuantity: number;
-  price: number;
-  category: string;
-}
+export const useInventoryData = (initialize: boolean = false) => {
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-export function useInventoryData(autoRefresh: boolean) {
-  const { toast } = useToast();
+  const updateQuantity = (itemId: number, newQuantity: number) => {
+    setInventoryItems(prev =>
+      prev.map(item =>
+        item.id === itemId
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
+  };
 
-  const { data: inventoryItems = [], isLoading, refetch } = useQuery({
-    queryKey: ['inventory-items'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('kitchen_orders')
-        .select('id, items')
-        .order('id');
-
-      if (error) throw error;
-
-      return data.map((order: any) => ({
-        id: order.id,
-        name: `Item ${order.id}`,
-        quantity: 10,
-        unit: 'pcs',
-        minQuantity: 5,
-        price: 9.99,
-        category: 'produce'
-      })) as InventoryItem[];
-    },
-    refetchInterval: autoRefresh ? 30000 : false
-  });
-
-  const updateQuantityMutation = useMutation({
-    mutationFn: async ({ itemId, quantity }: { itemId: number, quantity: number }) => {
-      console.log(`Updating item ${itemId} to quantity ${quantity}`);
-      return Promise.resolve();
-    },
-    onSuccess: () => {
-      refetch();
-      toast({
-        title: "Inventory Updated",
-        description: "Item quantity has been updated successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update inventory quantity",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const addItemMutation = useMutation({
-    mutationFn: async (item: Omit<InventoryItem, "id">) => {
-      console.log("Adding new item:", item);
-      return Promise.resolve();
-    },
-    onSuccess: () => {
-      refetch();
-      toast({
-        title: "Item Added",
-        description: "New item has been added to inventory",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add new item",
-        variant: "destructive",
-      });
-    }
-  });
+  const addItem = (item: Omit<InventoryItem, "id">) => {
+    const newItem: InventoryItem = {
+      ...item,
+      id: Math.max(0, ...inventoryItems.map(i => i.id)) + 1,
+      current_stock: item.quantity,
+      reorder_point: item.minQuantity
+    };
+    setInventoryItems(prev => [...prev, newItem]);
+  };
 
   return {
     inventoryItems,
     isLoading,
-    updateQuantity: (itemId: number, quantity: number) => {
-      if (quantity >= 0) {
-        updateQuantityMutation.mutate({ itemId, quantity });
-      }
-    },
-    addItem: (item: Omit<InventoryItem, "id">) => {
-      addItemMutation.mutate(item);
-    }
+    updateQuantity,
+    addItem
   };
-}
+};

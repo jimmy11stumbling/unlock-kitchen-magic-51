@@ -11,3 +11,12 @@ export interface JsonResponse {
   data?: any;
   error?: string;
 }
+
+export interface Message {
+  id: string;
+  text: string;
+  timestamp: string;
+  sender: 'user' | 'system';
+}
+
+// Add any other shared interfaces/types here
