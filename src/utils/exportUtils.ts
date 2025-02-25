@@ -111,7 +111,9 @@ export const importFromCSV = async (file: File): Promise<InventoryItem[]> => {
             unit: row.unit || 'pcs',
             minQuantity: parseInt(row.minQuantity) || 0,
             price: parseFloat(row.price) || 0,
-            category: row.category || 'uncategorized'
+            category: row.category || 'uncategorized',
+            reorderPoint: parseInt(row.reorderPoint) || 0,
+            idealStockLevel: parseInt(row.idealStockLevel) || 0
           }));
           resolve(items);
         } catch (error) {

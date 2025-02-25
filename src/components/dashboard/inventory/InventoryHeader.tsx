@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import type { InventoryItem } from "@/hooks/dashboard/useInventoryData";
 import { exportInventory, importFromCSV } from "@/utils/exportUtils";
 
-interface InventoryHeaderProps {
+export interface InventoryHeaderProps {
   autoRefresh: boolean;
   onAutoRefreshToggle: (value: boolean) => void;
   onAddItem: (item: Omit<InventoryItem, "id">) => void;
@@ -50,7 +51,6 @@ export function InventoryHeader({
       });
     }
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

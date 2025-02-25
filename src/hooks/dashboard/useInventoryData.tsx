@@ -11,6 +11,25 @@ export interface InventoryItem {
   minQuantity: number;
   price: number;
   category: string;
+  // Make these optional since they're not always required
+  reorderPoint?: number;
+  idealStockLevel?: number;
+  description?: string;
+  sku?: string;
+  location?: string;
+  categoryId?: string;
+  supplierId?: string;
+}
+
+export interface InventoryHistory {
+  id: string;
+  itemId: number;
+  action: string;
+  quantityChange: number;
+  previousQuantity: number;
+  newQuantity: number;
+  createdAt: string;
+  notes?: string;
 }
 
 export function useInventoryData(autoRefresh: boolean) {
@@ -33,7 +52,9 @@ export function useInventoryData(autoRefresh: boolean) {
         unit: 'pcs',
         minQuantity: 5,
         price: 9.99,
-        category: 'produce'
+        category: 'produce',
+        reorderPoint: 5,
+        idealStockLevel: 20
       })) as InventoryItem[];
     },
     refetchInterval: autoRefresh ? 30000 : false
