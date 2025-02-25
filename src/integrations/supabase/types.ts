@@ -460,38 +460,145 @@ export type Database = {
           },
         ]
       }
+      ingredient_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ingredients: {
         Row: {
+          category_id: string | null
           cost_per_unit: number
           created_at: string | null
           current_stock: number
+          description: string | null
           id: number
+          ideal_stock_level: number | null
+          last_ordered_at: string | null
+          location: string | null
           minimum_stock: number
           name: string
+          reorder_point: number | null
+          sku: string | null
+          supplier_id: string | null
           unit: string
           updated_at: string | null
         }
         Insert: {
+          category_id?: string | null
           cost_per_unit?: number
           created_at?: string | null
           current_stock?: number
+          description?: string | null
           id?: number
+          ideal_stock_level?: number | null
+          last_ordered_at?: string | null
+          location?: string | null
           minimum_stock?: number
           name: string
+          reorder_point?: number | null
+          sku?: string | null
+          supplier_id?: string | null
           unit: string
           updated_at?: string | null
         }
         Update: {
+          category_id?: string | null
           cost_per_unit?: number
           created_at?: string | null
           current_stock?: number
+          description?: string | null
           id?: number
+          ideal_stock_level?: number | null
+          last_ordered_at?: string | null
+          location?: string | null
           minimum_stock?: number
           name?: string
+          reorder_point?: number | null
+          sku?: string | null
+          supplier_id?: string | null
           unit?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ingredients_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "ingredient_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingredients_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_history: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          item_id: number | null
+          new_quantity: number | null
+          notes: string | null
+          previous_quantity: number | null
+          quantity_change: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          item_id?: number | null
+          new_quantity?: number | null
+          notes?: string | null
+          previous_quantity?: number | null
+          quantity_change?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          item_id?: number | null
+          new_quantity?: number | null
+          notes?: string | null
+          previous_quantity?: number | null
+          quantity_change?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_history_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kitchen_orders: {
         Row: {
