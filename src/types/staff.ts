@@ -1,23 +1,19 @@
 
-export interface CustomerFeedback {
-  id: number;
-  orderId: number;
-  rating: number;
-  comment?: string;
-  date: string;
-  resolved: boolean;
-}
+export type StaffStatus = "on_duty" | "off_duty" | "break" | "unavailable";
+export type StaffRole = "manager" | "chef" | "server" | "host" | "kitchen_staff";
 
-export interface Promotion {
+export interface StaffMember {
   id: number;
   name: string;
-  description: string;
-  discountType: "percentage" | "fixed";
-  discountValue: number;
-  startDate: string;
-  endDate: string;
-  active: boolean;
-  applicableItems: number[];
+  role: StaffRole;
+  status: StaffStatus;
+  email?: string;
+  phone?: string;
+  schedule: { [key: string]: string };
+  hourlyRate: number;
+  performanceRating?: number;
+  department?: string;
+  certifications?: string[];
 }
 
 export interface PayrollEntry {
@@ -40,7 +36,6 @@ export interface PayrollEntry {
   status: 'pending' | 'processed' | 'paid';
   paymentDate: string;
   paymentMethod: 'direct_deposit' | 'check';
-  checkNumber?: string;
 }
 
 export interface Shift {
@@ -49,6 +44,5 @@ export interface Shift {
   startTime: string;
   endTime: string;
   date: string;
-  time?: string;
   status: 'scheduled' | 'completed' | 'cancelled';
 }

@@ -30,3 +30,11 @@ export interface KitchenOrder {
   server_name: string;
   status: KitchenOrderStatus;
 }
+
+export interface Ingredient {
+  id: number;
+  name: string;
+  current_stock: number;
+  minimum_stock: number;
+  unit: string;
+}
