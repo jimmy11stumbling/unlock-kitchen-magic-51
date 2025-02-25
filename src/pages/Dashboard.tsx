@@ -23,11 +23,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useNotifications } from "@/hooks/useNotifications";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
+import { NotificationsProvider } from "@/hooks/useNotifications";
 
 const Dashboard = () => {
   const location = useLocation();
   const currentTab = location.pathname.split('/')[2] || 'overview';
+  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,22 +53,54 @@ const Dashboard = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-600 rounded-full" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-600 rounded-full flex items-center justify-center text-xs text-white">
+                      {unreadCount}
+                    </span>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuItem className="cursor-pointer">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-medium">New Order</span>
-                    <span className="text-sm text-muted-foreground">Table 5 placed a new order</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-medium">Low Inventory Alert</span>
-                    <span className="text-sm text-muted-foreground">Wine stock running low</span>
-                  </div>
-                </DropdownMenuItem>
+                <div className="flex items-center justify-between px-4 py-2 border-b">
+                  <h4 className="font-semibold">Notifications</h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={markAllAsRead}
+                    className="text-xs"
+                  >
+                    Mark all as read
+                  </Button>
+                </div>
+                <ScrollArea className="h-[300px]">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      No notifications
+                    </div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className="p-4 cursor-pointer"
+                        onClick={() => markAsRead(notification.id)}
+                      >
+                        <div className="flex flex-col gap-1">
+                          <div className="flex justify-between items-start">
+                            <span className={`font-medium ${!notification.read ? 'text-primary' : ''}`}>
+                              {notification.title}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(notification.timestamp, 'HH:mm')}
+                            </span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {notification.message}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </ScrollArea>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -138,4 +176,11 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+// Wrap the dashboard with the notifications provider
+export default function DashboardWithNotifications() {
+  return (
+    <NotificationsProvider>
+      <Dashboard />
+    </NotificationsProvider>
+  );
+}
