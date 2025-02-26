@@ -1,10 +1,9 @@
 
 import { TabsContent } from "@/components/ui/tabs";
-import { PayrollProcessForm } from "../PayrollProcessForm";
-import { PayrollHistory } from "../PayrollHistory";
-import { PayrollSettings } from "../PayrollSettings";
-import type { StaffMember } from "@/types/staff";
-import type { PayrollEntry } from "@/types/staff";
+import { PayrollProcess } from "./PayrollProcess";
+import { PayrollHistory } from "./PayrollHistory";
+import { PayrollSettings } from "./PayrollSettings";
+import type { StaffMember, PayrollEntry } from "@/types/staff";
 
 interface PayrollTabContentProps {
   staff: StaffMember[];
@@ -26,7 +25,7 @@ export const PayrollTabContent = ({
   return (
     <>
       <TabsContent value="process">
-        <PayrollProcessForm
+        <PayrollProcess
           staff={staff}
           selectedStaffId={selectedStaffId}
           onGeneratePayroll={onGeneratePayroll}
@@ -43,8 +42,9 @@ export const PayrollTabContent = ({
 
       <TabsContent value="settings">
         <PayrollSettings
+          staff={staff}
           selectedStaffId={selectedStaffId}
-          onUpdatePayrollSettings={onUpdatePayrollSettings}
+          onUpdateSettings={onUpdatePayrollSettings}
         />
       </TabsContent>
     </>

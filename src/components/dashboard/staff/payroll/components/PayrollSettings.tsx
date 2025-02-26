@@ -1,6 +1,9 @@
 
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { StaffMember } from "@/types/staff";
 
 interface PayrollSettingsProps {
@@ -12,46 +15,90 @@ interface PayrollSettingsProps {
 export const PayrollSettings = ({
   staff,
   selectedStaffId,
-  onUpdateSettings,
+  onUpdateSettings
 }: PayrollSettingsProps) => {
   const selectedStaff = staff.find(s => s.id === selectedStaffId);
+  const [paymentMethod, setPaymentMethod] = useState<"direct_deposit" | "check">("direct_deposit");
+  const [federalTax, setFederalTax] = useState(20);
+  const [stateTax, setStateTax] = useState(5);
+  const [localTax, setLocalTax] = useState(2);
+
+  const handleSaveSettings = async () => {
+    if (!selectedStaffId) return;
+
+    const settings: StaffMember['payrollSettings'] = {
+      paymentMethod,
+      taxWithholding: {
+        federal: federalTax,
+        state: stateTax,
+        local: localTax
+      },
+      benefits: {
+        insurance: "Standard",
+        retirement: "401k",
+        other: []
+      }
+    };
+
+    await onUpdateSettings(selectedStaffId, settings);
+  };
+
+  if (!selectedStaff) {
+    return (
+      <Card className="p-6">
+        <p className="text-muted-foreground">Please select a staff member to view settings</p>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Payroll Settings</h3>
-      {selectedStaffId && (
+    <Card className="p-6 space-y-6">
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold">Payment Settings</h3>
+        <Select value={paymentMethod} onValueChange={(value: "direct_deposit" | "check") => setPaymentMethod(value)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select payment method" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="direct_deposit">Direct Deposit</SelectItem>
+            <SelectItem value="check">Check</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Tax Withholding</h3>
         <div className="grid gap-4">
           <div>
-            <label className="text-sm font-medium">Pay Period</label>
-            <select className="w-full mt-1 p-2 border rounded-md">
-              <option value="weekly">Weekly</option>
-              <option value="biweekly">Bi-weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
+            <label className="text-sm font-medium">Federal Tax (%)</label>
+            <Input
+              type="number"
+              value={federalTax}
+              onChange={(e) => setFederalTax(Number(e.target.value))}
+            />
           </div>
           <div>
-            <label className="text-sm font-medium">Payment Method</label>
-            <select className="w-full mt-1 p-2 border rounded-md">
-              <option value="direct_deposit">Direct Deposit</option>
-              <option value="check">Check</option>
-            </select>
+            <label className="text-sm font-medium">State Tax (%)</label>
+            <Input
+              type="number"
+              value={stateTax}
+              onChange={(e) => setStateTax(Number(e.target.value))}
+            />
           </div>
           <div>
-            <label className="text-sm font-medium">Tax Withholding</label>
-            <div className="grid grid-cols-2 gap-4 mt-1">
-              <Input type="number" placeholder="Federal %" />
-              <Input type="number" placeholder="State %" />
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium">Benefits</label>
-            <div className="grid grid-cols-2 gap-4 mt-1">
-              <Input type="text" placeholder="Insurance Plan" />
-              <Input type="text" placeholder="Retirement Plan" />
-            </div>
+            <label className="text-sm font-medium">Local Tax (%)</label>
+            <Input
+              type="number"
+              value={localTax}
+              onChange={(e) => setLocalTax(Number(e.target.value))}
+            />
           </div>
         </div>
-      )}
-    </div>
+      </div>
+
+      <Button onClick={handleSaveSettings} className="w-full">
+        Save Settings
+      </Button>
+    </Card>
   );
 };
