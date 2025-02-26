@@ -17,19 +17,22 @@ export const useKitchenState = () => {
 
   const parseKitchenItems = (items: Json): KitchenOrderItem[] => {
     if (!Array.isArray(items)) return [];
-    return items.map(item => ({
-      id: Number(item.id),
-      name: String(item.name),
-      quantity: Number(item.quantity),
-      status: item.status as KitchenOrderItem['status'],
-      notes: item.notes as string | undefined,
-      menuItemId: Number(item.menuItemId),
-      startTime: item.startTime as string | undefined,
-      cookingStation: item.cookingStation as string | undefined,
-      assignedChef: item.assignedChef as string | undefined,
-      modifications: item.modifications as string[] | undefined,
-      allergenAlert: Boolean(item.allergenAlert)
-    }));
+    return items.map(item => {
+      const itemData = item as Record<string, Json>;
+      return {
+        id: Number(itemData.id || 0),
+        name: String(itemData.name || ''),
+        quantity: Number(itemData.quantity || 0),
+        status: (itemData.status as string || 'pending') as KitchenOrderItem['status'],
+        notes: itemData.notes as string | undefined,
+        menuItemId: Number(itemData.menuItemId || 0),
+        startTime: itemData.startTime as string | undefined,
+        cookingStation: itemData.cookingStation as string | undefined,
+        assignedChef: itemData.assignedChef as string | undefined,
+        modifications: Array.isArray(itemData.modifications) ? itemData.modifications as string[] : undefined,
+        allergenAlert: Boolean(itemData.allergenAlert)
+      };
+    });
   };
 
   const fetchKitchenOrders = async () => {
