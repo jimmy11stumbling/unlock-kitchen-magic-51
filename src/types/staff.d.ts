@@ -193,6 +193,7 @@ export interface PayrollEntry {
   payPeriodEnd: string;
   regularHours: number;
   overtimeHours: number;
+  regularRate: number;
   grossPay: number;
   totalPay: number;
   deductions: {

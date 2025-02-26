@@ -1,162 +1,156 @@
-
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { CreditCard, DollarSign, Receipt } from "lucide-react";
-import type { PaymentTransaction } from "@/types/staff";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  CreditCard,
+  Wallet,
+  Smartphone,
+  Receipt,
+  Check,
+  Download,
+} from "lucide-react";
 
-interface PaymentPanelProps {
-  payments: PaymentTransaction[];
-  onProcessPayment: (payment: Omit<PaymentTransaction, "id" | "timestamp">) => void;
+interface PaymentTransaction {
+  id: number;
+  orderId: number;
+  amount: number;
+  method: "cash" | "card" | "mobile";
+  status: "pending" | "completed" | "failed" | "refunded";
+  timestamp: string;
 }
 
-export const PaymentPanel = ({ payments, onProcessPayment }: PaymentPanelProps) => {
-  const [newPayment, setNewPayment] = useState({
-    orderId: 0,
-    amount: 0,
-    method: "credit" as PaymentTransaction["method"],
-    status: "pending" as PaymentTransaction["status"],
-  });
+const MOCK_TRANSACTIONS: PaymentTransaction[] = [
+  {
+    id: 1,
+    orderId: 101,
+    amount: 45.50,
+    method: "card",
+    status: "completed",
+    timestamp: "2024-03-23T14:30:00",
+  },
+  {
+    id: 2,
+    orderId: 102,
+    amount: 22.75,
+    method: "cash",
+    status: "completed",
+    timestamp: "2024-03-23T15:00:00",
+  },
+  {
+    id: 3,
+    orderId: 103,
+    amount: 78.20,
+    method: "mobile",
+    status: "completed",
+    timestamp: "2024-03-23T15:30:00",
+  },
+];
 
-  const getStatusColor = (status: PaymentTransaction["status"]) => {
-    switch (status) {
-      case "completed": return "text-green-600";
-      case "pending": return "text-yellow-600";
-      case "failed": return "text-red-600";
-      default: return "text-gray-600";
+export const PaymentPanel = () => {
+  const { toast } = useToast();
+  const [amount, setAmount] = useState<number | "">("");
+  const [orderId, setOrderId] = useState<number | "">("");
+
+  const handlePayment = (method: "cash" | "card" | "mobile") => {
+    const paymentMethod = method;
+
+    if (!amount || !orderId) {
+      toast({
+        title: "Error",
+        description: "Please enter both amount and order ID.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    toast({
+      title: "Payment processed",
+      description: `Payment of $${amount} processed for order #${orderId} via ${paymentMethod}.`,
+    });
+
+    setAmount("");
+    setOrderId("");
   };
 
   return (
-    <Card className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold">Payment Processing</h2>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <DollarSign className="w-4 h-4 mr-2" />
-              New Payment
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Process New Payment</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div>
-                <label className="text-sm font-medium">Order ID</label>
-                <Input
-                  type="number"
-                  value={newPayment.orderId}
-                  onChange={(e) => setNewPayment({ ...newPayment, orderId: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Amount</label>
-                <Input
-                  type="number"
-                  value={newPayment.amount}
-                  onChange={(e) => setNewPayment({ ...newPayment, amount: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Payment Method</label>
-                <Select
-                  value={newPayment.method}
-                  onValueChange={(value: PaymentTransaction["method"]) =>
-                    setNewPayment({ ...newPayment, method: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="credit">Credit Card</SelectItem>
-                    <SelectItem value="debit">Debit Card</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => {
-                  onProcessPayment(newPayment);
-                  setNewPayment({
-                    orderId: 0,
-                    amount: 0,
-                    method: "credit",
-                    status: "pending",
-                  });
-                }}
-              >
-                Process Payment
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+    <Card className="p-6 space-y-4">
+      <h2 className="text-lg font-semibold">Process Payment</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="orderId">Order ID</Label>
+          <Input
+            type="number"
+            id="orderId"
+            placeholder="Enter order ID"
+            value={orderId}
+            onChange={(e) => setOrderId(Number(e.target.value))}
+          />
+        </div>
+        <div>
+          <Label htmlFor="amount">Amount</Label>
+          <Input
+            type="number"
+            id="amount"
+            placeholder="Enter amount"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+          />
+        </div>
       </div>
 
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4">
-            <div className="flex items-center space-x-2">
-              <CreditCard className="w-8 h-8 text-blue-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total Transactions</p>
-                <p className="text-2xl font-bold">{payments.length}</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center space-x-2">
-              <DollarSign className="w-8 h-8 text-green-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold">
-                  ${payments.reduce((sum, payment) => sum + payment.amount, 0).toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center space-x-2">
-              <Receipt className="w-8 h-8 text-purple-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Average Transaction</p>
-                <p className="text-2xl font-bold">
-                  ${(payments.reduce((sum, payment) => sum + payment.amount, 0) / payments.length || 0).toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
+      <div className="flex justify-around">
+        <Button onClick={() => handlePayment("cash")} className="gap-2">
+          <Wallet className="h-4 w-4" />
+          Cash
+        </Button>
+        <Button onClick={() => handlePayment("card")} className="gap-2">
+          <CreditCard className="h-4 w-4" />
+          Card
+        </Button>
+        <Button onClick={() => handlePayment("mobile")} className="gap-2">
+          <Smartphone className="h-4 w-4" />
+          Mobile
+        </Button>
+      </div>
 
+      <div>
+        <h3 className="text-md font-semibold">Recent Transactions</h3>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Transaction ID</TableHead>
               <TableHead>Order ID</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Method</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Timestamp</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payments.map((payment) => (
-              <TableRow key={payment.id}>
-                <TableCell>#{payment.id}</TableCell>
-                <TableCell>#{payment.orderId}</TableCell>
-                <TableCell>${payment.amount.toFixed(2)}</TableCell>
-                <TableCell className="capitalize">{payment.method}</TableCell>
-                <TableCell className={getStatusColor(payment.status)}>
-                  {payment.status}
+            {MOCK_TRANSACTIONS.map((transaction) => (
+              <TableRow key={transaction.id}>
+                <TableCell>{transaction.orderId}</TableCell>
+                <TableCell>${transaction.amount.toFixed(2)}</TableCell>
+                <TableCell>{transaction.method}</TableCell>
+                <TableCell>{transaction.status}</TableCell>
+                <TableCell>{transaction.timestamp}</TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Receipt
+                  </Button>
                 </TableCell>
-                <TableCell>{new Date(payment.timestamp).toLocaleString()}</TableCell>
               </TableRow>
             ))}
           </TableBody>

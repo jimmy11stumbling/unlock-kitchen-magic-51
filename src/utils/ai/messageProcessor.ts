@@ -1,27 +1,51 @@
+type MessageRole = "user" | "assistant";
 
-import type { Message } from "@/types/staff";
-
-export const sanitizeMessage = (message: string): string => {
-  return message.trim();
-};
-
-export const validateMessage = (message: string): boolean => {
-  return message.trim().length > 0;
-};
-
-export const formatMessageHistory = (messages: Message[]): {
-  role: "user" | "assistant";
+interface Message {
+  role: MessageRole;
   content: string;
-}[] => {
-  return messages.map(msg => ({
-    role: msg.role,
-    content: sanitizeMessage(msg.content)
+}
+
+export const processMessages = (messages: Message[]) => {
+  const processedMessages = messages.map(message => ({
+    role: message.role,
+    content: message.content.trim()
   }));
+
+  const lastMessage = processedMessages[processedMessages.length - 1];
+  if (!lastMessage || !lastMessage.content) {
+    throw new Error("Invalid message sequence");
+  }
+
+  return {
+    messages: processedMessages,
+    lastMessage: lastMessage.content
+  };
 };
 
-export const processAssistantResponse = (response: any): string | null => {
-  if (!response?.content?.[0]?.text) {
-    return null;
+export const validateMessage = (message: Message): boolean => {
+  if (!message.content || typeof message.content !== 'string') {
+    return false;
   }
-  return sanitizeMessage(response.content[0].text);
+
+  if (!message.role || !['user', 'assistant'].includes(message.role)) {
+    return false;
+  }
+
+  return true;
+};
+
+export const formatMessage = (role: MessageRole, content: string): Message => {
+  return {
+    role,
+    content: content.trim()
+  };
+};
+
+export const extractUserQuery = (messages: Message[]): string => {
+  const userMessages = messages.filter(msg => msg.role === 'user');
+  return userMessages.length > 0 ? userMessages[userMessages.length - 1].content : '';
+};
+
+export const buildMessageHistory = (messages: Message[], maxLength = 10): Message[] => {
+  return messages.slice(-maxLength);
 };

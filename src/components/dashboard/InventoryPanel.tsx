@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +18,9 @@ export function InventoryPanel({ onAddItem }: InventoryPanelProps) {
     unit: "",
     minQuantity: 0,
     price: 0,
-    category: "ingredients" // Default category
+    category: "ingredients",
+    supplier: "",
+    lastRestocked: new Date().toISOString()
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,7 +33,9 @@ export function InventoryPanel({ onAddItem }: InventoryPanelProps) {
       unit: "",
       minQuantity: 0,
       price: 0,
-      category: "ingredients"
+      category: "ingredients",
+      supplier: "",
+      lastRestocked: new Date().toISOString()
     });
   };
 
@@ -108,6 +111,25 @@ export function InventoryPanel({ onAddItem }: InventoryPanelProps) {
               id="category"
               value={newItem.category}
               onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="supplier">Supplier</Label>
+            <Input
+              id="supplier"
+              value={newItem.supplier}
+              onChange={(e) => setNewItem({ ...newItem, supplier: e.target.value })}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lastRestocked">Last Restocked</Label>
+            <Input
+              id="lastRestocked"
+              type="date"
+              value={newItem.lastRestocked}
+              onChange={(e) => setNewItem({ ...newItem, lastRestocked: e.target.value })}
               required
             />
           </div>

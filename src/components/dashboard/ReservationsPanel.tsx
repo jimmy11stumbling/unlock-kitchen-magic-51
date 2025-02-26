@@ -30,6 +30,8 @@ export const ReservationsPanel = ({
     tableNumber: 1,
     status: "pending",
     notes: "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   });
 
   const handleAddReservation = () => {
@@ -50,6 +52,8 @@ export const ReservationsPanel = ({
         tableNumber: 1,
         status: "pending",
         notes: "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       });
     }
   };

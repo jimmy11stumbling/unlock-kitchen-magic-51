@@ -1,4 +1,3 @@
-
 import type { StaffMember } from "@/types/staff";
 import type { DatabaseStaffMember } from "../types/databaseTypes";
 import type { Json } from "@/integrations/supabase/types";
@@ -83,7 +82,7 @@ export const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMem
       startDate: dbStaff.created_at || new Date().toISOString(),
       department: dbStaff.department || '',
       certifications: Array.isArray(dbStaff.certifications) ? dbStaff.certifications : [],
-      performanceRating: dbStaff.performance_rating || 0,
+      performance_rating: dbStaff.performance_rating || 0,
       notes: dbStaff.notes || '',
       schedule: schedule,
       bankInfo: {
