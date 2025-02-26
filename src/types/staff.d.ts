@@ -91,26 +91,23 @@ export interface KitchenOrderItem {
   id: number;
   name: string;
   quantity: number;
-  status: "pending" | "preparing" | "ready" | "delivered";
   notes?: string;
-  menuItemId: number;
-  startTime?: string;
-  cookingStation?: string;
-  assignedChef?: string;
-  modifications?: string[];
-  allergenAlert?: boolean;
+  status: "pending" | "preparing" | "ready" | "delivered";
 }
 
 export interface KitchenOrder {
   id: number;
-  orderId: number;
-  tableNumber: number;
+  order_id: number;
+  table_number: number;
+  server_name: string;
   items: KitchenOrderItem[];
   status: "pending" | "preparing" | "ready" | "delivered";
   priority: "normal" | "rush" | "high";
-  estimatedDeliveryTime: string;
   notes?: string;
-  createdAt: string;
+  created_at: string;
+  updated_at: string;
+  estimated_delivery_time: string;
+  coursing: string;
 }
 
 export interface MenuItem {

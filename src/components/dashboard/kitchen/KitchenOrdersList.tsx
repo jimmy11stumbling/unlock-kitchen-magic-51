@@ -7,7 +7,7 @@ import type { KitchenOrder } from "@/types/staff";
 
 interface KitchenOrdersListProps {
   orders: KitchenOrder[];
-  onUpdateStatus: (orderId: number, status: string) => void;
+  onUpdateStatus: (orderId: number, status: "pending" | "preparing" | "ready" | "delivered") => void;
 }
 
 export const KitchenOrdersList = ({ orders, onUpdateStatus }: KitchenOrdersListProps) => {
@@ -15,12 +15,12 @@ export const KitchenOrdersList = ({ orders, onUpdateStatus }: KitchenOrdersListP
     switch (status) {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "in_progress":
+      case "preparing":
         return "bg-blue-100 text-blue-800";
-      case "completed":
+      case "ready":
         return "bg-green-100 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
+      case "delivered":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -38,7 +38,7 @@ export const KitchenOrdersList = ({ orders, onUpdateStatus }: KitchenOrdersListP
             <div>
               <h3 className="font-semibold">Order #{order.id}</h3>
               <p className="text-sm text-muted-foreground">
-                Table {order.tableNumber} • {order.serverName}
+                Table {order.table_number} • {order.server_name}
               </p>
             </div>
             <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
@@ -64,24 +64,24 @@ export const KitchenOrdersList = ({ orders, onUpdateStatus }: KitchenOrdersListP
               {order.status === "pending" && (
                 <Button 
                   className="flex-1"
-                  onClick={() => onUpdateStatus(order.id, "in_progress")}
+                  onClick={() => onUpdateStatus(order.id, "preparing")}
                 >
                   Start Preparing
                 </Button>
               )}
-              {order.status === "in_progress" && (
+              {order.status === "preparing" && (
                 <Button 
                   className="flex-1"
-                  onClick={() => onUpdateStatus(order.id, "completed")}
+                  onClick={() => onUpdateStatus(order.id, "ready")}
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Complete Order
                 </Button>
               )}
-              {["pending", "in_progress"].includes(order.status) && (
+              {["pending", "preparing"].includes(order.status) && (
                 <Button 
                   variant="outline"
-                  onClick={() => onUpdateStatus(order.id, "cancelled")}
+                  onClick={() => onUpdateStatus(order.id, "delivered")}
                 >
                   <XCircle className="h-4 w-4" />
                 </Button>

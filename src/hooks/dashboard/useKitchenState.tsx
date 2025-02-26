@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { KitchenOrder } from "@/types/staff";
@@ -9,7 +8,6 @@ export const useKitchenState = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch kitchen orders
   const { data: kitchenOrders = [], isLoading } = useQuery({
     queryKey: ['kitchenOrders'],
     queryFn: async () => {
@@ -19,16 +17,18 @@ export const useKitchenState = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as KitchenOrder[];
     }
   });
 
-  // Update order status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ orderId, status }: { orderId: number, status: string }) => {
+    mutationFn: async ({ orderId, status }: { orderId: number, status: KitchenOrder["status"] }) => {
       const { data, error } = await supabase
         .from('kitchen_orders')
-        .update({ status, updated_at: new Date().toISOString() })
+        .update({ 
+          status, 
+          updated_at: new Date().toISOString()
+        })
         .eq('id', orderId)
         .select()
         .single();
@@ -52,12 +52,18 @@ export const useKitchenState = () => {
     }
   });
 
-  // Create new kitchen order mutation
   const createOrderMutation = useMutation({
-    mutationFn: async (order: Omit<KitchenOrder, "id">) => {
+    mutationFn: async (order: Omit<KitchenOrder, "id" | "created_at" | "updated_at">) => {
+      const now = new Date().toISOString();
+      const newOrder = {
+        ...order,
+        created_at: now,
+        updated_at: now
+      };
+
       const { data, error } = await supabase
         .from('kitchen_orders')
-        .insert([order])
+        .insert([newOrder])
         .select()
         .single();
 
@@ -83,9 +89,9 @@ export const useKitchenState = () => {
   return {
     kitchenOrders,
     isLoading,
-    updateKitchenOrderStatus: (orderId: number, status: string) =>
+    updateKitchenOrderStatus: (orderId: number, status: KitchenOrder["status"]) =>
       updateStatusMutation.mutate({ orderId, status }),
-    createKitchenOrder: (order: Omit<KitchenOrder, "id">) =>
+    createKitchenOrder: (order: Omit<KitchenOrder, "id" | "created_at" | "updated_at">) =>
       createOrderMutation.mutate(order),
   };
 };

@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Select, 
   SelectContent, 
@@ -13,14 +12,15 @@ import { Clock, Users, ChefHat } from "lucide-react";
 import { KitchenOrdersList } from "@/components/dashboard/kitchen/KitchenOrdersList";
 import { useDashboardState } from "@/hooks/useDashboardState";
 import { useToast } from "@/components/ui/use-toast";
+import type { KitchenOrder } from "@/types/staff";
 
 const Kitchen = () => {
   const { kitchenOrders, updateKitchenOrderStatus, staff } = useDashboardState();
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<KitchenOrder["status"] | "all">("all");
   const { toast } = useToast();
 
   const activeStaff = staff.filter(member => 
-    member.status === "active" && member.role === "kitchen_staff"
+    member.status === "active" && member.role === "chef"
   );
 
   const filteredOrders = kitchenOrders.filter(order => 
@@ -28,14 +28,14 @@ const Kitchen = () => {
   );
 
   const averagePreparationTime = kitchenOrders
-    .filter(order => order.status === "completed")
+    .filter(order => order.status === "ready")
     .reduce((acc, order) => {
       const start = new Date(order.created_at).getTime();
       const end = new Date(order.updated_at).getTime();
       return acc + (end - start);
-    }, 0) / (kitchenOrders.filter(order => order.status === "completed").length || 1);
+    }, 0) / (kitchenOrders.filter(order => order.status === "ready").length || 1);
 
-  const handleStatusUpdate = (orderId: number, status: string) => {
+  const handleStatusUpdate = (orderId: number, status: KitchenOrder["status"]) => {
     updateKitchenOrderStatus(orderId, status);
     toast({
       title: "Order Status Updated",
@@ -58,7 +58,7 @@ const Kitchen = () => {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Active Orders</p>
               <h3 className="text-2xl font-bold">
-                {kitchenOrders.filter(o => ["pending", "in_progress"].includes(o.status)).length}
+                {kitchenOrders.filter(o => ["pending", "preparing"].includes(o.status)).length}
               </h3>
             </div>
             <Clock className="h-8 w-8 text-primary/20" />
@@ -91,16 +91,16 @@ const Kitchen = () => {
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-semibold">Orders Queue</h2>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(value: KitchenOrder["status"] | "all") => setStatusFilter(value)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Orders</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="preparing">Preparing</SelectItem>
+              <SelectItem value="ready">Ready</SelectItem>
+              <SelectItem value="delivered">Delivered</SelectItem>
             </SelectContent>
           </Select>
         </div>
