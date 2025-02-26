@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Database types that match the actual schema
+// Simple, flat types without nesting to avoid type instantiation depth issues
 type DbStaffMember = {
   id: number;
   name: string;
@@ -14,25 +14,12 @@ type DbStaffMember = {
   role: string;
 };
 
-type DbKitchenOrder = {
+type SimpleKitchenOrder = {
   id: number;
-  coursing: string;
+  status: string;
   created_at: string;
   updated_at: string;
   estimated_delivery_time: string;
-  items: unknown;
-  notes: string | null;
-  order_id: number | null;
-  priority: string;
-  server_name: string | null;
-  status: string;
-  table_number: number | null;
-};
-
-type OrderMetrics = {
-  completed: number;
-  avgPrepTime: number;
-  onTimeRate: number;
 };
 
 type StaffMetrics = {
@@ -54,56 +41,47 @@ export function StaffPerformanceTracker() {
     return () => clearInterval(interval);
   }, []);
 
-  const calculateOrderMetrics = (orders: DbKitchenOrder[]): OrderMetrics => {
-    const completedOrders = orders.filter(order => order.status === 'delivered');
-    const onTimeOrders = completedOrders.filter(order => {
-      const completionTime = new Date(order.updated_at);
-      const estimatedTime = new Date(order.estimated_delivery_time);
-      return completionTime <= estimatedTime;
+  // Simplified calculation function with basic types
+  const calculateMetrics = (orders: SimpleKitchenOrder[]) => {
+    const completed = orders.filter(order => order.status === 'delivered');
+    const onTime = completed.filter(order => {
+      return new Date(order.updated_at) <= new Date(order.estimated_delivery_time);
     });
 
-    const totalTime = completedOrders.reduce((acc, curr) => {
-      const start = new Date(curr.created_at);
-      const end = new Date(curr.updated_at);
-      return acc + (end.getTime() - start.getTime()) / (1000 * 60);
+    const totalMinutes = completed.reduce((acc, curr) => {
+      const start = new Date(curr.created_at).getTime();
+      const end = new Date(curr.updated_at).getTime();
+      return acc + (end - start) / (1000 * 60);
     }, 0);
 
     return {
-      completed: completedOrders.length,
-      avgPrepTime: completedOrders.length ? totalTime / completedOrders.length : 0,
-      onTimeRate: completedOrders.length ? (onTimeOrders.length / completedOrders.length) * 100 : 100
+      completed: completed.length,
+      avgPrepTime: completed.length ? totalMinutes / completed.length : 0,
+      onTimeRate: completed.length ? (onTime.length / completed.length) * 100 : 100
     };
   };
 
   const fetchStaffMetrics = async () => {
     try {
-      // Get all chef staff members
-      const { data: staffData, error: staffError } = await supabase
+      const { data: chefs, error: staffError } = await supabase
         .from('staff_members')
         .select('id, name, performance_rating, role')
         .eq('role', 'chef');
 
       if (staffError) throw staffError;
-      if (!staffData?.length) return;
+      if (!chefs || chefs.length === 0) return;
 
-      const chefs = staffData as Array<{
-        id: number;
-        name: string;
-        performance_rating: number;
-        role: string;
-      }>;
-
-      // Get orders for each chef and calculate metrics
+      // Process chefs sequentially to avoid Promise.all type depth issues
       const metrics: StaffMetrics[] = [];
-      
+
       for (const chef of chefs) {
-        const { data: orderData } = await supabase
+        const { data: orders } = await supabase
           .from('kitchen_orders')
           .select('id, status, created_at, updated_at, estimated_delivery_time')
           .eq('assigned_chef', chef.id);
 
-        const orders = orderData || [];
-        const orderMetrics = calculateOrderMetrics(orders as DbKitchenOrder[]);
+        // Calculate metrics with simplified order type
+        const orderMetrics = calculateMetrics(orders as SimpleKitchenOrder[] || []);
 
         metrics.push({
           id: chef.id,
