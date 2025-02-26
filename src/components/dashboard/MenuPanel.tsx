@@ -1,10 +1,9 @@
-
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { Image, Plus, Table as TableIcon } from "lucide-react";
-import { useState } from "react";
 import type { MenuItem } from "@/types/staff";
 import type { MenuPanelProps, MenuItemFormData } from "./menu/types";
 import { MenuItemForm } from "./menu/MenuItemForm";
@@ -105,14 +104,23 @@ export const MenuPanel = ({
         </div>
 
         <MenuSearchFilters
-          searchQuery={searchQuery}
+          searchTerm={searchQuery}
           onSearchChange={setSearchQuery}
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          availabilityFilter={availabilityFilter}
-          onAvailabilityChange={setAvailabilityFilter}
+          categories={["appetizer", "main", "dessert", "beverage"]}
+          onAddItem={() => {
+            if (!newItem.name || newItem.price <= 0) {
+              toast({
+                title: "Validation Error",
+                description: "Please fill in all required fields.",
+                variant: "destructive",
+              });
+              return;
+            }
+            onAddMenuItem(newItem);
+            setNewItem(defaultMenuItem);
+          }}
         />
 
         <div className="flex justify-end items-center mb-4 mt-4">
@@ -137,16 +145,16 @@ export const MenuPanel = ({
         {viewMode === "grid" ? (
           <MenuItemGrid
             items={filteredItems}
+            onEdit={(item) => onUpdateMenuItem(item.id, item)}
+            onDelete={onDeleteMenuItem}
             onUpdateAvailability={onUpdateAvailability}
-            onUpdateMenuItem={onUpdateMenuItem}
-            onDeleteMenuItem={onDeleteMenuItem}
           />
         ) : (
           <MenuItemTable
             items={filteredItems}
+            onEdit={(item) => onUpdateMenuItem(item.id, item)}
+            onDelete={onDeleteMenuItem}
             onUpdateAvailability={onUpdateAvailability}
-            onUpdateMenuItem={onUpdateMenuItem}
-            onDeleteMenuItem={onDeleteMenuItem}
           />
         )}
 

@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import type { MenuItem } from "@/types/staff";
 
 interface MenuSearchFiltersProps {
@@ -10,7 +10,7 @@ interface MenuSearchFiltersProps {
   onSearchChange: (value: string) => void;
   selectedCategory: string;
   onCategoryChange: (value: string) => void;
-  categories: string[];
+  categories: MenuItem["category"][];
   onAddItem: () => void;
 }
 
