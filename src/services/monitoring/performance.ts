@@ -1,7 +1,7 @@
 
 interface PerformanceMetric {
   name: string;
-  value: number;
+  value: number | Record<string, any>;
   timestamp: number;
   tags?: Record<string, string>;
 }
@@ -64,7 +64,7 @@ class PerformanceMonitor {
     }
   }
 
-  recordMetric(name: string, value: number, tags?: Record<string, string>): void {
+  recordMetric(name: string, value: number | Record<string, any>, tags?: Record<string, string>): void {
     const metric: PerformanceMetric = {
       name,
       value,
@@ -74,6 +74,10 @@ class PerformanceMonitor {
 
     this.metrics.push(metric);
     this.notifyObservers(metric);
+  }
+
+  trackCustomMetric(name: string, value: number): void {
+    this.recordMetric(name, value);
   }
 
   private notifyObservers(metric: PerformanceMetric): void {
@@ -117,20 +121,20 @@ class PerformanceMonitor {
 
     // Calculate FCP (First Contentful Paint)
     const fcp = metrics.find(m => m.name === 'first-contentful-paint');
-    if (fcp) {
+    if (fcp && typeof fcp.value === 'number') {
       result.firstContentfulPaint = fcp.value;
     }
 
     // Calculate CLS (Cumulative Layout Shift)
     const cls = metrics
-      .filter(m => m.name === 'layout-shift')
-      .reduce((sum, m) => sum + m.value, 0);
+      .filter(m => m.name === 'layout-shift' && typeof m.value === 'number')
+      .reduce((sum, m) => sum + (m.value as number), 0);
     result.cumulativeLayoutShift = cls;
 
     // Calculate average long task duration
-    const longTasks = metrics.filter(m => m.name === 'long-task');
+    const longTasks = metrics.filter(m => m.name === 'long-task' && typeof m.value === 'number');
     if (longTasks.length > 0) {
-      result.averageLongTaskDuration = longTasks.reduce((sum, m) => sum + m.value, 0) / longTasks.length;
+      result.averageLongTaskDuration = longTasks.reduce((sum, m) => sum + (m.value as number), 0) / longTasks.length;
     }
 
     return result;

@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { useEffect } from "react";
 import { performanceMonitor } from "@/services/monitoring/performance";
+import { analytics } from "@/services/analytics/analytics";
 import { logger } from "@/services/logging/logger";
 import { i18n } from "@/services/i18n/i18n";
 import { MetaTags } from "@/components/seo/MetaTags";
@@ -19,7 +20,8 @@ function App() {
   useEffect(() => {
     // Initialize services
     logger.info('Application started');
-    performanceMonitor.trackCustomMetric('app_init', performance.now());
+    performanceMonitor.recordMetric('app_init', performance.now());
+    analytics.initialize();
 
     // Initialize language from preference
     const preferredLanguage = localStorage.getItem('preferred-language');
