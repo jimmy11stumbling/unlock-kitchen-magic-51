@@ -15,14 +15,13 @@ interface StaffMetrics {
   qualityRating: number;
 }
 
-type DbStaffMember = {
+interface StaffMember {
   id: number;
   name: string;
   performance_rating: number;
 }
 
-type DbKitchenOrder = {
-  id: number;
+interface KitchenOrder {
   status: string;
   created_at: string;
   updated_at: string;
@@ -39,55 +38,58 @@ export function StaffPerformanceTracker() {
     return () => clearInterval(interval);
   }, []);
 
+  const calculateOrderMetrics = (orders: KitchenOrder[]) => {
+    const completedOrders = orders.filter(order => order.status === 'delivered');
+    const onTimeOrders = completedOrders.filter(order => {
+      const completionTime = new Date(order.updated_at);
+      const estimatedTime = new Date(order.estimated_delivery_time);
+      return completionTime <= estimatedTime;
+    });
+
+    const avgPrepTime = completedOrders.length ?
+      completedOrders.reduce((acc, curr) => {
+        const start = new Date(curr.created_at);
+        const end = new Date(curr.updated_at);
+        return acc + (end.getTime() - start.getTime()) / (1000 * 60);
+      }, 0) / completedOrders.length : 0;
+
+    return {
+      completed: completedOrders.length,
+      avgPrepTime,
+      onTimeRate: completedOrders.length ? (onTimeOrders.length / completedOrders.length) * 100 : 100
+    };
+  };
+
   const fetchStaffMetrics = async () => {
     try {
       const { data: staffMembers, error: staffError } = await supabase
         .from('staff_members')
-        .select('*')
+        .select('id, name, performance_rating')
         .eq('role', 'chef');
 
-      if (staffError) {
-        throw staffError;
-      }
+      if (staffError) throw staffError;
+      if (!staffMembers) return;
 
-      if (!staffMembers) {
-        return;
-      }
+      const metrics = await Promise.all(
+        staffMembers.map(async (staff: StaffMember) => {
+          const { data: orders } = await supabase
+            .from('kitchen_orders')
+            .select('status, created_at, updated_at, estimated_delivery_time')
+            .eq('assigned_chef', staff.id);
 
-      const metricsPromises = staffMembers.map(async (staff: DbStaffMember) => {
-        const { data: orders } = await supabase
-          .from('kitchen_orders')
-          .select('*')
-          .eq('assigned_chef', staff.id);
+          const orderMetrics = calculateOrderMetrics(orders || []);
 
-        const completedOrders = (orders || []).filter((order: DbKitchenOrder) => order.status === 'delivered');
-        const onTimeOrders = completedOrders.filter((order: DbKitchenOrder) => {
-          const completionTime = new Date(order.updated_at);
-          const estimatedTime = new Date(order.estimated_delivery_time);
-          return completionTime <= estimatedTime;
-        });
+          return {
+            id: staff.id,
+            name: staff.name,
+            ordersCompleted: orderMetrics.completed,
+            averagePreparationTime: orderMetrics.avgPrepTime,
+            onTimeDeliveryRate: orderMetrics.onTimeRate,
+            qualityRating: staff.performance_rating || 0
+          };
+        })
+      );
 
-        const avgPrepTime = completedOrders.length ?
-          completedOrders.reduce((acc, curr: DbKitchenOrder) => {
-            const start = new Date(curr.created_at);
-            const end = new Date(curr.updated_at);
-            return acc + (end.getTime() - start.getTime()) / (1000 * 60);
-          }, 0) / completedOrders.length : 0;
-
-        const metric: StaffMetrics = {
-          id: staff.id,
-          name: staff.name,
-          ordersCompleted: completedOrders.length,
-          averagePreparationTime: avgPrepTime,
-          onTimeDeliveryRate: completedOrders.length ?
-            (onTimeOrders.length / completedOrders.length) * 100 : 100,
-          qualityRating: staff.performance_rating || 0
-        };
-
-        return metric;
-      });
-
-      const metrics = await Promise.all(metricsPromises);
       setStaffMetrics(metrics);
     } catch (error) {
       console.error('Error fetching staff metrics:', error);
