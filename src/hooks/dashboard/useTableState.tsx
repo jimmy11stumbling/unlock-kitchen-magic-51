@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import type { TableLayout, Order, MenuItem, KitchenOrder, KitchenOrderItem } from "@/types/staff";
 
@@ -63,28 +62,29 @@ export const useTableState = () => {
     const createKitchenOrder = (orderId: number, items: any[]) => {
       const kitchenItems: KitchenOrderItem[] = items.map((item, index) => ({
         id: index + 1,
-        name: `Item ${item.menuItemId}`,
-        menuItemId: item.menuItemId,
+        menu_item_id: item.id,
+        name: item.name,
         quantity: item.quantity,
         status: "pending",
-        cookingStation: item.cookingStation || "grill",
-        assignedChef: item.assignedChef || "",
-        modifications: item.modifications || [],
-        allergenAlert: item.allergenAlert || false
+        cooking_station: item.station || "grill",
+        notes: item.notes
       }));
 
-      const kitchenOrder: KitchenOrder = {
-        id: kitchenOrders.length + 1,
-        orderId: order.id,
-        tableNumber: order.tableNumber,
+      const order: KitchenOrder = {
+        id: Math.floor(Math.random() * 1000),
+        order_id: orderId,
+        table_number: order.tableNumber,
+        server_name: "Server",
         items: kitchenItems,
         status: "pending",
         priority: "normal",
-        estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString(),
-        createdAt: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        estimated_delivery_time: new Date(Date.now() + 30 * 60000).toISOString(),
+        coursing: "standard"
       };
 
-      setKitchenOrders([...kitchenOrders, kitchenOrder]);
+      setKitchenOrders([...kitchenOrders, order]);
       setOrders(orders.map(o => 
         o.id === orderId ? { ...o, status: "preparing" } : o
       ));
