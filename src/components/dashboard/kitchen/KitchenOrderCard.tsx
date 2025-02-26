@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Clock, ChefHat, AlertTriangle, Flag, Timer } from "lucide-react";
 import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
+import { CoursePlannerDialog } from "./CoursePlannerDialog";
+import { RecipeInstructionsDialog } from "./RecipeInstructionsDialog";
+import { OrderModificationLog } from "./OrderModificationLog";
+import { TemperatureMonitor } from "./TemperatureMonitor";
 
 interface KitchenOrderCardProps {
   order: KitchenOrder;
@@ -31,6 +34,7 @@ export function KitchenOrderCard({
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [chefName, setChefName] = useState("");
   const [notes, setNotes] = useState(order.notes || "");
+  const [showModifications, setShowModifications] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -75,6 +79,18 @@ export function KitchenOrderCard({
       </div>
 
       <div className="space-y-4">
+        <div className="flex gap-2">
+          <CoursePlannerDialog 
+            order={order}
+            onUpdateCoursing={(orderId, itemId, course) => {
+              console.log('Updating course:', { orderId, itemId, course });
+            }}
+          />
+          <Button variant="outline" onClick={() => setShowModifications(true)}>
+            View History
+          </Button>
+        </div>
+
         {order.items.map((item) => (
           <div 
             key={item.id}
@@ -169,6 +185,19 @@ export function KitchenOrderCard({
                 </Button>
               )}
             </div>
+
+            {item.allergens?.length > 0 && (
+              <div className="mt-2 p-2 bg-red-50 rounded flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+                <span className="text-sm text-red-700">
+                  Allergens: {item.allergens.join(", ")}
+                </span>
+              </div>
+            )}
+
+            <div className="mt-2">
+              <RecipeInstructionsDialog item={item} />
+            </div>
           </div>
         ))}
 
@@ -176,6 +205,10 @@ export function KitchenOrderCard({
           <Clock className="h-4 w-4" />
           <span>Ordered at {new Date(order.created_at).toLocaleTimeString()}</span>
         </div>
+
+        {order.items.some(item => item.status === "preparing") && (
+          <TemperatureMonitor stationId={order.items[0].cooking_station || "main"} />
+        )}
 
         <div className="flex gap-2">
           <Dialog>
@@ -224,6 +257,26 @@ export function KitchenOrderCard({
           )}
         </div>
       </div>
+
+      <Dialog open={showModifications} onOpenChange={setShowModifications}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Order #{order.order_id} History</DialogTitle>
+          </DialogHeader>
+          <OrderModificationLog
+            modifications={[
+              {
+                id: 1,
+                timestamp: new Date().toISOString(),
+                type: 'status',
+                user: 'John Chef',
+                details: 'Changed status to preparing'
+              },
+              // Add more modification entries as needed
+            ]}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
