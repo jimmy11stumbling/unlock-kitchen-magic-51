@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Base database types
+// Database types that match the actual schema
 type DbStaffMember = {
   id: number;
   name: string;
@@ -16,11 +16,17 @@ type DbStaffMember = {
 
 type DbKitchenOrder = {
   id: number;
-  status: string;
+  coursing: string;
   created_at: string;
   updated_at: string;
   estimated_delivery_time: string;
-  assigned_chef: number;
+  items: unknown;
+  notes: string | null;
+  order_id: number | null;
+  priority: string;
+  server_name: string | null;
+  status: string;
+  table_number: number | null;
 };
 
 // Simplified metrics types
@@ -72,32 +78,28 @@ export function StaffPerformanceTracker() {
 
   const fetchStaffMetrics = async () => {
     try {
-      // Get all chef staff members
-      const staffResult = await supabase
+      const { data: chefs, error: staffError } = await supabase
         .from('staff_members')
-        .select('*')
+        .select()
         .eq('role', 'chef');
 
-      if (staffResult.error) throw staffResult.error;
-      const chefs = staffResult.data as DbStaffMember[];
-      if (!chefs.length) return;
+      if (staffError) throw staffError;
+      if (!chefs) return;
 
-      // Get orders for each chef
-      const metricsPromises = chefs.map(async (chef) => {
-        const ordersResult = await supabase
+      const metricsPromises = (chefs as DbStaffMember[]).map(async (chef) => {
+        const { data: orders } = await supabase
           .from('kitchen_orders')
-          .select('*')
+          .select()
           .eq('assigned_chef', chef.id);
 
-        const orders = ordersResult.data as DbKitchenOrder[] || [];
-        const metrics = calculateOrderMetrics(orders);
+        const orderMetrics = calculateOrderMetrics(orders as DbKitchenOrder[] || []);
 
         const staffMetric: StaffMetrics = {
           id: chef.id,
           name: chef.name,
-          ordersCompleted: metrics.completed,
-          averagePreparationTime: metrics.avgPrepTime,
-          onTimeDeliveryRate: metrics.onTimeRate,
+          ordersCompleted: orderMetrics.completed,
+          averagePreparationTime: orderMetrics.avgPrepTime,
+          onTimeDeliveryRate: orderMetrics.onTimeRate,
           qualityRating: chef.performance_rating || 0
         };
 
