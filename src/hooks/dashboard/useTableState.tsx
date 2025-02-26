@@ -59,7 +59,7 @@ export const useTableState = () => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
-    const createKitchenOrder = (orderId: number, items: any[]) => {
+    const createKitchenOrder = (orderId: number, tableNumber: number, items: any[]) => {
       const kitchenItems: KitchenOrderItem[] = items.map((item, index) => ({
         id: index + 1,
         menu_item_id: item.id,
@@ -73,7 +73,7 @@ export const useTableState = () => {
       const order: KitchenOrder = {
         id: Math.floor(Math.random() * 1000),
         order_id: orderId,
-        table_number: order.tableNumber,
+        table_number: tableNumber,
         server_name: "Server",
         items: kitchenItems,
         status: "pending",
@@ -90,7 +90,7 @@ export const useTableState = () => {
       ));
     };
 
-    createKitchenOrder(orderId, order.items);
+    createKitchenOrder(orderId, order.tableNumber, order.items);
   };
 
   const getTableOrders = () => {

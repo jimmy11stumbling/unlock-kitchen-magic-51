@@ -18,22 +18,21 @@ export const useKitchenState = () => {
 
       if (error) throw error;
 
-      // Transform the data to match our frontend types
-      return (data as any[]).map(order => ({
+      return (data || []).map((order: any) => ({
         ...order,
         items: Array.isArray(order.items) ? order.items.map((item: any) => ({
           id: item.id,
           name: item.name,
           quantity: item.quantity,
-          notes: item.notes,
           status: item.status,
+          notes: item.notes,
           menu_item_id: item.menu_item_id,
-          start_time: item.start_time,
-          completion_time: item.completion_time,
           cooking_station: item.cooking_station,
           assigned_chef: item.assigned_chef,
           modifications: item.modifications,
-          allergen_alert: item.allergen_alert
+          allergen_alert: item.allergen_alert,
+          start_time: item.start_time,
+          completion_time: item.completion_time
         })) : []
       })) as KitchenOrder[];
     }
@@ -41,31 +40,25 @@ export const useKitchenState = () => {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: number, status: KitchenOrder["status"] }) => {
-      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('kitchen_orders')
         .update({ 
-          status,
-          updated_at: now,
+          status, 
+          updated_at: new Date().toISOString()
         })
         .eq('id', orderId)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kitchenOrders'] });
-      toast({
-        title: "Order Updated",
-        description: "The order status has been updated successfully.",
-      });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
-        description: "Failed to update order status.",
+        description: "Failed to update order status",
         variant: "destructive",
       });
     }
@@ -74,17 +67,23 @@ export const useKitchenState = () => {
   const createOrderMutation = useMutation({
     mutationFn: async (orderData: Omit<KitchenOrder, "id" | "created_at" | "updated_at">) => {
       const now = new Date().toISOString();
-      const newOrder = {
-        ...orderData,
+      const dbOrder = {
+        items: orderData.items,
+        status: orderData.status,
+        priority: orderData.priority,
+        notes: orderData.notes,
+        server_name: orderData.server_name,
+        table_number: orderData.table_number,
+        order_id: orderData.order_id,
+        coursing: orderData.coursing,
         created_at: now,
         updated_at: now,
-        estimated_delivery_time: orderData.estimated_delivery_time || now,
-        coursing: orderData.coursing || 'standard'
+        estimated_delivery_time: orderData.estimated_delivery_time
       };
 
       const { data, error } = await supabase
         .from('kitchen_orders')
-        .insert([newOrder])
+        .insert([dbOrder])
         .select()
         .single();
 
@@ -94,15 +93,8 @@ export const useKitchenState = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kitchenOrders'] });
       toast({
-        title: "Order Created",
-        description: "New kitchen order has been created.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create kitchen order.",
-        variant: "destructive",
+        title: "Success",
+        description: "Kitchen order created successfully",
       });
     }
   });
@@ -113,6 +105,6 @@ export const useKitchenState = () => {
     updateKitchenOrderStatus: (orderId: number, status: KitchenOrder["status"]) =>
       updateStatusMutation.mutate({ orderId, status }),
     createKitchenOrder: (order: Omit<KitchenOrder, "id" | "created_at" | "updated_at">) =>
-      createOrderMutation.mutate(order),
+      createOrderMutation.mutate(order)
   };
 };
