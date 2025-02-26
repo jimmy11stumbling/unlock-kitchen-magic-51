@@ -43,7 +43,7 @@ export function StaffPerformanceTracker() {
     try {
       const { data: staffMembers, error: staffError } = await supabase
         .from('staff_members')
-        .select<'staff_members', DbStaffMember>('id, name, performance_rating')
+        .select('*')
         .eq('role', 'chef');
 
       if (staffError) {
@@ -54,27 +54,27 @@ export function StaffPerformanceTracker() {
         return;
       }
 
-      const metricsPromises = staffMembers.map(async (staff) => {
+      const metricsPromises = staffMembers.map(async (staff: DbStaffMember) => {
         const { data: orders } = await supabase
           .from('kitchen_orders')
-          .select<'kitchen_orders', DbKitchenOrder>('id, status, created_at, updated_at, estimated_delivery_time')
+          .select('*')
           .eq('assigned_chef', staff.id);
 
-        const completedOrders = (orders || []).filter(order => order.status === 'delivered');
-        const onTimeOrders = completedOrders.filter(order => {
+        const completedOrders = (orders || []).filter((order: DbKitchenOrder) => order.status === 'delivered');
+        const onTimeOrders = completedOrders.filter((order: DbKitchenOrder) => {
           const completionTime = new Date(order.updated_at);
           const estimatedTime = new Date(order.estimated_delivery_time);
           return completionTime <= estimatedTime;
         });
 
         const avgPrepTime = completedOrders.length ?
-          completedOrders.reduce((acc, curr) => {
+          completedOrders.reduce((acc, curr: DbKitchenOrder) => {
             const start = new Date(curr.created_at);
             const end = new Date(curr.updated_at);
             return acc + (end.getTime() - start.getTime()) / (1000 * 60);
           }, 0) / completedOrders.length : 0;
 
-        return {
+        const metric: StaffMetrics = {
           id: staff.id,
           name: staff.name,
           ordersCompleted: completedOrders.length,
@@ -83,6 +83,8 @@ export function StaffPerformanceTracker() {
             (onTimeOrders.length / completedOrders.length) * 100 : 100,
           qualityRating: staff.performance_rating || 0
         };
+
+        return metric;
       });
 
       const metrics = await Promise.all(metricsPromises);
