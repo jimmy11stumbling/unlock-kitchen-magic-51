@@ -5,7 +5,27 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { PostgrestSingleResponse } from "@supabase/supabase-js";
+
+// Simplified base types to avoid deep nesting
+interface BaseStaffMember {
+  id: number;
+  name: string;
+  performance_rating: number;
+}
+
+interface BaseKitchenOrder {
+  status: string;
+  created_at: string;
+  updated_at: string;
+  estimated_delivery_time: string;
+}
+
+// Final metrics types
+interface OrderMetrics {
+  completed: number;
+  avgPrepTime: number;
+  onTimeRate: number;
+}
 
 interface StaffMetrics {
   id: number;
@@ -16,36 +36,17 @@ interface StaffMetrics {
   qualityRating: number;
 }
 
-interface StaffMember {
-  id: number;
-  name: string;
-  performance_rating: number;
-}
-
-interface KitchenOrder {
-  status: string;
-  created_at: string;
-  updated_at: string;
-  estimated_delivery_time: string;
-}
-
-interface OrderMetrics {
-  completed: number;
-  avgPrepTime: number;
-  onTimeRate: number;
-}
-
 export function StaffPerformanceTracker() {
   const [staffMetrics, setStaffMetrics] = useState<StaffMetrics[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchStaffMetrics();
-    const interval = setInterval(fetchStaffMetrics, 300000);
+    void fetchStaffMetrics();
+    const interval = setInterval(() => void fetchStaffMetrics(), 300000);
     return () => clearInterval(interval);
   }, []);
 
-  const calculateOrderMetrics = (orders: KitchenOrder[]): OrderMetrics => {
+  const calculateOrderMetrics = (orders: BaseKitchenOrder[]): OrderMetrics => {
     const completedOrders = orders.filter(order => order.status === 'delivered');
     const onTimeOrders = completedOrders.filter(order => {
       const completionTime = new Date(order.updated_at);
@@ -53,51 +54,45 @@ export function StaffPerformanceTracker() {
       return completionTime <= estimatedTime;
     });
 
-    const avgPrepTime = completedOrders.length ?
-      completedOrders.reduce((acc, curr) => {
-        const start = new Date(curr.created_at);
-        const end = new Date(curr.updated_at);
-        return acc + (end.getTime() - start.getTime()) / (1000 * 60);
-      }, 0) / completedOrders.length : 0;
+    const totalTime = completedOrders.reduce((acc, curr) => {
+      const start = new Date(curr.created_at);
+      const end = new Date(curr.updated_at);
+      return acc + (end.getTime() - start.getTime()) / (1000 * 60);
+    }, 0);
 
     return {
       completed: completedOrders.length,
-      avgPrepTime,
+      avgPrepTime: completedOrders.length ? totalTime / completedOrders.length : 0,
       onTimeRate: completedOrders.length ? (onTimeOrders.length / completedOrders.length) * 100 : 100
     };
   };
 
   const fetchStaffMetrics = async () => {
     try {
-      const staffResponse = await supabase
+      const { data: staffData, error: staffError } = await supabase
         .from('staff_members')
-        .select('id, name, performance_rating')
+        .select<'staff_members', BaseStaffMember>('id, name, performance_rating')
         .eq('role', 'chef');
 
-      if (staffResponse.error) throw staffResponse.error;
-      if (!staffResponse.data) return;
+      if (staffError) throw staffError;
+      if (!staffData?.length) return;
 
-      const staffMembers = staffResponse.data as StaffMember[];
-
-      const metricsPromises = staffMembers.map(async (staff) => {
-        const ordersResponse = await supabase
+      const metricsPromises = staffData.map(async (staff) => {
+        const { data: ordersData } = await supabase
           .from('kitchen_orders')
-          .select('status, created_at, updated_at, estimated_delivery_time')
+          .select<'kitchen_orders', BaseKitchenOrder>('status, created_at, updated_at, estimated_delivery_time')
           .eq('assigned_chef', staff.id);
 
-        const orders = (ordersResponse.data || []) as KitchenOrder[];
-        const orderMetrics = calculateOrderMetrics(orders);
+        const orderMetrics = calculateOrderMetrics(ordersData || []);
 
-        const metric: StaffMetrics = {
+        return {
           id: staff.id,
           name: staff.name,
           ordersCompleted: orderMetrics.completed,
           averagePreparationTime: orderMetrics.avgPrepTime,
           onTimeDeliveryRate: orderMetrics.onTimeRate,
           qualityRating: staff.performance_rating || 0
-        };
-
-        return metric;
+        } satisfies StaffMetrics;
       });
 
       const metrics = await Promise.all(metricsPromises);
