@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,8 @@ export function KitchenDashboard() {
         title: "Status Updated",
         description: `Order #${orderId} marked as ${status}`,
       });
+
+      fetchOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
       toast({
@@ -127,7 +130,7 @@ export function KitchenDashboard() {
 
   const handleFlag = async (orderId: number) => {
     try {
-      const order = orders.find(o => o.orderId === orderId);
+      const order = orders.find(o => o.id === orderId);
       const newPriority = order?.priority === "high" ? "normal" : "high";
 
       const { error } = await supabase
@@ -141,6 +144,8 @@ export function KitchenDashboard() {
         title: "Priority Updated",
         description: `Order #${orderId} priority set to ${newPriority}`,
       });
+
+      fetchOrders();
     } catch (error) {
       console.error('Error updating order priority:', error);
       toast({
@@ -184,6 +189,8 @@ export function KitchenDashboard() {
           <TabsTrigger value="salad">Salad Station</TabsTrigger>
           <TabsTrigger value="dessert">Dessert Station</TabsTrigger>
           <TabsTrigger value="beverage">Beverage Station</TabsTrigger>
+          <TabsTrigger value="hot">Hot Station</TabsTrigger>
+          <TabsTrigger value="cold">Cold Station</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeStation}>
