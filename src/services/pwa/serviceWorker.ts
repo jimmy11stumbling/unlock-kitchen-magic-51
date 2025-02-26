@@ -1,5 +1,6 @@
 
-declare const self: ServiceWorkerGlobalScope;
+/// <reference lib="webworker" />
+/* eslint-disable no-restricted-globals */
 
 const CACHE_NAME = 'app-cache-v1';
 const OFFLINE_URL = '/offline.html';
