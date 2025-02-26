@@ -6,13 +6,28 @@ import { useToast } from "@/components/ui/use-toast";
 import { ChefHat, Clock, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
+interface KitchenOrderItem {
+  id: number;
+  name: string;
+  quantity: number;
+  status: 'pending' | 'preparing' | 'ready' | 'delivered';
+  notes?: string;
+}
+
 interface KitchenOrder {
   id: number;
   table_number: number;
-  status: string;
+  status: 'pending' | 'preparing' | 'ready' | 'delivered';
   estimated_delivery_time: string;
-  items: any[];
+  items: KitchenOrderItem[];
+  priority: 'normal' | 'rush' | 'high';
+  created_at: string;
+  server_name: string;
 }
+
+type DatabaseKitchenOrder = Omit<KitchenOrder, 'items'> & {
+  items: string;
+};
 
 export function KitchenStatus() {
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
@@ -61,8 +76,14 @@ export function KitchenStatus() {
       return;
     }
 
-    setOrders(data || []);
-    calculateAverageWaitTime(data || []);
+    // Transform the database response into the correct type
+    const transformedOrders: KitchenOrder[] = (data || []).map((order: DatabaseKitchenOrder) => ({
+      ...order,
+      items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items,
+    }));
+
+    setOrders(transformedOrders);
+    calculateAverageWaitTime(transformedOrders);
   };
 
   const calculateAverageWaitTime = (orders: KitchenOrder[]) => {
@@ -78,13 +99,15 @@ export function KitchenStatus() {
     setAverageWaitTime(Math.round(average));
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: KitchenOrder['status']) => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'preparing':
         return 'bg-blue-100 text-blue-800';
-      default:
+      case 'ready':
+        return 'bg-green-100 text-green-800';
+      case 'delivered':
         return 'bg-gray-100 text-gray-800';
     }
   };
