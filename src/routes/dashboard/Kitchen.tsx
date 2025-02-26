@@ -1,5 +1,5 @@
 
-import { KitchenDashboard } from "@/components/dashboard/kitchen/KitchenDashboard";
+import { KitchenDashboard } from "@/components/kitchen/KitchenDashboard";
 
 const Kitchen = () => {
   return <KitchenDashboard />;
