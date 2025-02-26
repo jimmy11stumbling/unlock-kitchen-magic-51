@@ -11,30 +11,25 @@ export const ReservationMetrics = ({ reservations }: ReservationMetricsProps) =>
   const getReservationsByStatus = (status: Reservation["status"]) =>
     reservations.filter((r) => r.status === status).length;
 
-  const totalReservations = reservations.length;
-  const confirmedReservations = getReservationsByStatus("confirmed");
-  const pendingReservations = getReservationsByStatus("pending");
+  const metrics = [
+    { label: "Total", count: reservations.length, variant: "secondary" as const },
+    { label: "Confirmed", count: getReservationsByStatus("confirmed"), variant: "success" as const },
+    { label: "Pending", count: getReservationsByStatus("pending"), variant: "secondary" as const },
+    { label: "Seated", count: getReservationsByStatus("seated"), variant: "default" as const },
+    { label: "Completed", count: getReservationsByStatus("completed"), variant: "success" as const },
+    { label: "Cancelled", count: getReservationsByStatus("cancelled"), variant: "destructive" as const }
+  ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <Card className="p-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-medium text-muted-foreground">Total</h3>
-          <Badge variant="secondary">{totalReservations}</Badge>
-        </div>
-      </Card>
-      <Card className="p-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-medium text-muted-foreground">Confirmed</h3>
-          <Badge variant="success">{confirmedReservations}</Badge>
-        </div>
-      </Card>
-      <Card className="p-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-medium text-muted-foreground">Pending</h3>
-          <Badge variant="secondary">{pendingReservations}</Badge>
-        </div>
-      </Card>
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      {metrics.map((metric) => (
+        <Card key={metric.label} className="p-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-medium text-muted-foreground">{metric.label}</h3>
+            <Badge variant={metric.variant}>{metric.count}</Badge>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 };

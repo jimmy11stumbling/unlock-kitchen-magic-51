@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { Reservation } from "@/types/staff";
+import type { Reservation, ReservationStatus } from "@/types/staff";
+import { getNextAllowedStatuses } from "./utils";
 
 interface ReservationTableProps {
   reservations: Reservation[];
-  onUpdateStatus: (reservationId: number, status: Reservation["status"]) => void;
-  getStatusColor: (status: Reservation["status"]) => string;
+  onUpdateStatus: (reservationId: number, status: ReservationStatus) => void;
+  getStatusColor: (status: ReservationStatus) => string;
 }
 
 export const ReservationTable = ({
@@ -22,6 +23,21 @@ export const ReservationTable = ({
   onUpdateStatus,
   getStatusColor,
 }: ReservationTableProps) => {
+  const renderActionButtons = (reservation: Reservation) => {
+    const nextStatuses = getNextAllowedStatuses(reservation.status);
+    
+    return nextStatuses.map(status => (
+      <Button
+        key={status}
+        size="sm"
+        variant={status === "cancelled" || status === "no-show" ? "destructive" : "default"}
+        onClick={() => onUpdateStatus(reservation.id, status)}
+      >
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Button>
+    ));
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -38,7 +54,14 @@ export const ReservationTable = ({
       <TableBody>
         {reservations.map((reservation) => (
           <TableRow key={reservation.id}>
-            <TableCell>{reservation.customerName}</TableCell>
+            <TableCell>
+              <div>
+                <div>{reservation.customerName}</div>
+                {reservation.phoneNumber && (
+                  <div className="text-sm text-muted-foreground">{reservation.phoneNumber}</div>
+                )}
+              </div>
+            </TableCell>
             <TableCell>{reservation.date}</TableCell>
             <TableCell>{reservation.time}</TableCell>
             <TableCell>{reservation.tableNumber}</TableCell>
@@ -50,31 +73,7 @@ export const ReservationTable = ({
             </TableCell>
             <TableCell>
               <div className="flex gap-2">
-                {reservation.status === "pending" && (
-                  <>
-                    <Button
-                      size="sm"
-                      onClick={() => onUpdateStatus(reservation.id, "confirmed")}
-                    >
-                      Confirm
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => onUpdateStatus(reservation.id, "cancelled")}
-                    >
-                      Cancel
-                    </Button>
-                  </>
-                )}
-                {reservation.status === "confirmed" && (
-                  <Button
-                    size="sm"
-                    onClick={() => onUpdateStatus(reservation.id, "cancelled")}
-                  >
-                    Cancel
-                  </Button>
-                )}
+                {renderActionButtons(reservation)}
               </div>
             </TableCell>
           </TableRow>
