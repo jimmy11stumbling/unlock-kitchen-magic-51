@@ -39,37 +39,6 @@ export function StaffPerformanceTracker() {
     return () => clearInterval(interval);
   }, []);
 
-  const calculateMetrics = async (staff: StaffMember): Promise<StaffMetrics> => {
-    const { data: orders } = await supabase
-      .from('kitchen_orders')
-      .select('id, status, created_at, updated_at, estimated_delivery_time')
-      .eq('assigned_chef', staff.id);
-
-    const completedOrders = (orders || []).filter(order => order.status === 'delivered');
-    const onTimeOrders = completedOrders.filter(order => {
-      const completionTime = new Date(order.updated_at);
-      const estimatedTime = new Date(order.estimated_delivery_time);
-      return completionTime <= estimatedTime;
-    });
-
-    const avgPrepTime = completedOrders.length ?
-      completedOrders.reduce((acc, curr) => {
-        const start = new Date(curr.created_at);
-        const end = new Date(curr.updated_at);
-        return acc + (end.getTime() - start.getTime()) / (1000 * 60);
-      }, 0) / completedOrders.length : 0;
-
-    return {
-      id: staff.id,
-      name: staff.name,
-      ordersCompleted: completedOrders.length,
-      averagePreparationTime: avgPrepTime,
-      onTimeDeliveryRate: completedOrders.length ?
-        (onTimeOrders.length / completedOrders.length) * 100 : 100,
-      qualityRating: staff.performance_rating || 0
-    };
-  };
-
   const fetchStaffMetrics = async () => {
     try {
       const { data: staffData, error: staffError } = await supabase
@@ -79,7 +48,39 @@ export function StaffPerformanceTracker() {
 
       if (staffError) throw staffError;
 
-      const metrics = await Promise.all((staffData || []).map(calculateMetrics));
+      const metrics: StaffMetrics[] = [];
+      
+      for (const staff of (staffData || [])) {
+        const { data: orders } = await supabase
+          .from('kitchen_orders')
+          .select('id, status, created_at, updated_at, estimated_delivery_time')
+          .eq('assigned_chef', staff.id);
+
+        const completedOrders = (orders || []).filter(order => order.status === 'delivered');
+        const onTimeOrders = completedOrders.filter(order => {
+          const completionTime = new Date(order.updated_at);
+          const estimatedTime = new Date(order.estimated_delivery_time);
+          return completionTime <= estimatedTime;
+        });
+
+        const avgPrepTime = completedOrders.length ?
+          completedOrders.reduce((acc, curr) => {
+            const start = new Date(curr.created_at);
+            const end = new Date(curr.updated_at);
+            return acc + (end.getTime() - start.getTime()) / (1000 * 60);
+          }, 0) / completedOrders.length : 0;
+
+        metrics.push({
+          id: staff.id,
+          name: staff.name,
+          ordersCompleted: completedOrders.length,
+          averagePreparationTime: avgPrepTime,
+          onTimeDeliveryRate: completedOrders.length ?
+            (onTimeOrders.length / completedOrders.length) * 100 : 100,
+          qualityRating: staff.performance_rating || 0
+        });
+      }
+
       setStaffMetrics(metrics);
     } catch (error) {
       console.error('Error fetching staff metrics:', error);
