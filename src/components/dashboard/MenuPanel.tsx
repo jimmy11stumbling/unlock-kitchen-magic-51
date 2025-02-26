@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,31 +36,17 @@ export const MenuPanel = ({
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [newItem, setNewItem] = useState<MenuItemFormData>(defaultMenuItem);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "price" | "category">("name");
-  const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "available" | "unavailable">("all");
 
-  const filteredItems = menuItems
-    .filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
-      const matchesAvailability = availabilityFilter === "all" ||
-                                (availabilityFilter === "available" && item.available) ||
-                                (availabilityFilter === "unavailable" && !item.available);
-      return matchesSearch && matchesCategory && matchesAvailability;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "price":
-          return a.price - b.price;
-        case "category":
-          return a.category.localeCompare(b.category);
-        default:
-          return 0;
-      }
-    });
+  const filteredItems = menuItems.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value as MenuItem["category"] | "all");
+  };
 
   const handleAddItem = () => {
     if (!newItem.name || newItem.price <= 0) {
@@ -107,20 +94,9 @@ export const MenuPanel = ({
           searchTerm={searchQuery}
           onSearchChange={setSearchQuery}
           selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
+          onCategoryChange={handleCategoryChange}
           categories={["appetizer", "main", "dessert", "beverage"]}
-          onAddItem={() => {
-            if (!newItem.name || newItem.price <= 0) {
-              toast({
-                title: "Validation Error",
-                description: "Please fill in all required fields.",
-                variant: "destructive",
-              });
-              return;
-            }
-            onAddMenuItem(newItem);
-            setNewItem(defaultMenuItem);
-          }}
+          onAddItem={handleAddItem}
         />
 
         <div className="flex justify-end items-center mb-4 mt-4">

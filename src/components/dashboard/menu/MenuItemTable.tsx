@@ -8,15 +8,15 @@ import type { MenuItem } from "@/types/staff";
 interface MenuItemTableProps {
   items: MenuItem[];
   onUpdateAvailability: (itemId: number, available: boolean) => void;
-  onUpdateMenuItem?: (itemId: number, item: Partial<MenuItem>) => void;
-  onDeleteMenuItem?: (itemId: number) => void;
+  onEdit: (item: MenuItem) => void;
+  onDelete: (itemId: number) => void;
 }
 
 export const MenuItemTable = ({
   items,
   onUpdateAvailability,
-  onUpdateMenuItem,
-  onDeleteMenuItem,
+  onEdit,
+  onDelete,
 }: MenuItemTableProps) => {
   return (
     <Table>
@@ -46,14 +46,14 @@ export const MenuItemTable = ({
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => onUpdateMenuItem?.(item.id, item)}
+                  onClick={() => onEdit(item)}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => onDeleteMenuItem?.(item.id)}
+                  onClick={() => onDelete(item.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
