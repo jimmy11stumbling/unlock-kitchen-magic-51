@@ -48,11 +48,12 @@ export function InventoryTracker({ order }: InventoryTrackerProps) {
       });
 
       // Check current stock levels
+      // Using direct comparison instead of supabase.sql
       const { data: ingredients, error: ingredientError } = await supabase
         .from('ingredients')
         .select('id, name, current_stock, minimum_stock, unit')
         .in('id', Array.from(ingredientIds))
-        .lt('current_stock', supabase.sql`minimum_stock + 10`);
+        .filter('current_stock', 'lt', 'minimum_stock + 10');
 
       if (ingredientError) throw ingredientError;
 
