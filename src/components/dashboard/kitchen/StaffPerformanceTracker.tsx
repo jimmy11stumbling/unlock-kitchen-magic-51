@@ -29,7 +29,6 @@ type DbKitchenOrder = {
   table_number: number | null;
 };
 
-// Simplified metrics types
 type OrderMetrics = {
   completed: number;
   avgPrepTime: number;
@@ -78,38 +77,43 @@ export function StaffPerformanceTracker() {
 
   const fetchStaffMetrics = async () => {
     try {
-      // Fetch chefs data with type safety
-      const chefResult = await supabase
+      // Get all chef staff members
+      const { data: staffData, error: staffError } = await supabase
         .from('staff_members')
-        .select()
+        .select('id, name, performance_rating, role')
         .eq('role', 'chef');
 
-      if (chefResult.error) throw chefResult.error;
+      if (staffError) throw staffError;
+      if (!staffData?.length) return;
+
+      const chefs = staffData as Array<{
+        id: number;
+        name: string;
+        performance_rating: number;
+        role: string;
+      }>;
+
+      // Get orders for each chef and calculate metrics
+      const metrics: StaffMetrics[] = [];
       
-      const chefs = chefResult.data as unknown as DbStaffMember[];
-      if (!chefs?.length) return;
+      for (const chef of chefs) {
+        const { data: orderData } = await supabase
+          .from('kitchen_orders')
+          .select('id, status, created_at, updated_at, estimated_delivery_time')
+          .eq('assigned_chef', chef.id);
 
-      // Process each chef's orders
-      const metrics = await Promise.all(
-        chefs.map(async (chef) => {
-          const ordersResult = await supabase
-            .from('kitchen_orders')
-            .select()
-            .eq('assigned_chef', chef.id);
+        const orders = orderData || [];
+        const orderMetrics = calculateOrderMetrics(orders as DbKitchenOrder[]);
 
-          const orders = (ordersResult.data || []) as unknown as DbKitchenOrder[];
-          const orderMetrics = calculateOrderMetrics(orders);
-
-          return {
-            id: chef.id,
-            name: chef.name,
-            ordersCompleted: orderMetrics.completed,
-            averagePreparationTime: orderMetrics.avgPrepTime,
-            onTimeDeliveryRate: orderMetrics.onTimeRate,
-            qualityRating: chef.performance_rating || 0
-          } as StaffMetrics;
-        })
-      );
+        metrics.push({
+          id: chef.id,
+          name: chef.name,
+          ordersCompleted: orderMetrics.completed,
+          averagePreparationTime: orderMetrics.avgPrepTime,
+          onTimeDeliveryRate: orderMetrics.onTimeRate,
+          qualityRating: chef.performance_rating || 0
+        });
+      }
 
       setStaffMetrics(metrics);
 
