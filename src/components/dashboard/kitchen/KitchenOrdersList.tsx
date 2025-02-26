@@ -2,15 +2,27 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, XCircle } from "lucide-react";
-import type { KitchenOrder } from "@/types/staff";
+import { Clock, CheckCircle, XCircle, Flag, ChefHat } from "lucide-react";
+import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
 
 interface KitchenOrdersListProps {
   orders: KitchenOrder[];
-  onUpdateStatus: (orderId: number, status: "pending" | "preparing" | "ready" | "delivered") => void;
+  onUpdateStatus: (orderId: number, status: KitchenOrder["status"]) => void;
+  onUpdatePriority: (orderId: number, priority: KitchenOrder["priority"]) => void;
+  onUpdateItemStatus: (
+    orderId: number,
+    itemId: number,
+    status: KitchenOrderItem["status"],
+    assignedChef?: string
+  ) => void;
 }
 
-export const KitchenOrdersList = ({ orders, onUpdateStatus }: KitchenOrdersListProps) => {
+export const KitchenOrdersList = ({ 
+  orders, 
+  onUpdateStatus, 
+  onUpdatePriority,
+  onUpdateItemStatus 
+}: KitchenOrdersListProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -41,16 +53,35 @@ export const KitchenOrdersList = ({ orders, onUpdateStatus }: KitchenOrdersListP
                 Table {order.table_number} • {order.server_name}
               </p>
             </div>
-            <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+            <div className="flex gap-2">
+              <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onUpdatePriority(order.id, order.priority === "rush" ? "normal" : "rush")}
+              >
+                <Flag className={`h-4 w-4 ${order.priority === "rush" ? "text-red-500" : ""}`} />
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
             <div className="border-t pt-4">
               <h4 className="font-medium mb-2">Items</h4>
-              {order.items.map((item, index) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span>{item.quantity}x {item.name}</span>
-                  <span className="text-muted-foreground">{item.notes}</span>
+              {order.items.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm mb-2">
+                  <div className="flex flex-col">
+                    <span>{item.quantity}x {item.name}</span>
+                    {item.notes && (
+                      <span className="text-muted-foreground text-xs">{item.notes}</span>
+                    )}
+                  </div>
+                  {item.assigned_chef && (
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <ChefHat className="h-4 w-4" />
+                      <span>{item.assigned_chef}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

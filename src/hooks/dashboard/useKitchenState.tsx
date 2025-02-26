@@ -92,7 +92,7 @@ export const useKitchenState = () => {
     mutationFn: async (orderData: Omit<KitchenOrder, "id" | "created_at" | "updated_at">) => {
       const now = new Date().toISOString();
       
-      // Convert KitchenOrderItem[] to a plain object array for Supabase
+      // Convert KitchenOrderItems to plain objects for Supabase
       const serializedItems = orderData.items.map(item => ({
         id: item.id,
         name: item.name,
@@ -197,6 +197,10 @@ export const useKitchenState = () => {
         .single();
 
       if (fetchError) throw fetchError;
+      
+      if (!order || !order.items || !Array.isArray(order.items)) {
+        throw new Error('Invalid order data');
+      }
 
       // Update the specific item's status
       const updatedItems = order.items.map((item: any) => {
