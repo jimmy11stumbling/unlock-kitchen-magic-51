@@ -1,6 +1,6 @@
 
 /// <reference lib="webworker" />
-/* eslint-disable no-restricted-globals */
+declare const self: ServiceWorkerGlobalScope;
 
 const CACHE_NAME = 'app-cache-v1';
 const OFFLINE_URL = '/offline.html';
@@ -25,7 +25,7 @@ const STATIC_ASSETS = [
 ];
 
 // Cache static assets during installation
-self.addEventListener('install', (event) => {
+self.addEventListener('install', (event: ExtendableEvent) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
@@ -36,7 +36,7 @@ self.addEventListener('install', (event) => {
 });
 
 // Clean up old caches during activation
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil(
     Promise.all([
       // Take control of all clients immediately
@@ -98,7 +98,7 @@ const cacheFirst = async (request: Request) => {
 };
 
 // Handle fetch events
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', (event: FetchEvent) => {
   const url = new URL(event.request.url);
 
   // Handle different types of requests
@@ -119,8 +119,8 @@ self.addEventListener('fetch', (event) => {
 });
 
 // Handle push notifications
-self.addEventListener('push', (event) => {
-  const options = {
+self.addEventListener('push', (event: PushEvent) => {
+  const options: NotificationOptions = {
     body: event.data?.text() ?? 'New notification',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png'
@@ -132,7 +132,7 @@ self.addEventListener('push', (event) => {
 });
 
 // Handle notification clicks
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
   event.waitUntil(
     self.clients.matchAll({ type: 'window' }).then((clientList) => {
