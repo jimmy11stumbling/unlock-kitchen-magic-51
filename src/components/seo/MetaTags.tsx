@@ -34,6 +34,5 @@ export function MetaTags({
       <meta name="twitter:description" content={description} />
       {ogImage && <meta name="twitter:image" content={ogImage} />}
     </Helmet>
-  </Helmet>
-);
+  );
 }
