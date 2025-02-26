@@ -3,9 +3,13 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, AlertTriangle, Flag, CheckCircle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Clock, AlertTriangle, Flag, CheckCircle, ChefHat, MessageSquare } from "lucide-react";
+import { OrderTimer } from "./components/OrderTimer";
+import { format } from "date-fns";
 import type { KitchenOrder } from "@/types/staff";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface KitchenOrderCardProps {
   order: KitchenOrder;
@@ -15,6 +19,7 @@ interface KitchenOrderCardProps {
 
 export function KitchenOrderCard({ order, onStatusUpdate, onFlag }: KitchenOrderCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [chefNotes, setChefNotes] = useState(order.notes || "");
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -26,10 +31,6 @@ export function KitchenOrderCard({ order, onStatusUpdate, onFlag }: KitchenOrder
     }
   };
 
-  const timeElapsed = order.items.some(item => item.startTime) 
-    ? formatDistanceToNow(new Date(order.items[0].startTime!))
-    : "Not started";
-
   return (
     <Card className={`p-4 ${order.priority === "rush" ? "border-red-500 border-2" : ""}`}>
       <div className="flex justify-between items-start mb-4">
@@ -37,14 +38,14 @@ export function KitchenOrderCard({ order, onStatusUpdate, onFlag }: KitchenOrder
           <div className="flex items-center gap-2">
             <h3 className="font-semibold">Order #{order.orderId}</h3>
             <Badge variant="outline">Table {order.tableNumber}</Badge>
-            <Badge className={getStatusColor(order.items[0].status)}>
-              {order.items[0].status}
+            <Badge className={getStatusColor(order.status)}>
+              {order.status}
             </Badge>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-            <Clock className="h-4 w-4" />
-            {timeElapsed}
-          </div>
+          <OrderTimer 
+            startTime={order.items[0].startTime || new Date().toISOString()} 
+            estimatedTime={order.estimatedDeliveryTime}
+          />
         </div>
         <div className="flex gap-2">
           {order.priority === "rush" && (
@@ -76,6 +77,12 @@ export function KitchenOrderCard({ order, onStatusUpdate, onFlag }: KitchenOrder
                   Allergy Alert
                 </Badge>
               )}
+              {item.assignedChef && (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground ml-2">
+                  <ChefHat className="h-3 w-3" />
+                  {item.assignedChef}
+                </div>
+              )}
             </div>
             {item.status === "ready" && <CheckCircle className="h-4 w-4 text-green-500" />}
           </div>
@@ -92,7 +99,33 @@ export function KitchenOrderCard({ order, onStatusUpdate, onFlag }: KitchenOrder
       </Button>
 
       <div className="flex gap-2 mt-4">
-        {order.items[0].status === "pending" && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="flex-1">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Notes
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Kitchen Notes - Order #{order.orderId}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="notes">Chef Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={chefNotes}
+                  onChange={(e) => setChefNotes(e.target.value)}
+                  placeholder="Add preparation notes..."
+                  className="mt-2"
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {order.status === "pending" && (
           <Button 
             className="flex-1"
             onClick={() => onStatusUpdate(order.orderId, "preparing")}
@@ -100,7 +133,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onFlag }: KitchenOrder
             Start Preparing
           </Button>
         )}
-        {order.items[0].status === "preparing" && (
+        {order.status === "preparing" && (
           <Button 
             className="flex-1"
             onClick={() => onStatusUpdate(order.orderId, "ready")}
@@ -108,7 +141,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onFlag }: KitchenOrder
             Mark as Ready
           </Button>
         )}
-        {order.items[0].status === "ready" && (
+        {order.status === "ready" && (
           <Button 
             className="flex-1"
             onClick={() => onStatusUpdate(order.orderId, "delivered")}
@@ -117,13 +150,6 @@ export function KitchenOrderCard({ order, onStatusUpdate, onFlag }: KitchenOrder
           </Button>
         )}
       </div>
-
-      {order.notes && (
-        <div className="mt-4 p-2 bg-muted rounded-md text-sm">
-          <p className="font-medium">Notes:</p>
-          <p>{order.notes}</p>
-        </div>
-      )}
     </Card>
   );
 }

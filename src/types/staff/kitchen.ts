@@ -8,6 +8,7 @@ export interface KitchenOrderItem {
   modifications: string[];
   allergenAlert: boolean;
   startTime?: string;
+  completionTime?: string;
 }
 
 export interface KitchenOrder {
@@ -19,4 +20,6 @@ export interface KitchenOrder {
   priority: 'normal' | 'high' | 'rush';
   notes?: string;
   estimatedDeliveryTime: string;
+  startTime?: string;
+  completionTime?: string;
 }
