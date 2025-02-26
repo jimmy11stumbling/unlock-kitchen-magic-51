@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,6 +22,12 @@ export const PayrollPanel = ({
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [payPeriodStart, setPayPeriodStart] = useState("");
   const [payPeriodEnd, setPayPeriodEnd] = useState("");
+
+  // Get payroll history from the staff member if available
+  const getStaffPayrollHistory = (staffId: number): PayrollEntry[] => {
+    const staffMember = staff.find(s => s.id === staffId);
+    return staffMember?.payrollEntries || [];
+  };
 
   return (
     <Card className="p-6">
@@ -85,7 +92,7 @@ export const PayrollPanel = ({
             <div className="border rounded-lg p-4">
               <h3 className="text-lg font-medium mb-4">Recent Payroll History</h3>
               <div className="divide-y">
-                {selectedStaffId && staff.find(s => s.id === selectedStaffId)?.payrollSettings?.history?.map((entry: PayrollEntry) => (
+                {selectedStaffId && getStaffPayrollHistory(selectedStaffId).map((entry: PayrollEntry) => (
                   <div key={entry.id} className="py-3 flex justify-between items-center">
                     <div>
                       <p className="font-medium">Pay Period: {entry.payPeriodStart} - {entry.payPeriodEnd}</p>
