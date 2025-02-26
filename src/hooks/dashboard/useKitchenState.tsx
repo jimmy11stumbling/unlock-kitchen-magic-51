@@ -3,10 +3,34 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export const useKitchenState = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Set up realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('kitchen-orders')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'kitchen_orders'
+        },
+        (payload) => {
+          console.log('Kitchen order update received:', payload);
+          queryClient.invalidateQueries({ queryKey: ['kitchenOrders'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: kitchenOrders = [], isLoading } = useQuery({
     queryKey: ['kitchenOrders'],
@@ -123,12 +147,110 @@ export const useKitchenState = () => {
     }
   });
 
+  const updateOrderPriority = useMutation({
+    mutationFn: async ({ orderId, priority }: { orderId: number, priority: KitchenOrder["priority"] }) => {
+      const { data, error } = await supabase
+        .from('kitchen_orders')
+        .update({ 
+          priority,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kitchenOrders'] });
+      toast({
+        title: "Success",
+        description: "Order priority updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update order priority",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const updateItemStatus = useMutation({
+    mutationFn: async ({ 
+      orderId, 
+      itemId, 
+      status, 
+      assignedChef 
+    }: { 
+      orderId: number; 
+      itemId: number; 
+      status: KitchenOrderItem["status"]; 
+      assignedChef?: string;
+    }) => {
+      // First get the current order
+      const { data: order, error: fetchError } = await supabase
+        .from('kitchen_orders')
+        .select('*')
+        .eq('id', orderId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update the specific item's status
+      const updatedItems = order.items.map((item: any) => {
+        if (item.id === itemId) {
+          return {
+            ...item,
+            status,
+            assigned_chef: assignedChef || item.assigned_chef,
+            start_time: status === 'preparing' ? new Date().toISOString() : item.start_time,
+            completion_time: status === 'ready' ? new Date().toISOString() : item.completion_time
+          };
+        }
+        return item;
+      });
+
+      // Update the order with new items array
+      const { data, error } = await supabase
+        .from('kitchen_orders')
+        .update({ 
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kitchenOrders'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update item status",
+        variant: "destructive",
+      });
+    }
+  });
+
   return {
     kitchenOrders,
     isLoading,
     updateKitchenOrderStatus: (orderId: number, status: KitchenOrder["status"]) =>
       updateStatusMutation.mutate({ orderId, status }),
     createKitchenOrder: (order: Omit<KitchenOrder, "id" | "created_at" | "updated_at">) =>
-      createOrderMutation.mutate(order)
+      createOrderMutation.mutate(order),
+    updateOrderPriority: (orderId: number, priority: KitchenOrder["priority"]) =>
+      updateOrderPriority.mutate({ orderId, priority }),
+    updateItemStatus: (
+      orderId: number, 
+      itemId: number, 
+      status: KitchenOrderItem["status"], 
+      assignedChef?: string
+    ) => updateItemStatus.mutate({ orderId, itemId, status, assignedChef })
   };
 };
