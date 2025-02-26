@@ -24,8 +24,9 @@ const Staff = () => {
     updateStaffInfo
   } = useDashboardState();
 
-  const handleAddShift = (staffId: number, date: string, startTime: string, endTime: string) => {
-    // Handle shift addition
+  const handleAddShift = (staffId: number, date: string, time: string) => {
+    const [startTime, endTime] = time.split("-");
+    console.log({ staffId, date, startTime, endTime });
   };
 
   return (

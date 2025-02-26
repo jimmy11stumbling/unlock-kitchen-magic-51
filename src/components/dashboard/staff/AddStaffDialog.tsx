@@ -18,7 +18,7 @@ export const AddStaffDialog = ({ onAddStaff }: AddStaffDialogProps) => {
     salary: number;
   }>({ 
     name: "", 
-    role: "server", // Default role
+    role: "server",
     salary: 0 
   });
 
@@ -41,7 +41,7 @@ export const AddStaffDialog = ({ onAddStaff }: AddStaffDialogProps) => {
       startDate: currentDate,
       department: newStaff.role,
       certifications: [],
-      performanceRating: 0,
+      performance_rating: 0,
       notes: "",
       schedule: {
         monday: "OFF",

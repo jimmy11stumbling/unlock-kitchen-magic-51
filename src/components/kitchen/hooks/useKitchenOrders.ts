@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +23,27 @@ export function useKitchenOrders() {
     return validStations.includes(station) ? station as KitchenOrderItem['cookingStation'] : 'grill';
   };
 
+  const transformOrder = (order: any): KitchenOrder => ({
+    id: order.id,
+    orderId: order.order_id,
+    tableNumber: order.table_number,
+    items: order.items.map((item: any) => ({
+      id: item.id || Math.random(),
+      name: item.name || `Item ${item.menuItemId}`,
+      menuItemId: Number(item.menuItemId),
+      quantity: Number(item.quantity),
+      status: validateStatus(item.status),
+      cookingStation: validateCookingStation(item.cookingStation),
+      assignedChef: item.assignedChef || '',
+      modifications: Array.isArray(item.modifications) ? item.modifications : [],
+      allergenAlert: Boolean(item.allergenAlert)
+    })),
+    status: validateStatus(order.status),
+    priority: validatePriority(order.priority),
+    estimatedDeliveryTime: order.estimated_delivery_time,
+    createdAt: order.created_at || new Date().toISOString()
+  });
+
   const fetchOrders = async () => {
     try {
       const { data, error } = await supabase
@@ -34,24 +54,7 @@ export function useKitchenOrders() {
 
       if (error) throw error;
 
-      const transformedOrders: KitchenOrder[] = data?.map(order => ({
-        id: order.id,
-        orderId: order.order_id,
-        tableNumber: order.table_number,
-        items: (Array.isArray(order.items) ? order.items : []).map((item: any) => ({
-          menuItemId: Number(item.menuItemId),
-          quantity: Number(item.quantity),
-          status: validateStatus(item.status),
-          cookingStation: validateCookingStation(item.cookingStation),
-          assignedChef: item.assignedChef || '',
-          modifications: Array.isArray(item.modifications) ? item.modifications : [],
-          allergenAlert: Boolean(item.allergenAlert)
-        })),
-        status: validateStatus(order.status),
-        priority: validatePriority(order.priority),
-        notes: order.notes,
-        estimatedDeliveryTime: order.estimated_delivery_time
-      })) || [];
+      const transformedOrders: KitchenOrder[] = data?.map(order => transformOrder(order)) || [];
 
       setOrders(transformedOrders);
       setIsLoading(false);

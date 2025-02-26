@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,8 +22,9 @@ export const PayrollProcess = ({
   const [payPeriodEnd, setPayPeriodEnd] = useState("");
   const [regularHours, setRegularHours] = useState<number>(0);
   const [overtimeHours, setOvertimeHours] = useState<number>(0);
+  const [internalSelectedStaffId, setInternalSelectedStaffId] = useState<number | null>(selectedStaffId);
 
-  const selectedStaff = staff.find(s => s.id === selectedStaffId);
+  const selectedStaff = staff.find(s => s.id === internalSelectedStaffId);
 
   const calculateGrossPay = () => {
     if (!selectedStaff) return 0;
@@ -43,7 +43,7 @@ export const PayrollProcess = ({
   };
 
   const handleGeneratePayroll = async () => {
-    if (!selectedStaffId || !payPeriodStart || !payPeriodEnd) {
+    if (!internalSelectedStaffId || !payPeriodStart || !payPeriodEnd) {
       toast({
         title: "Error",
         description: "Please select a staff member and pay period dates",
@@ -56,7 +56,7 @@ export const PayrollProcess = ({
     const netPay = calculateNetPay(grossPay);
 
     try {
-      await onGeneratePayroll(selectedStaffId, payPeriodStart, payPeriodEnd);
+      await onGeneratePayroll(internalSelectedStaffId, payPeriodStart, payPeriodEnd);
       toast({
         title: "Success",
         description: `Payroll generated: Gross Pay $${grossPay.toFixed(2)}, Net Pay $${netPay.toFixed(2)}`,
@@ -77,8 +77,8 @@ export const PayrollProcess = ({
           <label className="text-sm font-medium">Select Staff Member</label>
           <select
             className="w-full mt-1 p-2 border rounded-md"
-            value={selectedStaffId || ""}
-            onChange={(e) => setSelectedStaffId(Number(e.target.value))}
+            value={internalSelectedStaffId || ""}
+            onChange={(e) => setInternalSelectedStaffId(Number(e.target.value))}
           >
             <option value="">Select staff member...</option>
             {staff.map((member) => (

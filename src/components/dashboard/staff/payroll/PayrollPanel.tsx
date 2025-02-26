@@ -34,7 +34,7 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
       other: 50
     },
     netPay: 1375,
-    status: "paid"
+    status: "pending"
   },
   {
     id: 2,
@@ -54,7 +54,7 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
       other: 0
     },
     netPay: 1063,
-    status: "paid"
+    status: "pending"
   }
 ];
 

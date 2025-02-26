@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -124,7 +123,7 @@ export const StaffPanel = ({
                     <Card className="p-4">
                       <h3 className="font-medium mb-2">Performance Score</h3>
                       <p className="text-2xl font-bold">
-                        {staff.find(m => m.id === selectedStaffId)?.performanceRating || 0}/10
+                        {staff.find(m => m.id === selectedStaffId)?.performance_rating || 0}/10
                       </p>
                     </Card>
                   </div>
