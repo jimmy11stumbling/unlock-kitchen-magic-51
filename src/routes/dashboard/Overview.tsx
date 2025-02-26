@@ -40,6 +40,11 @@ interface DashboardMetrics {
   customerSatisfaction: number;
   inventoryAlerts: number;
   topSellingItems: Array<{name: string, quantity: number}>;
+  averageOrderValue: number;
+  peakHours: Array<{hour: number, orders: number}>;
+  staffEfficiency: number;
+  revenueGrowth: number;
+  mostProfitableItems: Array<{name: string, revenue: number}>;
 }
 
 export default function Overview() {
@@ -51,7 +56,12 @@ export default function Overview() {
     pendingOrders: 0,
     customerSatisfaction: 0,
     inventoryAlerts: 0,
-    topSellingItems: []
+    topSellingItems: [],
+    averageOrderValue: 0,
+    peakHours: [],
+    staffEfficiency: 0,
+    revenueGrowth: 0,
+    mostProfitableItems: []
   });
   const [salesData, setSalesData] = useState([]);
   const [timeFrame, setTimeFrame] = useState("today");
@@ -78,30 +88,31 @@ export default function Overview() {
 
   const fetchDashboardData = async () => {
     try {
-      // During development, use mock data instead of Supabase calls
       const ordersData = mockOrders;
       const staffData = mockStaffData;
       const inventoryData = mockInventoryData;
 
-      // Calculate metrics using mock data
+      // Enhanced calculations
       const calculatedMetrics = {
         totalOrders: ordersData.length,
-        totalRevenue: ordersData.reduce((sum, order) => sum + order.total, 0),
+        totalRevenue: calculateTotalRevenue(ordersData),
         avgPrepTime: calculateAveragePrepTime(ordersData),
         activeStaff: staffData.length,
         pendingOrders: ordersData.filter(order => order.status === 'pending').length,
         customerSatisfaction: calculateCustomerSatisfaction(ordersData),
-        inventoryAlerts: inventoryData.length,
-        topSellingItems: calculateTopSellingItems(ordersData)
+        inventoryAlerts: calculateInventoryAlerts(inventoryData),
+        topSellingItems: calculateTopSellingItems(ordersData),
+        averageOrderValue: calculateAverageOrderValue(ordersData),
+        peakHours: calculatePeakHours(ordersData),
+        staffEfficiency: calculateStaffEfficiency(ordersData, staffData),
+        revenueGrowth: calculateRevenueGrowth(ordersData),
+        mostProfitableItems: calculateMostProfitableItems(ordersData)
       };
 
       setMetrics(calculatedMetrics);
-      setSalesData(generateMockSalesData(timeFrame));
+      setSalesData(generateSalesData(ordersData));
 
-      // Log the metrics for debugging
-      console.log('Dashboard Metrics:', calculatedMetrics);
-      console.log('Sales Data:', salesData);
-
+      console.log('Enhanced Dashboard Metrics:', calculatedMetrics);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast({
@@ -110,6 +121,88 @@ export default function Overview() {
         variant: "destructive",
       });
     }
+  };
+
+  const calculateTotalRevenue = (orders: any[]) => {
+    return orders.reduce((sum, order) => {
+      if (order.status !== 'cancelled') {
+        return sum + (order.total || 0);
+      }
+      return sum;
+    }, 0);
+  };
+
+  const calculateAverageOrderValue = (orders: any[]) => {
+    if (orders.length === 0) return 0;
+    const completedOrders = orders.filter(order => order.status !== 'cancelled');
+    return completedOrders.reduce((sum, order) => sum + order.total, 0) / completedOrders.length;
+  };
+
+  const calculatePeakHours = (orders: any[]) => {
+    const hourCounts = new Array(24).fill(0);
+    orders.forEach(order => {
+      const hour = new Date(order.created_at).getHours();
+      hourCounts[hour]++;
+    });
+    
+    return hourCounts
+      .map((count, hour) => ({ hour, orders: count }))
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 5);
+  };
+
+  const calculateStaffEfficiency = (orders: any[], staff: any[]) => {
+    if (staff.length === 0 || orders.length === 0) return 0;
+    
+    const completedOrders = orders.filter(order => order.status === 'delivered');
+    const avgOrdersPerStaff = completedOrders.length / staff.length;
+    const targetOrdersPerStaff = 10; // Configurable target
+    
+    return Math.min((avgOrdersPerStaff / targetOrdersPerStaff) * 100, 100);
+  };
+
+  const calculateRevenueGrowth = (orders: any[]) => {
+    if (orders.length === 0) return 0;
+    
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    
+    const currentMonthOrders = orders.filter(order => 
+      new Date(order.created_at) >= lastMonth
+    );
+    
+    const previousMonthOrders = orders.filter(order => 
+      new Date(order.created_at) < lastMonth && 
+      new Date(order.created_at) >= new Date(lastMonth.getFullYear(), lastMonth.getMonth() - 1, 1)
+    );
+    
+    const currentRevenue = currentMonthOrders.reduce((sum, order) => sum + order.total, 0);
+    const previousRevenue = previousMonthOrders.reduce((sum, order) => sum + order.total, 0);
+    
+    return previousRevenue === 0 ? 100 : 
+      ((currentRevenue - previousRevenue) / previousRevenue) * 100;
+  };
+
+  const calculateMostProfitableItems = (orders: any[]) => {
+    const itemRevenue = new Map();
+    
+    orders.forEach(order => {
+      order.items.forEach((item: any) => {
+        const currentRevenue = itemRevenue.get(item.name) || 0;
+        itemRevenue.set(item.name, currentRevenue + (item.price * item.quantity));
+      });
+    });
+    
+    return Array.from(itemRevenue.entries())
+      .map(([name, revenue]) => ({ name, revenue: Number(revenue.toFixed(2)) }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+  };
+
+  const calculateInventoryAlerts = (inventory: any[]) => {
+    return inventory.filter(item => 
+      item.current_stock <= item.minimum_stock
+    ).length;
   };
 
   const calculateAveragePrepTime = (orders: any[]) => {
@@ -238,6 +331,15 @@ export default function Overview() {
             <Clock className="h-8 w-8 text-primary/20" />
           </div>
         </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Avg Order Value</p>
+              <h3 className="text-2xl font-bold">${metrics.averageOrderValue.toFixed(2)}</h3>
+            </div>
+            <TrendingUp className="h-8 w-8 text-primary/20" />
+          </div>
+        </Card>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -257,15 +359,15 @@ export default function Overview() {
         </Card>
 
         <Card className="p-4">
-          <h3 className="font-semibold mb-4">Top Selling Items</h3>
+          <h3 className="font-semibold mb-4">Most Profitable Items</h3>
           <div className="space-y-4">
-            {metrics.topSellingItems.map((item, index) => (
+            {metrics.mostProfitableItems.map((item, index) => (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-semibold text-muted-foreground">#{index + 1}</span>
                   <span>{item.name}</span>
                 </div>
-                <Badge variant="secondary">{item.quantity} orders</Badge>
+                <Badge variant="secondary">${item.revenue}</Badge>
               </div>
             ))}
           </div>
@@ -314,6 +416,33 @@ export default function Overview() {
               <span>{metrics.inventoryAlerts} items below minimum stock</span>
             </div>
           )}
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Staff Efficiency</h3>
+            <Badge 
+              variant={metrics.staffEfficiency >= 80 ? "success" : "secondary"}
+            >
+              {Math.round(metrics.staffEfficiency)}%
+            </Badge>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Based on orders processed per staff member
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Revenue Growth</h3>
+            <Badge 
+              variant={metrics.revenueGrowth > 0 ? "success" : "destructive"}
+            >
+              {metrics.revenueGrowth > 0 ? '+' : ''}{Math.round(metrics.revenueGrowth)}%
+            </Badge>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Compared to last month
+          </div>
         </Card>
       </div>
     </div>
