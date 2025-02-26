@@ -1,14 +1,8 @@
 
 import { useState, useMemo } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useInventoryData } from "@/hooks/dashboard/useInventoryData";
 import { InventoryHeader } from "./InventoryHeader";
-import { InventoryStats } from "./InventoryStats";
-import { InventoryItemCard } from "./InventoryItemCard";
-import { InventoryFilters } from "./InventoryFilters";
-import { InventoryAnalytics } from "./InventoryAnalytics";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+import { InventoryTabs } from "./components/InventoryTabs";
 import { toast } from "@/components/ui/use-toast";
 
 export function InventoryDashboard() {
@@ -126,93 +120,30 @@ export function InventoryDashboard() {
         inventoryItems={inventoryItems}
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList>
-          <TabsTrigger value="items">Inventory Items</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="items">
-          <div className="space-y-6">
-            <InventoryStats 
-              inventoryItems={inventoryItems}
-              lowStockCount={lowStockItems.length}
-            />
-
-            <InventoryFilters 
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              priceRange={priceRange}
-              onPriceRangeChange={setPriceRange}
-              stockFilter={stockFilter}
-              onStockFilterChange={setStockFilter}
-              maxPrice={maxPrice}
-            />
-
-            {selectedItems.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Button onClick={() => handleBatchUpdate('increment')}>
-                  Increment Selected (+1)
-                </Button>
-                <Button onClick={() => handleBatchUpdate('decrement')}>
-                  Decrement Selected (-1)
-                </Button>
-                <Button variant="outline" onClick={() => setSelectedItems([])}>
-                  Clear Selection
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  {selectedItems.length} items selected
-                </span>
-              </div>
-            )}
-
-            <Tabs defaultValue="all" className="w-full" onValueChange={setActiveCategory}>
-              <TabsList>
-                {["all", "produce", "meat", "dairy", "dry goods", "beverages"].map((category) => (
-                  <TabsTrigger key={category} value={category} className="capitalize">
-                    {category}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-
-              {["all", "produce", "meat", "dairy", "dry goods", "beverages"].map((category) => (
-                <TabsContent key={category} value={category}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {isLoading ? (
-                      <p>Loading inventory...</p>
-                    ) : filteredItems.length === 0 ? (
-                      <p className="col-span-full text-center text-muted-foreground py-8">
-                        No items found with current filters
-                      </p>
-                    ) : (
-                      filteredItems.map((item) => (
-                        <div key={item.id} className="relative">
-                          <div className="absolute top-2 right-2 z-10">
-                            <Checkbox
-                              checked={selectedItems.includes(item.id)}
-                              onCheckedChange={() => toggleItemSelection(item.id)}
-                            />
-                          </div>
-                          <InventoryItemCard
-                            item={item}
-                            onUpdateQuantity={updateQuantity}
-                          />
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="analytics">
-          <InventoryAnalytics inventoryItems={inventoryItems} />
-        </TabsContent>
-      </Tabs>
+      <InventoryTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        inventoryItems={inventoryItems}
+        lowStockItems={lowStockItems}
+        filteredItems={filteredItems}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        priceRange={priceRange}
+        onPriceRangeChange={setPriceRange}
+        stockFilter={stockFilter}
+        onStockFilterChange={setStockFilter}
+        maxPrice={maxPrice}
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+        selectedItems={selectedItems}
+        onBatchUpdate={handleBatchUpdate}
+        onClearSelection={() => setSelectedItems([])}
+        onItemSelect={toggleItemSelection}
+        onUpdateQuantity={updateQuantity}
+        isLoading={isLoading}
+      />
     </div>
   );
 }
