@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +23,13 @@ import {
   Tooltip,
   ResponsiveContainer
 } from "recharts";
+
+import { 
+  mockOrders, 
+  mockStaffData, 
+  mockInventoryData, 
+  generateMockSalesData 
+} from '@/hooks/dashboard/analytics/data/mockDashboardData';
 
 interface DashboardMetrics {
   totalOrders: number;
@@ -72,43 +78,29 @@ export default function Overview() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch orders data
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*');
+      // During development, use mock data instead of Supabase calls
+      const ordersData = mockOrders;
+      const staffData = mockStaffData;
+      const inventoryData = mockInventoryData;
 
-      if (ordersError) throw ordersError;
-
-      // Fetch staff data
-      const { data: staffData, error: staffError } = await supabase
-        .from('staff_members')
-        .select('*')
-        .eq('status', 'active');
-
-      if (staffError) throw staffError;
-
-      // Fetch inventory alerts
-      const { data: inventoryData, error: inventoryError } = await supabase
-        .from('ingredients')
-        .select('*')
-        .lt('current_stock', 'minimum_stock');
-
-      if (inventoryError) throw inventoryError;
-
-      // Calculate metrics
+      // Calculate metrics using mock data
       const calculatedMetrics = {
-        totalOrders: ordersData?.length || 0,
-        totalRevenue: ordersData?.reduce((sum, order) => sum + (order.total || 0), 0) || 0,
-        avgPrepTime: calculateAveragePrepTime(ordersData || []),
-        activeStaff: staffData?.length || 0,
-        pendingOrders: ordersData?.filter(order => order.status === 'pending').length || 0,
-        customerSatisfaction: calculateCustomerSatisfaction(ordersData || []),
-        inventoryAlerts: inventoryData?.length || 0,
-        topSellingItems: calculateTopSellingItems(ordersData || [])
+        totalOrders: ordersData.length,
+        totalRevenue: ordersData.reduce((sum, order) => sum + order.total, 0),
+        avgPrepTime: calculateAveragePrepTime(ordersData),
+        activeStaff: staffData.length,
+        pendingOrders: ordersData.filter(order => order.status === 'pending').length,
+        customerSatisfaction: calculateCustomerSatisfaction(ordersData),
+        inventoryAlerts: inventoryData.length,
+        topSellingItems: calculateTopSellingItems(ordersData)
       };
 
       setMetrics(calculatedMetrics);
-      setSalesData(generateSalesData(ordersData || []));
+      setSalesData(generateMockSalesData(timeFrame));
+
+      // Log the metrics for debugging
+      console.log('Dashboard Metrics:', calculatedMetrics);
+      console.log('Sales Data:', salesData);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
