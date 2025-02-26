@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Clock, ChefHat, AlertTriangle, Flag, Timer } from "lucide-react";
-import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
+import type { KitchenOrder, KitchenOrderItem, MenuItem } from "@/types/staff";
 import { CoursePlannerDialog } from "./CoursePlannerDialog";
 import { RecipeInstructionsDialog } from "./RecipeInstructionsDialog";
 import { OrderModificationLog } from "./OrderModificationLog";
