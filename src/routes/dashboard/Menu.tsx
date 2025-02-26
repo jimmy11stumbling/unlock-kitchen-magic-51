@@ -90,12 +90,7 @@ const Menu = () => {
     <div className="p-8 space-y-8">
       <div className="flex flex-col items-start gap-4 mb-8">
         <div className="flex items-center gap-2">
-          <img 
-            src="/placeholder.svg" 
-            alt="MaestroAI Logo" 
-            className="h-10 w-10"
-          />
-          <h1 className="font-playfair text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+          <h1 className="font-playfair text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent animate-fade-in">
             MaestroAI
           </h1>
           <DropdownMenu>

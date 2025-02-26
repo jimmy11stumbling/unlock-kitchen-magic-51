@@ -1,84 +1,62 @@
 
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Filter } from "lucide-react";
 import type { MenuItem } from "@/types/staff";
 
 interface MenuSearchFiltersProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  selectedCategory: MenuItem["category"] | "all";
-  onCategoryChange: (category: MenuItem["category"] | "all") => void;
-  sortBy: "name" | "price" | "category";
-  onSortChange: (sort: "name" | "price" | "category") => void;
-  availabilityFilter: "all" | "available" | "unavailable";
-  onAvailabilityChange: (filter: "all" | "available" | "unavailable") => void;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  selectedCategory: string;
+  onCategoryChange: (value: string) => void;
+  categories: string[];
+  onAddItem: () => void;
 }
 
 export const MenuSearchFilters = ({
-  searchQuery,
+  searchTerm,
   onSearchChange,
   selectedCategory,
   onCategoryChange,
-  sortBy,
-  onSortChange,
-  availabilityFilter,
-  onAvailabilityChange,
+  categories,
+  onAddItem,
 }: MenuSearchFiltersProps) => {
   return (
-    <div className="flex flex-col md:flex-row gap-4">
-      <Input
-        placeholder="Search menu items..."
-        value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className="max-w-xs"
-      />
-      <div className="flex gap-2">
-        <Select
-          value={selectedCategory}
-          onValueChange={(value: MenuItem["category"] | "all") => onCategoryChange(value)}
-        >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Category" />
+    <div className="flex flex-col md:flex-row gap-4 items-end mb-6">
+      <div className="flex-1 space-y-2">
+        <label className="text-sm font-medium">Search Menu Items</label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or description"
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      <div className="w-full md:w-48 space-y-2">
+        <label className="text-sm font-medium">Category</label>
+        <Select value={selectedCategory} onValueChange={onCategoryChange}>
+          <SelectTrigger>
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="appetizer">Appetizers</SelectItem>
-            <SelectItem value="main">Main Courses</SelectItem>
-            <SelectItem value="dessert">Desserts</SelectItem>
-            <SelectItem value="beverage">Beverages</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={sortBy}
-          onValueChange={(value: "name" | "price" | "category") => onSortChange(value)}
-        >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="name">Name</SelectItem>
-            <SelectItem value="price">Price</SelectItem>
-            <SelectItem value="category">Category</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={availabilityFilter}
-          onValueChange={(value: "all" | "available" | "unavailable") =>
-            onAvailabilityChange(value)
-          }
-        >
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Availability" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Items</SelectItem>
-            <SelectItem value="available">Available</SelectItem>
-            <SelectItem value="unavailable">Unavailable</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
+
+      <Button onClick={onAddItem} className="whitespace-nowrap">
+        Add Menu Item
+      </Button>
     </div>
   );
 };
