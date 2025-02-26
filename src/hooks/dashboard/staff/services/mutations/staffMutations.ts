@@ -1,150 +1,21 @@
-import type { StaffMember } from "@/types/staff";
-import type { DatabaseStaffMember } from "../types/databaseTypes";
 import { supabase } from "@/integrations/supabase/client";
-import { checkTableExists } from "../utils/supabaseUtils";
-import { mockStaffData } from "../mockData/mockStaffData";
+import type { DatabaseStaffMember } from "../../types/databaseTypes";
+import type { StaffRole } from "@/types/staff";
 
-export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">) => {
+export const updateStaffMember = async (staffId: number, data: Partial<DatabaseStaffMember>) => {
   try {
-    const tableExists = await checkTableExists();
-
-    if (!tableExists) {
-      console.warn('Staff members table does not exist, using mock data');
-      const newId = mockStaffData.length + 1;
-      const newStaff: DatabaseStaffMember = {
-        id: newId,
-        name: data.name,
-        role: data.role,
-        email: data.email,
-        phone: data.phone,
-        status: 'active',
-        salary: data.salary,
-        department: data.department,
-        certifications: data.certifications,
-        performance_rating: data.performance_rating || 0,
-        shift: data.shift,
-        address: data.address,
-        schedule: data.schedule,
-        bank_info: data.bankInfo,
-        emergency_contact: data.emergencyContact,
-        notes: data.notes,
-        employment_status: 'full_time',
-        hire_date: data.startDate,
-        benefits: {},
-        hourly_rate: data.hourlyRate || 0,
-        overtime_rate: data.overtimeRate || 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        access_level: data.role === 'manager' ? 'admin' : 'staff',
-        tax_id: ""
-      };
-      mockStaffData.push(newStaff);
-      return newStaff;
-    }
-
-    const staffData = {
-      name: data.name,
-      role: data.role,
-      email: data.email,
-      phone: data.phone,
-      status: 'active',
-      salary: data.salary,
-      department: data.department,
-      certifications: data.certifications,
-      performance_rating: data.performance_rating || 0,
-      shift: data.shift,
-      address: data.address,
-      schedule: data.schedule,
-      bank_info: data.bankInfo,
-      emergency_contact: data.emergencyContact,
-      notes: data.notes,
-      employment_status: 'full_time',
-      hire_date: data.startDate,
-      hourly_rate: data.hourlyRate || 0,
-      overtime_rate: data.overtimeRate || 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    const { data: newStaff, error } = await supabase
-      .from('staff_members')
-      .insert(staffData)
-      .select()
-      .single();
-
-    if (error) throw error;
-    if (!newStaff) throw new Error('Failed to create staff member');
-
-    return {
-      ...newStaff,
-      access_level: data.role === 'manager' ? 'admin' : 'staff'
-    };
-  } catch (error) {
-    console.error('Error creating staff member:', error);
-    throw error;
-  }
-};
-
-export const updateStaffMember = async (staffId: number, updates: Partial<StaffMember>) => {
-  try {
-    const tableExists = await checkTableExists();
-
-    if (!tableExists) {
-      console.warn('Staff members table does not exist, using mock data');
-      const staffIndex = mockStaffData.findIndex(s => s.id === staffId);
-      if (staffIndex !== -1) {
-        mockStaffData[staffIndex] = {
-          ...mockStaffData[staffIndex],
-          ...updates,
-          updated_at: new Date().toISOString()
-        };
-        return mockStaffData[staffIndex];
-      }
-      throw new Error('Staff member not found');
-    }
-
-    const { data: updatedStaff, error } = await supabase
-      .from('staff_members')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', staffId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    if (!updatedStaff) throw new Error('Failed to update staff member');
-
-    return updatedStaff;
-  } catch (error) {
-    console.error('Error updating staff member:', error);
-    throw error;
-  }
-};
-
-export const deleteStaffMember = async (staffId: number) => {
-  try {
-    const tableExists = await checkTableExists();
-
-    if (!tableExists) {
-      console.warn('Staff members table does not exist, using mock data');
-      const staffIndex = mockStaffData.findIndex(s => s.id === staffId);
-      if (staffIndex !== -1) {
-        mockStaffData.splice(staffIndex, 1);
-        return;
-      }
-      throw new Error('Staff member not found');
-    }
-
     const { error } = await supabase
       .from('staff_members')
-      .delete()
+      .update({
+        ...data,
+        updated_at: new Date().toISOString(),
+        employment_status: data.employment_status as "full_time" | "part_time" | "contract" | "terminated"
+      })
       .eq('id', staffId);
 
     if (error) throw error;
   } catch (error) {
-    console.error('Error deleting staff member:', error);
+    console.error('Error updating staff member:', error);
     throw error;
   }
 };

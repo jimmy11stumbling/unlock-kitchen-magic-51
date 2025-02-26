@@ -1,19 +1,8 @@
 import { useState } from "react";
-import type { TableLayout, Order, MenuItem, KitchenOrder } from "@/types/staff";
-
-const initialTables: TableLayout[] = [
-  { id: 1, number: 1, capacity: 4, status: "occupied", section: "indoor", activeOrder: null },
-  { id: 2, number: 2, capacity: 2, status: "available", section: "indoor", activeOrder: null },
-  { id: 3, number: 3, capacity: 6, status: "reserved", section: "outdoor", activeOrder: null },
-  { id: 4, number: 4, capacity: 4, status: "available", section: "outdoor", activeOrder: null },
-  { id: 5, number: 5, capacity: 8, status: "occupied", section: "indoor", activeOrder: null },
-  { id: 6, number: 6, capacity: 2, status: "available", section: "bar", activeOrder: null },
-  { id: 7, number: 7, capacity: 4, status: "occupied", section: "bar", activeOrder: null },
-  { id: 8, number: 8, capacity: 6, status: "available", section: "outdoor", activeOrder: null }
-];
+import type { TableLayout, Order, MenuItem, KitchenOrder, KitchenOrderItem } from "@/types/staff";
 
 export const useTableState = () => {
-  const [tables, setTables] = useState<TableLayout[]>(initialTables);
+  const [tables, setTables] = useState<TableLayout[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
 
@@ -90,7 +79,8 @@ export const useTableState = () => {
         items: kitchenItems,
         status: "pending",
         priority: "normal",
-        estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString()
+        estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString(),
+        createdAt: new Date().toISOString()
       };
 
       setKitchenOrders([...kitchenOrders, kitchenOrder]);

@@ -103,6 +103,7 @@ export const PayrollPanel = ({
         <TabsContent value="settings">
           <PayrollSettings
             staff={staff}
+            selectedStaffId={selectedStaffId}
             onUpdateSettings={onUpdatePayrollSettings}
           />
         </TabsContent>
