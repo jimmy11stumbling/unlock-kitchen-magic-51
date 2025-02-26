@@ -74,19 +74,19 @@ export const useTableState = () => {
     const kitchenOrder: KitchenOrder = {
       id: kitchenOrders.length + 1,
       orderId: order.id,
+      tableNumber: order.tableNumber,
       items: order.items.map(item => ({
-        menuItemId: item.id,
+        menuItemId: Number(item.id),
         quantity: item.quantity,
         status: "pending",
-        cookingStation: "main",
+        cookingStation: "grill",
         assignedChef: "",
         modifications: [],
-        allergenAlert: false,
+        allergenAlert: false
       })),
+      status: "pending",
       priority: "normal",
-      notes: "",
-      coursing: "standard",
-      estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString(), // 30 minutes from now
+      estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString()
     };
 
     setKitchenOrders([...kitchenOrders, kitchenOrder]);

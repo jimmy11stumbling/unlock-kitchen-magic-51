@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { KitchenOrderCard } from "./KitchenOrderCard";
-import type { KitchenOrder } from "@/types/staff";
+import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
 import { VolumeX, Volume2 } from "lucide-react";
 
 export function KitchenDashboard() {
@@ -57,9 +57,18 @@ export function KitchenDashboard() {
         id: order.id,
         orderId: order.order_id,
         tableNumber: order.table_number,
-        items: Array.isArray(order.items) ? order.items : [],
-        status: order.status,
-        priority: order.priority,
+        items: (Array.isArray(order.items) ? order.items : []).map((item: any) => ({
+          ...item,
+          menuItemId: Number(item.menuItemId), // Ensure menuItemId is a number
+          quantity: Number(item.quantity),
+          status: item.status || 'pending',
+          cookingStation: item.cookingStation || 'grill',
+          assignedChef: item.assignedChef || '',
+          modifications: Array.isArray(item.modifications) ? item.modifications : [],
+          allergenAlert: Boolean(item.allergenAlert)
+        })),
+        status: order.status || 'pending',
+        priority: order.priority || 'normal',
         notes: order.notes,
         estimatedDeliveryTime: order.estimated_delivery_time
       })) || [];

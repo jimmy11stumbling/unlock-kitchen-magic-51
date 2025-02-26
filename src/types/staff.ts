@@ -1,3 +1,4 @@
+
 export type StaffRole = 'manager' | 'chef' | 'server' | 'host' | 'bartender';
 export type StaffStatus = 'active' | 'on_break' | 'off_duty';
 
@@ -195,10 +196,10 @@ export interface DailyReport {
 }
 
 export interface KitchenOrderItem {
-  menuItemId: string;
+  menuItemId: number;  // Changed from string to number
   quantity: number;
   status: 'pending' | 'preparing' | 'ready' | 'delivered';
-  cookingStation: 'grill' | 'fry' | 'salad' | 'dessert' | 'beverage';
+  cookingStation: 'grill' | 'fry' | 'salad' | 'dessert' | 'beverage' | 'hot' | 'cold';  // Added 'hot' and 'cold'
   assignedChef: string;
   modifications: string[];
   allergenAlert: boolean;
