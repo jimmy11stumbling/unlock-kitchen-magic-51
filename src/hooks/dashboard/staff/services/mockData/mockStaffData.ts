@@ -23,7 +23,6 @@ export const mockStaffData: DatabaseStaffMember[] = [
     department: "management",
     certifications: ["ServSafe Manager", "Food Handler", "Alcohol Service"],
     performance_rating: 4.8,
-    notes: "Regional manager for downtown locations",
     schedule: {
       monday: "9:00-17:00",
       tuesday: "9:00-17:00",
@@ -39,9 +38,8 @@ export const mockStaffData: DatabaseStaffMember[] = [
       accountType: "checking"
     },
     employment_status: "full_time",
-    hire_date: "2023-01-15",
     benefits: {},
     updated_at: new Date().toISOString(),
-    tax_id: "123-45-6789"
+    access_level: "admin"
   }
 ];

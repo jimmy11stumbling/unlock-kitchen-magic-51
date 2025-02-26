@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +43,7 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
     regularRate: 25,
     overtimeRate: 37.5,
     grossPay: 2187.50,
+    totalPay: 2187.50,
     deductions: {
       tax: 437.50,
       insurance: 150,
@@ -51,9 +51,7 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
       other: 50
     },
     netPay: 1375,
-    status: "paid",
-    paymentDate: "2024-03-20",
-    paymentMethod: "direct_deposit"
+    status: "pending"
   },
   {
     id: 2,
@@ -65,6 +63,7 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
     regularRate: 22,
     overtimeRate: 33,
     grossPay: 1650,
+    totalPay: 1650,
     deductions: {
       tax: 330,
       insurance: 125,
@@ -72,9 +71,7 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
       other: 0
     },
     netPay: 1063,
-    status: "paid",
-    paymentDate: "2024-03-20",
-    paymentMethod: "direct_deposit"
+    status: "pending"
   }
 ];
 

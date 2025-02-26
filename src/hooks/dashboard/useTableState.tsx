@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import type { TableLayout, Order, MenuItem, KitchenOrder } from "@/types/staff";
 
@@ -71,28 +70,36 @@ export const useTableState = () => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
-    const kitchenOrder: KitchenOrder = {
-      id: kitchenOrders.length + 1,
-      orderId: order.id,
-      tableNumber: order.tableNumber,
-      items: order.items.map(item => ({
-        menuItemId: Number(item.id),
+    const createKitchenOrder = (orderId: number, items: any[]) => {
+      const kitchenItems: KitchenOrderItem[] = items.map((item, index) => ({
+        id: index + 1,
+        name: `Item ${item.menuItemId}`,
+        menuItemId: item.menuItemId,
         quantity: item.quantity,
         status: "pending",
-        cookingStation: "grill",
-        assignedChef: "",
-        modifications: [],
-        allergenAlert: false
-      })),
-      status: "pending",
-      priority: "normal",
-      estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString()
+        cookingStation: item.cookingStation || "grill",
+        assignedChef: item.assignedChef || "",
+        modifications: item.modifications || [],
+        allergenAlert: item.allergenAlert || false
+      }));
+
+      const kitchenOrder: KitchenOrder = {
+        id: kitchenOrders.length + 1,
+        orderId: order.id,
+        tableNumber: order.tableNumber,
+        items: kitchenItems,
+        status: "pending",
+        priority: "normal",
+        estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString()
+      };
+
+      setKitchenOrders([...kitchenOrders, kitchenOrder]);
+      setOrders(orders.map(o => 
+        o.id === orderId ? { ...o, status: "preparing" } : o
+      ));
     };
 
-    setKitchenOrders([...kitchenOrders, kitchenOrder]);
-    setOrders(orders.map(o => 
-      o.id === orderId ? { ...o, status: "preparing" } : o
-    ));
+    createKitchenOrder(orderId, order.items);
   };
 
   const getTableOrders = () => {

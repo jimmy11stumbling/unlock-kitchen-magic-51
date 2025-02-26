@@ -5,14 +5,15 @@ import type { StaffMember } from "@/types/staff";
 
 interface PayrollSettingsProps {
   staff: StaffMember[];
+  selectedStaffId: number | null;
   onUpdateSettings: (staffId: number, settings: StaffMember['payrollSettings']) => Promise<void>;
 }
 
 export const PayrollSettings = ({
   staff,
+  selectedStaffId,
   onUpdateSettings,
 }: PayrollSettingsProps) => {
-  const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const selectedStaff = staff.find(s => s.id === selectedStaffId);
 
   return (
