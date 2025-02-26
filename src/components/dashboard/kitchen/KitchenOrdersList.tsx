@@ -36,7 +36,7 @@ export const KitchenOrdersList = ({ orders, onUpdateStatus }: KitchenOrdersListP
         <Card key={order.id} className="p-4">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h3 className="font-semibold">Order #{order.id}</h3>
+              <h3 className="font-semibold">Order #{order.order_id}</h3>
               <p className="text-sm text-muted-foreground">
                 Table {order.table_number} • {order.server_name}
               </p>
@@ -48,7 +48,7 @@ export const KitchenOrdersList = ({ orders, onUpdateStatus }: KitchenOrdersListP
             <div className="border-t pt-4">
               <h4 className="font-medium mb-2">Items</h4>
               {order.items.map((item, index) => (
-                <div key={index} className="flex justify-between text-sm">
+                <div key={item.id} className="flex justify-between text-sm">
                   <span>{item.quantity}x {item.name}</span>
                   <span className="text-muted-foreground">{item.notes}</span>
                 </div>

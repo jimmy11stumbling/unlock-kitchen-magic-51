@@ -1,7 +1,7 @@
 
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { KitchenOrder } from "@/types/staff";
+import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useKitchenState = () => {
@@ -17,17 +17,36 @@ export const useKitchenState = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as KitchenOrder[];
+
+      // Transform the data to match our frontend types
+      return (data as any[]).map(order => ({
+        ...order,
+        items: Array.isArray(order.items) ? order.items.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          notes: item.notes,
+          status: item.status,
+          menu_item_id: item.menu_item_id,
+          start_time: item.start_time,
+          completion_time: item.completion_time,
+          cooking_station: item.cooking_station,
+          assigned_chef: item.assigned_chef,
+          modifications: item.modifications,
+          allergen_alert: item.allergen_alert
+        })) : []
+      })) as KitchenOrder[];
     }
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: number, status: KitchenOrder["status"] }) => {
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('kitchen_orders')
         .update({ 
-          status, 
-          updated_at: new Date().toISOString()
+          status,
+          updated_at: now,
         })
         .eq('id', orderId)
         .select()
@@ -53,12 +72,14 @@ export const useKitchenState = () => {
   });
 
   const createOrderMutation = useMutation({
-    mutationFn: async (order: Omit<KitchenOrder, "id" | "created_at" | "updated_at">) => {
+    mutationFn: async (orderData: Omit<KitchenOrder, "id" | "created_at" | "updated_at">) => {
       const now = new Date().toISOString();
       const newOrder = {
-        ...order,
+        ...orderData,
         created_at: now,
-        updated_at: now
+        updated_at: now,
+        estimated_delivery_time: orderData.estimated_delivery_time || now,
+        coursing: orderData.coursing || 'standard'
       };
 
       const { data, error } = await supabase

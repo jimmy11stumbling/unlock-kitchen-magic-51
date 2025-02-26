@@ -93,6 +93,13 @@ export interface KitchenOrderItem {
   quantity: number;
   notes?: string;
   status: "pending" | "preparing" | "ready" | "delivered";
+  menu_item_id: number;
+  start_time?: string;
+  completion_time?: string;
+  cooking_station?: "grill" | "fry" | "salad" | "dessert" | "beverage" | "hot" | "cold";
+  assigned_chef?: string;
+  modifications?: string[];
+  allergen_alert?: boolean;
 }
 
 export interface KitchenOrder {
