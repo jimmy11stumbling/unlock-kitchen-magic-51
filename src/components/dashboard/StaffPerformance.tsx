@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +53,7 @@ export function StaffPerformance() {
         status,
         performance_rating
       `)
-      .eq('status', 'on_duty');
+      .eq('status', 'active');
 
     if (error) {
       toast({
@@ -65,12 +64,11 @@ export function StaffPerformance() {
       return;
     }
 
-    // Transform and calculate metrics
     const transformedData: StaffMetrics[] = (staffData || []).map(staff => ({
       id: staff.id,
       name: staff.name,
-      ordersCompleted: 0, // We'll implement this with order tracking
-      averageOrderTime: 0, // We'll implement this with order timing
+      ordersCompleted: 0,
+      averageOrderTime: 0,
       customerRating: staff.performance_rating || 0,
       status: staff.status
     }));

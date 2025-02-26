@@ -25,8 +25,19 @@ interface KitchenOrder {
   server_name: string;
 }
 
-type DatabaseKitchenOrder = Omit<KitchenOrder, 'items'> & {
+type DatabaseKitchenOrder = {
+  id: number;
+  table_number: number;
+  status: string;
+  estimated_delivery_time: string;
   items: string;
+  priority: string;
+  created_at: string;
+  server_name: string;
+  coursing: string;
+  notes: string | null;
+  order_id: number | null;
+  updated_at: string;
 };
 
 export function KitchenStatus() {
@@ -77,9 +88,15 @@ export function KitchenStatus() {
     }
 
     // Transform the database response into the correct type
-    const transformedOrders: KitchenOrder[] = (data || []).map((order: DatabaseKitchenOrder) => ({
-      ...order,
+    const transformedOrders: KitchenOrder[] = (data as DatabaseKitchenOrder[]).map((order) => ({
+      id: order.id,
+      table_number: order.table_number,
+      status: order.status as KitchenOrder['status'],
+      estimated_delivery_time: order.estimated_delivery_time,
       items: typeof order.items === 'string' ? JSON.parse(order.items) : order.items,
+      priority: order.priority as KitchenOrder['priority'],
+      created_at: order.created_at,
+      server_name: order.server_name
     }));
 
     setOrders(transformedOrders);
