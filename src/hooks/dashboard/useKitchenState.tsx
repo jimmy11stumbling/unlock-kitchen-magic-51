@@ -1,178 +1,91 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
-import type { Json } from "@/hooks/dashboard/types/orderTypes";
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import type { KitchenOrder } from "@/types/staff";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useKitchenState = () => {
-  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchKitchenOrders();
-    subscribeToKitchenUpdates();
-  }, []);
-
-  const parseKitchenItems = (items: Json): KitchenOrderItem[] => {
-    if (!Array.isArray(items)) return [];
-    return items.map(item => {
-      const itemData = item as Record<string, Json>;
-      return {
-        id: Number(itemData.id || 0),
-        name: String(itemData.name || ''),
-        quantity: Number(itemData.quantity || 0),
-        status: (itemData.status as string || 'pending') as KitchenOrderItem['status'],
-        notes: itemData.notes as string | undefined,
-        menuItemId: Number(itemData.menuItemId || 0),
-        startTime: itemData.startTime as string | undefined,
-        cookingStation: itemData.cookingStation as string | undefined,
-        assignedChef: itemData.assignedChef as string | undefined,
-        modifications: Array.isArray(itemData.modifications) ? itemData.modifications as string[] : undefined,
-        allergenAlert: Boolean(itemData.allergenAlert)
-      };
-    });
-  };
-
-  const fetchKitchenOrders = async () => {
-    try {
+  // Fetch kitchen orders
+  const { data: kitchenOrders = [], isLoading } = useQuery({
+    queryKey: ['kitchenOrders'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('kitchen_orders')
         .select('*')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      const parsedOrders: KitchenOrder[] = data.map(order => ({
-        id: order.id,
-        orderId: order.order_id,
-        tableNumber: order.table_number,
-        items: parseKitchenItems(order.items),
-        status: order.status as KitchenOrder['status'],
-        priority: order.priority as KitchenOrder['priority'],
-        estimatedDeliveryTime: order.estimated_delivery_time,
-        createdAt: order.created_at
-      }));
-
-      setKitchenOrders(parsedOrders);
-    } catch (error) {
-      console.error('Error fetching kitchen orders:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch kitchen orders",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      return data;
     }
-  };
+  });
 
-  const subscribeToKitchenUpdates = () => {
-    const channel = supabase
-      .channel('kitchen-orders')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'kitchen_orders' },
-        () => {
-          fetchKitchenOrders();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
-
-  const updateOrderStatus = async (orderId: number, status: KitchenOrder['status']) => {
-    try {
-      const { error } = await supabase
+  // Update order status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ orderId, status }: { orderId: number, status: string }) => {
+      const { data, error } = await supabase
         .from('kitchen_orders')
-        .update({ status })
-        .eq('id', orderId);
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', orderId)
+        .select()
+        .single();
 
       if (error) throw error;
-
-      setKitchenOrders(orders =>
-        orders.map(order =>
-          order.id === orderId ? { ...order, status } : order
-        )
-      );
-
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kitchenOrders'] });
       toast({
         title: "Order Updated",
-        description: `Order #${orderId} status changed to ${status}`,
+        description: "The order status has been updated successfully.",
       });
-    } catch (error) {
-      console.error('Error updating order status:', error);
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update order status",
+        description: "Failed to update order status.",
         variant: "destructive",
       });
     }
-  };
+  });
 
-  const updateItemStatus = async (
-    orderId: number,
-    itemId: number,
-    status: KitchenOrderItem['status']
-  ) => {
-    try {
-      const order = kitchenOrders.find(o => o.id === orderId);
-      if (!order) return;
-
-      const updatedItems = order.items.map(item =>
-        item.id === itemId ? { ...item, status } : item
-      );
-
-      // Convert KitchenOrderItem[] to Json type for Supabase
-      const itemsForDb = updatedItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        quantity: item.quantity,
-        status: item.status,
-        notes: item.notes,
-        menuItemId: item.menuItemId,
-        startTime: item.startTime,
-        cookingStation: item.cookingStation,
-        assignedChef: item.assignedChef,
-        modifications: item.modifications,
-        allergenAlert: item.allergenAlert
-      }));
-
-      const { error } = await supabase
+  // Create new kitchen order mutation
+  const createOrderMutation = useMutation({
+    mutationFn: async (order: Omit<KitchenOrder, "id">) => {
+      const { data, error } = await supabase
         .from('kitchen_orders')
-        .update({ items: itemsForDb })
-        .eq('id', orderId);
+        .insert([order])
+        .select()
+        .single();
 
       if (error) throw error;
-
-      setKitchenOrders(orders =>
-        orders.map(order =>
-          order.id === orderId ? { ...order, items: updatedItems } : order
-        )
-      );
-
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kitchenOrders'] });
       toast({
-        title: "Item Updated",
-        description: `Item status changed to ${status}`,
+        title: "Order Created",
+        description: "New kitchen order has been created.",
       });
-    } catch (error) {
-      console.error('Error updating item status:', error);
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update item status",
+        description: "Failed to create kitchen order.",
         variant: "destructive",
       });
     }
-  };
+  });
 
   return {
     kitchenOrders,
-    loading,
-    updateOrderStatus,
-    updateItemStatus,
+    isLoading,
+    updateKitchenOrderStatus: (orderId: number, status: string) =>
+      updateStatusMutation.mutate({ orderId, status }),
+    createKitchenOrder: (order: Omit<KitchenOrder, "id">) =>
+      createOrderMutation.mutate(order),
   };
 };
