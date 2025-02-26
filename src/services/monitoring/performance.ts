@@ -3,15 +3,17 @@ interface PerformanceMetric {
   name: string;
   value: number;
   timestamp: number;
+  tags?: Record<string, string>;
 }
 
 class PerformanceMonitor {
   private static instance: PerformanceMonitor;
   private metrics: PerformanceMetric[] = [];
-  private readonly maxMetrics = 1000;
+  private observers: Set<(metric: PerformanceMetric) => void> = new Set();
 
   private constructor() {
-    this.initializePerformanceObserver();
+    this.setupPerformanceObserver();
+    this.setupNetworkMonitoring();
   }
 
   static getInstance(): PerformanceMonitor {
@@ -21,46 +23,125 @@ class PerformanceMonitor {
     return PerformanceMonitor.instance;
   }
 
-  private initializePerformanceObserver() {
-    if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
-      const observer = new PerformanceObserver((list) => {
-        list.getEntries().forEach((entry) => {
-          this.addMetric(entry.name, entry.duration);
-        });
+  private setupPerformanceObserver(): void {
+    if ('PerformanceObserver' in window) {
+      // Observe paint timing
+      const paintObserver = new PerformanceObserver((entryList) => {
+        for (const entry of entryList.getEntries()) {
+          this.recordMetric(entry.name, entry.startTime);
+        }
       });
+      paintObserver.observe({ entryTypes: ['paint'] });
 
-      observer.observe({ entryTypes: ['resource', 'navigation', 'longtask'] });
+      // Observe layout shifts
+      const layoutObserver = new PerformanceObserver((entryList) => {
+        for (const entry of entryList.getEntries()) {
+          this.recordMetric('layout-shift', entry.value);
+        }
+      });
+      layoutObserver.observe({ entryTypes: ['layout-shift'] });
+
+      // Observe long tasks
+      const longTaskObserver = new PerformanceObserver((entryList) => {
+        for (const entry of entryList.getEntries()) {
+          this.recordMetric('long-task', entry.duration);
+        }
+      });
+      longTaskObserver.observe({ entryTypes: ['longtask'] });
     }
   }
 
-  private addMetric(name: string, value: number) {
+  private setupNetworkMonitoring(): void {
+    if ('connection' in navigator) {
+      const connection = (navigator as any).connection;
+      connection.addEventListener('change', () => {
+        this.recordMetric('network-change', {
+          effectiveType: connection.effectiveType,
+          downlink: connection.downlink,
+          rtt: connection.rtt
+        });
+      });
+    }
+  }
+
+  recordMetric(name: string, value: number, tags?: Record<string, string>): void {
     const metric: PerformanceMetric = {
       name,
       value,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      tags
     };
 
-    this.metrics.unshift(metric);
-    if (this.metrics.length > this.maxMetrics) {
-      this.metrics.pop();
+    this.metrics.push(metric);
+    this.notifyObservers(metric);
+  }
+
+  private notifyObservers(metric: PerformanceMetric): void {
+    this.observers.forEach(observer => observer(metric));
+  }
+
+  subscribeToMetrics(callback: (metric: PerformanceMetric) => void): () => void {
+    this.observers.add(callback);
+    return () => this.observers.delete(callback);
+  }
+
+  getMetrics(
+    filter?: {
+      name?: string;
+      startTime?: number;
+      endTime?: number;
+      tags?: Record<string, string>;
+    }
+  ): PerformanceMetric[] {
+    let filtered = this.metrics;
+
+    if (filter) {
+      filtered = filtered.filter(metric => {
+        const nameMatch = !filter.name || metric.name === filter.name;
+        const timeMatch = (!filter.startTime || metric.timestamp >= filter.startTime) &&
+                         (!filter.endTime || metric.timestamp <= filter.endTime);
+        const tagMatch = !filter.tags || Object.entries(filter.tags).every(
+          ([key, value]) => metric.tags?.[key] === value
+        );
+
+        return nameMatch && timeMatch && tagMatch;
+      });
     }
 
-    // In production, we would send to a monitoring service
-    if (process.env.NODE_ENV === 'production') {
-      // TODO: Send to monitoring service
+    return filtered;
+  }
+
+  calculateMetrics(): Record<string, number> {
+    const metrics = this.getMetrics();
+    const result: Record<string, number> = {};
+
+    // Calculate FCP (First Contentful Paint)
+    const fcp = metrics.find(m => m.name === 'first-contentful-paint');
+    if (fcp) {
+      result.firstContentfulPaint = fcp.value;
     }
+
+    // Calculate CLS (Cumulative Layout Shift)
+    const cls = metrics
+      .filter(m => m.name === 'layout-shift')
+      .reduce((sum, m) => sum + m.value, 0);
+    result.cumulativeLayoutShift = cls;
+
+    // Calculate average long task duration
+    const longTasks = metrics.filter(m => m.name === 'long-task');
+    if (longTasks.length > 0) {
+      result.averageLongTaskDuration = longTasks.reduce((sum, m) => sum + m.value, 0) / longTasks.length;
+    }
+
+    return result;
   }
 
-  trackCustomMetric(name: string, value: number) {
-    this.addMetric(name, value);
-  }
-
-  getMetrics(): PerformanceMetric[] {
-    return [...this.metrics];
-  }
-
-  clearMetrics() {
-    this.metrics = [];
+  startMeasurement(name: string): () => void {
+    const startTime = performance.now();
+    return () => {
+      const duration = performance.now() - startTime;
+      this.recordMetric(name, duration);
+    };
   }
 }
 
