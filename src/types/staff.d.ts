@@ -1,4 +1,3 @@
-
 export type ReservationStatus = 
   | "pending"
   | "confirmed"
@@ -76,6 +75,7 @@ export interface StaffMember {
       other: string[];
     };
   };
+  payrollEntries?: PayrollEntry[];
 }
 
 export interface Shift {
