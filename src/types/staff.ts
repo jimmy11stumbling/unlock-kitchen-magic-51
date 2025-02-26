@@ -194,23 +194,25 @@ export interface DailyReport {
   netProfit: number;
 }
 
+export interface KitchenOrderItem {
+  menuItemId: string;
+  quantity: number;
+  status: 'pending' | 'preparing' | 'ready' | 'delivered';
+  cookingStation: 'grill' | 'fry' | 'salad' | 'dessert' | 'beverage';
+  assignedChef: string;
+  modifications: string[];
+  allergenAlert: boolean;
+  startTime?: string;
+}
+
 export interface KitchenOrder {
   id: number;
   orderId: number;
-  items: {
-    menuItemId: number;
-    quantity: number;
-    status: "pending" | "preparing" | "ready" | "delivered";
-    startTime?: string;
-    completionTime?: string;
-    cookingStation: string;
-    assignedChef: string;
-    modifications: string[];
-    allergenAlert: boolean;
-  }[];
-  priority: "normal" | "high" | "rush";
-  notes: string;
-  coursing: "standard" | "appetizers first" | "serve together" | "desserts after clearing mains";
+  tableNumber: number;
+  items: KitchenOrderItem[];
+  status: 'pending' | 'preparing' | 'ready' | 'delivered';
+  priority: 'normal' | 'high' | 'rush';
+  notes?: string;
   estimatedDeliveryTime: string;
 }
 

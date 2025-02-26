@@ -18,7 +18,6 @@ export function KitchenDashboard() {
   useEffect(() => {
     fetchOrders();
     
-    // Subscribe to real-time updates
     const channel = supabase
       .channel('kitchen-orders')
       .on(
@@ -37,7 +36,7 @@ export function KitchenDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [soundEnabled]);
 
   const playNotificationSound = () => {
     const audio = new Audio('/notification.mp3');
@@ -54,7 +53,18 @@ export function KitchenDashboard() {
 
       if (error) throw error;
 
-      setOrders(data || []);
+      const transformedOrders: KitchenOrder[] = data?.map(order => ({
+        id: order.id,
+        orderId: order.order_id,
+        tableNumber: order.table_number,
+        items: Array.isArray(order.items) ? order.items : [],
+        status: order.status,
+        priority: order.priority,
+        notes: order.notes,
+        estimatedDeliveryTime: order.estimated_delivery_time
+      })) || [];
+
+      setOrders(transformedOrders);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching orders:', error);

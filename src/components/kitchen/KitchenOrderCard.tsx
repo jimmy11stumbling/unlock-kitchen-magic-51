@@ -36,7 +36,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onFlag }: KitchenOrder
         <div>
           <div className="flex items-center gap-2">
             <h3 className="font-semibold">Order #{order.orderId}</h3>
-            <Badge variant="outline">Table {order.table_number}</Badge>
+            <Badge variant="outline">Table {order.tableNumber}</Badge>
             <Badge className={getStatusColor(order.items[0].status)}>
               {order.items[0].status}
             </Badge>
