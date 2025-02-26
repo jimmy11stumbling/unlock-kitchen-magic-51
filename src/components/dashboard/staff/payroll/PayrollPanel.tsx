@@ -1,11 +1,19 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Tabs } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DollarSign, FileText, Settings } from "lucide-react";
 import type { StaffMember, PayrollEntry } from "@/types/staff";
-import { PayrollTabs } from "./components/PayrollTabs";
-import { PayrollTabContent } from "./components/PayrollTabContent";
+import { PayrollProcess } from "./components/PayrollProcess";
+import { PayrollHistory } from "./components/PayrollHistory";
+import { PayrollSettings } from "./components/PayrollSettings";
+
+interface PayrollPanelProps {
+  staff: StaffMember[];
+  onGeneratePayroll: (staffId: number, startDate: string, endDate: string) => Promise<void>;
+  onGeneratePayStub: (payrollEntryId: number) => Promise<string>;
+  onUpdatePayrollSettings: (staffId: number, settings: StaffMember['payrollSettings']) => Promise<void>;
+}
 
 const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
   {
@@ -18,6 +26,7 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
     regularRate: 25,
     overtimeRate: 37.5,
     grossPay: 2187.50,
+    totalPay: 2187.50,
     deductions: {
       tax: 437.50,
       insurance: 150,
@@ -25,9 +34,7 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
       other: 50
     },
     netPay: 1375,
-    status: "paid" as const,
-    paymentDate: "2024-03-20",
-    paymentMethod: "direct_deposit"
+    status: "paid"
   },
   {
     id: 2,
@@ -39,6 +46,7 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
     regularRate: 22,
     overtimeRate: 33,
     grossPay: 1650,
+    totalPay: 1650,
     deductions: {
       tax: 330,
       insurance: 125,
@@ -46,18 +54,9 @@ const MOCK_PAYROLL_HISTORY: PayrollEntry[] = [
       other: 0
     },
     netPay: 1063,
-    status: "paid" as const,
-    paymentDate: "2024-03-20",
-    paymentMethod: "direct_deposit"
+    status: "paid"
   }
 ];
-
-interface PayrollPanelProps {
-  staff: StaffMember[];
-  onGeneratePayroll: (staffId: number, startDate: string, endDate: string) => Promise<void>;
-  onGeneratePayStub: (payrollEntryId: number) => Promise<string>;
-  onUpdatePayrollSettings: (staffId: number, settings: StaffMember['payrollSettings']) => Promise<void>;
-}
 
 export const PayrollPanel = ({
   staff,
@@ -65,37 +64,48 @@ export const PayrollPanel = ({
   onGeneratePayStub,
   onUpdatePayrollSettings
 }: PayrollPanelProps) => {
-  const { toast } = useToast();
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
-
-  const handleGeneratePayroll = async (staffId: number, startDate: string, endDate: string) => {
-    try {
-      await onGeneratePayroll(staffId, startDate, endDate);
-      toast({
-        title: "Success",
-        description: "Payroll generated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate payroll",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <Card className="p-6">
       <Tabs defaultValue="process" className="space-y-4">
-        <PayrollTabs />
-        <PayrollTabContent
-          staff={staff}
-          selectedStaffId={selectedStaffId}
-          payrollHistory={MOCK_PAYROLL_HISTORY}
-          onGeneratePayroll={handleGeneratePayroll}
-          onGeneratePayStub={onGeneratePayStub}
-          onUpdatePayrollSettings={onUpdatePayrollSettings}
-        />
+        <TabsList>
+          <TabsTrigger value="process" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Process Payroll
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Payroll History
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Settings
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="process">
+          <PayrollProcess
+            staff={staff}
+            selectedStaffId={selectedStaffId}
+            onGeneratePayroll={onGeneratePayroll}
+          />
+        </TabsContent>
+
+        <TabsContent value="history">
+          <PayrollHistory
+            staff={staff}
+            payrollHistory={MOCK_PAYROLL_HISTORY}
+            onGeneratePayStub={onGeneratePayStub}
+          />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <PayrollSettings
+            staff={staff}
+            onUpdateSettings={onUpdatePayrollSettings}
+          />
+        </TabsContent>
       </Tabs>
     </Card>
   );
