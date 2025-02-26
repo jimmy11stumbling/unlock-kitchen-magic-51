@@ -45,10 +45,10 @@ export function InventoryStatus() {
   };
 
   const fetchInventoryStatus = async () => {
+    // Instead of using raw(), we'll fetch all ingredients and filter in the application
     const { data, error } = await supabase
       .from('ingredients')
       .select('*')
-      .lte('current_stock', supabase.raw('minimum_stock'))
       .order('current_stock', { ascending: true });
 
     if (error) {
@@ -60,7 +60,12 @@ export function InventoryStatus() {
       return;
     }
 
-    setLowStockItems(data || []);
+    // Filter items where current_stock is less than or equal to minimum_stock
+    const lowStock = (data || []).filter(
+      item => item.current_stock <= item.minimum_stock
+    );
+
+    setLowStockItems(lowStock);
   };
 
   return (
