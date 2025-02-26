@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { KitchenLayout } from "./KitchenLayout";
 import { EquipmentMonitor } from "./EquipmentMonitor";
 import { KitchenOrderCard } from "./KitchenOrderCard";
-import { StaffPerformanceTracker } from "./StaffPerformanceTracker";
 import { QualityControl } from "./QualityControl";
 import { TemperatureMonitor } from "./TemperatureMonitor";
 import { InventoryTracker } from "./InventoryTracker";
@@ -39,7 +38,6 @@ export function KitchenDashboard() {
       <div className="xl:col-span-4 space-y-6">
         <KitchenLayout activeOrders={kitchenOrders?.filter(order => order.status === 'preparing')} />
         <EquipmentMonitor />
-        <StaffPerformanceTracker />
         <QualityControl />
         {kitchenOrders?.map(order => (
           <InventoryTracker key={order.id} order={order} />
