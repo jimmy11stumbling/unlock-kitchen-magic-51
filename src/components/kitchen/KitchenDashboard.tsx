@@ -1,72 +1,58 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { VolumeX, Volume2 } from "lucide-react";
-import { useKitchenOrders } from "./hooks/useKitchenOrders";
-import { KitchenStationTabs } from "./components/KitchenStationTabs";
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { KitchenOrderCard } from "../dashboard/kitchen/KitchenOrderCard";
+import { useKitchenState } from "@/hooks/dashboard/useKitchenState";
+import type { KitchenOrder } from "@/types/staff";
 
-export function KitchenDashboard() {
-  const [activeStation, setActiveStation] = useState<string>("all");
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const { orders, isLoading, fetchOrders, handleStatusUpdate, handleFlag } = useKitchenOrders();
+export const KitchenDashboard = () => {
+  const { kitchenOrders, loading, updateOrderStatus, updateItemStatus } = useKitchenState();
+  const [filterStatus, setFilterStatus] = useState<KitchenOrder['status'] | 'all'>('all');
 
-  useEffect(() => {
-    fetchOrders();
-    
-    const channel = supabase
-      .channel('kitchen-orders')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'kitchen_orders' },
-        (payload) => {
-          console.log('Change received!', payload);
-          if (soundEnabled) {
-            playNotificationSound();
-          }
-          fetchOrders();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [soundEnabled, fetchOrders]);
-
-  const playNotificationSound = () => {
-    const audio = new Audio('/notification.mp3');
-    audio.play().catch(console.error);
-  };
-
-  if (isLoading) {
-    return <div>Loading kitchen orders...</div>;
-  }
+  const filteredOrders = kitchenOrders.filter(order => 
+    filterStatus === 'all' ? true : order.status === filterStatus
+  );
 
   return (
-    <div className="p-6">
+    <div className="container mx-auto p-4 max-w-[1920px]">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Kitchen Display System</h1>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setSoundEnabled(!soundEnabled)}
-        >
-          {soundEnabled ? (
-            <Volume2 className="h-4 w-4" />
-          ) : (
-            <VolumeX className="h-4 w-4" />
-          )}
-        </Button>
+        <h1 className="text-2xl font-bold">Kitchen Dashboard</h1>
+        <Select value={filterStatus} onValueChange={(value: typeof filterStatus) => setFilterStatus(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Orders</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="preparing">Preparing</SelectItem>
+            <SelectItem value="ready">Ready</SelectItem>
+            <SelectItem value="delivered">Delivered</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <KitchenStationTabs
-        activeStation={activeStation}
-        setActiveStation={setActiveStation}
-        orders={orders}
-        onStatusUpdate={handleStatusUpdate}
-        onFlag={handleFlag}
-      />
+      {loading ? (
+        <Card className="p-8">
+          <p className="text-center">Loading kitchen orders...</p>
+        </Card>
+      ) : filteredOrders.length === 0 ? (
+        <Card className="p-8">
+          <p className="text-center">No orders matching the selected filter</p>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredOrders.map(order => (
+            <KitchenOrderCard
+              key={order.id}
+              order={order}
+              onUpdateStatus={updateOrderStatus}
+              onUpdateItemStatus={updateItemStatus}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
-}
+};
