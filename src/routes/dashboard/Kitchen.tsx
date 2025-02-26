@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { 
   Select, 
@@ -11,6 +11,7 @@ import {
 import { Clock, Users, ChefHat, Flame } from "lucide-react";
 import { KitchenOrdersList } from "@/components/dashboard/kitchen/KitchenOrdersList";
 import { useDashboardState } from "@/hooks/useDashboardState";
+import { useKitchenNotifications } from "@/hooks/dashboard/useKitchenNotifications";
 import type { KitchenOrder } from "@/types/staff";
 
 const Kitchen = () => {
@@ -22,9 +23,62 @@ const Kitchen = () => {
     updateItemStatus,
     staff 
   } = useDashboardState();
+
+  const {
+    notifyNewOrder,
+    notifyOrderReady,
+    notifyOrderOverdue
+  } = useKitchenNotifications();
   
   const [statusFilter, setStatusFilter] = useState<KitchenOrder["status"] | "all">("all");
   const [stationFilter, setStationFilter] = useState<string>("all");
+  const [previousOrders, setPreviousOrders] = useState<KitchenOrder[]>([]);
+
+  useEffect(() => {
+    if (!kitchenOrders) return;
+
+    // Check for new orders
+    const newOrders = kitchenOrders.filter(
+      order => !previousOrders.find(prev => prev.id === order.id)
+    );
+    newOrders.forEach(notifyNewOrder);
+
+    // Check for orders that became ready
+    kitchenOrders.forEach(order => {
+      const prevOrder = previousOrders.find(prev => prev.id === order.id);
+      if (prevOrder && prevOrder.status !== "ready" && order.status === "ready") {
+        notifyOrderReady(order);
+      }
+    });
+
+    // Check for overdue orders
+    kitchenOrders.forEach(order => {
+      const isOverdue = order.items.some(item => {
+        if (!item.start_time || item.status !== "preparing") return false;
+        const elapsedMinutes = Math.floor(
+          (new Date().getTime() - new Date(item.start_time).getTime()) / 1000 / 60
+        );
+        return elapsedMinutes > 15;
+      });
+
+      if (isOverdue) {
+        const prevOrder = previousOrders.find(prev => prev.id === order.id);
+        const wasOverdue = prevOrder?.items.some(item => {
+          if (!item.start_time || item.status !== "preparing") return false;
+          const elapsedMinutes = Math.floor(
+            (new Date().getTime() - new Date(item.start_time).getTime()) / 1000 / 60
+          );
+          return elapsedMinutes > 15;
+        });
+
+        if (!wasOverdue) {
+          notifyOrderOverdue(order);
+        }
+      }
+    });
+
+    setPreviousOrders(kitchenOrders);
+  }, [kitchenOrders, previousOrders, notifyNewOrder, notifyOrderReady, notifyOrderOverdue]);
 
   const activeStaff = staff?.filter(member => 
     member.status === "active" && member.role === "chef"
