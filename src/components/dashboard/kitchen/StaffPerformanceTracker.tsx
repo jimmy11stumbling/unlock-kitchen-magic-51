@@ -6,35 +6,38 @@ import { useToast } from "@/components/ui/use-toast";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Simplified base types to avoid deep nesting
-interface BaseStaffMember {
+// Base database types
+type DbStaffMember = {
   id: number;
   name: string;
   performance_rating: number;
-}
+  role: string;
+};
 
-interface BaseKitchenOrder {
+type DbKitchenOrder = {
+  id: number;
   status: string;
   created_at: string;
   updated_at: string;
   estimated_delivery_time: string;
-}
+  assigned_chef: number;
+};
 
-// Final metrics types
-interface OrderMetrics {
+// Simplified metrics types
+type OrderMetrics = {
   completed: number;
   avgPrepTime: number;
   onTimeRate: number;
-}
+};
 
-interface StaffMetrics {
+type StaffMetrics = {
   id: number;
   name: string;
   ordersCompleted: number;
   averagePreparationTime: number;
   onTimeDeliveryRate: number;
   qualityRating: number;
-}
+};
 
 export function StaffPerformanceTracker() {
   const [staffMetrics, setStaffMetrics] = useState<StaffMetrics[]>([]);
@@ -46,7 +49,7 @@ export function StaffPerformanceTracker() {
     return () => clearInterval(interval);
   }, []);
 
-  const calculateOrderMetrics = (orders: BaseKitchenOrder[]): OrderMetrics => {
+  const calculateOrderMetrics = (orders: DbKitchenOrder[]): OrderMetrics => {
     const completedOrders = orders.filter(order => order.status === 'delivered');
     const onTimeOrders = completedOrders.filter(order => {
       const completionTime = new Date(order.updated_at);
@@ -69,36 +72,41 @@ export function StaffPerformanceTracker() {
 
   const fetchStaffMetrics = async () => {
     try {
-      const { data: staffData, error: staffError } = await supabase
+      // Get all chef staff members
+      const staffResult = await supabase
         .from('staff_members')
-        .select('id, name, performance_rating')
-        .eq('role', 'chef')
-        .returns<BaseStaffMember[]>();
+        .select('*')
+        .eq('role', 'chef');
 
-      if (staffError) throw staffError;
-      if (!staffData?.length) return;
+      if (staffResult.error) throw staffResult.error;
+      const chefs = staffResult.data as DbStaffMember[];
+      if (!chefs.length) return;
 
-      const metricsPromises = staffData.map(async (staff) => {
-        const { data: ordersData } = await supabase
+      // Get orders for each chef
+      const metricsPromises = chefs.map(async (chef) => {
+        const ordersResult = await supabase
           .from('kitchen_orders')
-          .select('status, created_at, updated_at, estimated_delivery_time')
-          .eq('assigned_chef', staff.id)
-          .returns<BaseKitchenOrder[]>();
+          .select('*')
+          .eq('assigned_chef', chef.id);
 
-        const orderMetrics = calculateOrderMetrics(ordersData || []);
+        const orders = ordersResult.data as DbKitchenOrder[] || [];
+        const metrics = calculateOrderMetrics(orders);
 
-        return {
-          id: staff.id,
-          name: staff.name,
-          ordersCompleted: orderMetrics.completed,
-          averagePreparationTime: orderMetrics.avgPrepTime,
-          onTimeDeliveryRate: orderMetrics.onTimeRate,
-          qualityRating: staff.performance_rating || 0
-        } satisfies StaffMetrics;
+        const staffMetric: StaffMetrics = {
+          id: chef.id,
+          name: chef.name,
+          ordersCompleted: metrics.completed,
+          averagePreparationTime: metrics.avgPrepTime,
+          onTimeDeliveryRate: metrics.onTimeRate,
+          qualityRating: chef.performance_rating || 0
+        };
+
+        return staffMetric;
       });
 
-      const metrics = await Promise.all(metricsPromises);
-      setStaffMetrics(metrics);
+      const resolvedMetrics = await Promise.all(metricsPromises);
+      setStaffMetrics(resolvedMetrics);
+
     } catch (error) {
       console.error('Error fetching staff metrics:', error);
       toast({
