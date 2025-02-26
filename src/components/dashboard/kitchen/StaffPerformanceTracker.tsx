@@ -6,16 +6,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Simple, flat types without nesting to avoid type instantiation depth issues
-type DbStaffMember = {
+// Using explicit types to avoid deep instantiation
+type BasicStaffMember = {
   id: number;
-  name: string;
+  name: string; 
   performance_rating: number;
-  role: string;
 };
 
-type SimpleKitchenOrder = {
-  id: number;
+type BasicKitchenOrder = {
   status: string;
   created_at: string;
   updated_at: string;
@@ -41,11 +39,13 @@ export function StaffPerformanceTracker() {
     return () => clearInterval(interval);
   }, []);
 
-  // Simplified calculation function with basic types
-  const calculateMetrics = (orders: SimpleKitchenOrder[]) => {
+  // Simplified calculation without complex type interactions
+  const calculateMetrics = (orders: BasicKitchenOrder[]) => {
     const completed = orders.filter(order => order.status === 'delivered');
     const onTime = completed.filter(order => {
-      return new Date(order.updated_at) <= new Date(order.estimated_delivery_time);
+      const deliveryTime = new Date(order.updated_at).getTime();
+      const estimatedTime = new Date(order.estimated_delivery_time).getTime();
+      return deliveryTime <= estimatedTime;
     });
 
     const totalMinutes = completed.reduce((acc, curr) => {
@@ -63,32 +63,34 @@ export function StaffPerformanceTracker() {
 
   const fetchStaffMetrics = async () => {
     try {
-      const { data: chefs, error: staffError } = await supabase
+      // Using explicit typing and casting to avoid deep instantiation
+      const { data, error } = await supabase
         .from('staff_members')
-        .select('id, name, performance_rating, role')
-        .eq('role', 'chef');
+        .select('id, name, performance_rating')
+        .eq('role', 'chef')
+        .returns<BasicStaffMember[]>();
 
-      if (staffError) throw staffError;
-      if (!chefs || chefs.length === 0) return;
+      if (error) throw error;
+      if (!data?.length) return;
 
-      // Process chefs sequentially to avoid Promise.all type depth issues
       const metrics: StaffMetrics[] = [];
 
-      for (const chef of chefs) {
-        const { data: orders } = await supabase
+      for (const chef of data) {
+        const { data: orderData } = await supabase
           .from('kitchen_orders')
-          .select('id, status, created_at, updated_at, estimated_delivery_time')
-          .eq('assigned_chef', chef.id);
+          .select('status, created_at, updated_at, estimated_delivery_time')
+          .eq('assigned_chef', chef.id)
+          .returns<BasicKitchenOrder[]>();
 
-        // Calculate metrics with simplified order type
-        const orderMetrics = calculateMetrics(orders as SimpleKitchenOrder[] || []);
+        const orders = orderData || [];
+        const { completed, avgPrepTime, onTimeRate } = calculateMetrics(orders);
 
         metrics.push({
           id: chef.id,
           name: chef.name,
-          ordersCompleted: orderMetrics.completed,
-          averagePreparationTime: orderMetrics.avgPrepTime,
-          onTimeDeliveryRate: orderMetrics.onTimeRate,
+          ordersCompleted: completed,
+          averagePreparationTime: avgPrepTime,
+          onTimeDeliveryRate: onTimeRate,
           qualityRating: chef.performance_rating || 0
         });
       }
