@@ -1,19 +1,15 @@
 
 import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { KitchenOrderCard } from "./KitchenOrderCard";
-import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
 import { VolumeX, Volume2 } from "lucide-react";
+import { useKitchenOrders } from "./hooks/useKitchenOrders";
+import { KitchenStationTabs } from "./components/KitchenStationTabs";
 
 export function KitchenDashboard() {
-  const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [activeStation, setActiveStation] = useState<string>("all");
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const { orders, isLoading, fetchOrders, handleStatusUpdate, handleFlag } = useKitchenOrders();
 
   useEffect(() => {
     fetchOrders();
@@ -36,129 +32,12 @@ export function KitchenDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [soundEnabled]);
+  }, [soundEnabled, fetchOrders]);
 
   const playNotificationSound = () => {
     const audio = new Audio('/notification.mp3');
     audio.play().catch(console.error);
   };
-
-  const fetchOrders = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('kitchen_orders')
-        .select('*')
-        .order('priority', { ascending: false })
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-
-      const transformedOrders: KitchenOrder[] = data?.map(order => ({
-        id: order.id,
-        orderId: order.order_id,
-        tableNumber: order.table_number,
-        items: (Array.isArray(order.items) ? order.items : []).map((item: any) => ({
-          menuItemId: Number(item.menuItemId),
-          quantity: Number(item.quantity),
-          status: validateStatus(item.status),
-          cookingStation: validateCookingStation(item.cookingStation),
-          assignedChef: item.assignedChef || '',
-          modifications: Array.isArray(item.modifications) ? item.modifications : [],
-          allergenAlert: Boolean(item.allergenAlert)
-        })),
-        status: validateStatus(order.status),
-        priority: validatePriority(order.priority),
-        notes: order.notes,
-        estimatedDeliveryTime: order.estimated_delivery_time
-      })) || [];
-
-      setOrders(transformedOrders);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch orders",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const validateStatus = (status: string): KitchenOrderItem['status'] => {
-    const validStatuses = ['pending', 'preparing', 'ready', 'delivered'];
-    return validStatuses.includes(status) ? status as KitchenOrderItem['status'] : 'pending';
-  };
-
-  const validatePriority = (priority: string): KitchenOrder['priority'] => {
-    const validPriorities = ['normal', 'high', 'rush'];
-    return validPriorities.includes(priority) ? priority as KitchenOrder['priority'] : 'normal';
-  };
-
-  const validateCookingStation = (station: string): KitchenOrderItem['cookingStation'] => {
-    const validStations = ['grill', 'fry', 'salad', 'dessert', 'beverage', 'hot', 'cold'];
-    return validStations.includes(station) ? station as KitchenOrderItem['cookingStation'] : 'grill';
-  };
-
-  const handleStatusUpdate = async (orderId: number, status: "preparing" | "ready" | "delivered") => {
-    try {
-      const { error } = await supabase
-        .from('kitchen_orders')
-        .update({ 
-          status,
-          ...(status === 'preparing' ? { preparation_start_time: new Date().toISOString() } : {}),
-          ...(status === 'ready' ? { preparation_end_time: new Date().toISOString() } : {})
-        })
-        .eq('id', orderId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Status Updated",
-        description: `Order #${orderId} marked as ${status}`,
-      });
-
-      fetchOrders();
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update order status",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleFlag = async (orderId: number) => {
-    try {
-      const order = orders.find(o => o.id === orderId);
-      const newPriority = order?.priority === "high" ? "normal" : "high";
-
-      const { error } = await supabase
-        .from('kitchen_orders')
-        .update({ priority: newPriority })
-        .eq('id', orderId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Priority Updated",
-        description: `Order #${orderId} priority set to ${newPriority}`,
-      });
-
-      fetchOrders();
-    } catch (error) {
-      console.error('Error updating order priority:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update order priority",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const filteredOrders = orders.filter(order => 
-    activeStation === "all" || order.items.some(item => item.cookingStation === activeStation)
-  );
 
   if (isLoading) {
     return <div>Loading kitchen orders...</div>;
@@ -181,37 +60,13 @@ export function KitchenDashboard() {
         </Button>
       </div>
 
-      <Tabs value={activeStation} onValueChange={setActiveStation} className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">All Orders</TabsTrigger>
-          <TabsTrigger value="grill">Grill Station</TabsTrigger>
-          <TabsTrigger value="fry">Fry Station</TabsTrigger>
-          <TabsTrigger value="salad">Salad Station</TabsTrigger>
-          <TabsTrigger value="dessert">Dessert Station</TabsTrigger>
-          <TabsTrigger value="beverage">Beverage Station</TabsTrigger>
-          <TabsTrigger value="hot">Hot Station</TabsTrigger>
-          <TabsTrigger value="cold">Cold Station</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value={activeStation}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredOrders.length === 0 ? (
-              <p className="col-span-full text-center text-muted-foreground py-8">
-                No orders for this station
-              </p>
-            ) : (
-              filteredOrders.map((order) => (
-                <KitchenOrderCard
-                  key={order.id}
-                  order={order}
-                  onStatusUpdate={handleStatusUpdate}
-                  onFlag={handleFlag}
-                />
-              ))
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <KitchenStationTabs
+        activeStation={activeStation}
+        setActiveStation={setActiveStation}
+        orders={orders}
+        onStatusUpdate={handleStatusUpdate}
+        onFlag={handleFlag}
+      />
     </div>
   );
 }
