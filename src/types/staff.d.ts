@@ -25,7 +25,7 @@ export interface Reservation {
 }
 
 export type StaffStatus = "active" | "on_break" | "off_duty";
-export type StaffRole = "manager" | "server" | "chef" | "bartender";
+export type StaffRole = "manager" | "server" | "chef" | "bartender" | "host";
 
 export interface StaffMember {
   id: number;
@@ -52,6 +52,7 @@ export interface StaffMember {
   hourlyRate?: number;
   overtimeRate?: number;
   shift?: string;
+  startDate?: string;
   emergencyContact?: {
     name: string;
     phone: string;
@@ -64,9 +65,26 @@ export interface StaffMember {
   };
   payrollSettings?: {
     paymentMethod: "direct_deposit" | "check";
-    taxWithholding: number;
-    benefits: string[];
+    taxWithholding: {
+      federal: number;
+      state: number;
+      local: number;
+    };
+    benefits: {
+      insurance: string;
+      retirement: string;
+      other: string[];
+    };
   };
+}
+
+export interface Shift {
+  id: number;
+  staffId: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: "scheduled" | "completed" | "cancelled";
 }
 
 export interface KitchenOrderItem {
@@ -108,17 +126,19 @@ export interface MenuItem {
   orderCount?: number;
 }
 
+export interface OrderItem {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+  notes?: string;
+}
+
 export interface Order {
   id: number;
   tableNumber: number;
   serverName: string;
-  items: {
-    id: number;
-    name: string;
-    quantity: number;
-    price: number;
-    notes?: string;
-  }[];
+  items: OrderItem[];
   total: number;
   status: "pending" | "preparing" | "ready" | "delivered" | "cancelled";
   timestamp: string;
@@ -169,12 +189,18 @@ export interface PaymentTransaction {
 export interface PayrollEntry {
   id: number;
   staffId: number;
-  startDate: string;
-  endDate: string;
+  payPeriodStart: string;
+  payPeriodEnd: string;
   regularHours: number;
   overtimeHours: number;
+  grossPay: number;
   totalPay: number;
-  deductions: number;
+  deductions: {
+    tax: number;
+    insurance: number;
+    retirement: number;
+    other: number;
+  };
   netPay: number;
   status: "pending" | "approved" | "paid";
 }
@@ -185,6 +211,7 @@ export interface Message {
   sender: string;
   timestamp: string;
   type: "system" | "user" | "error";
+  role?: string;
 }
 
 export interface InventoryItem {
@@ -197,4 +224,25 @@ export interface InventoryItem {
   price: number;
   supplier: string;
   lastRestocked: string;
+}
+
+export interface CustomerFeedback {
+  id: number;
+  orderId: number;
+  date: string;
+  rating: number;
+  comment: string;
+  resolved: boolean;
+}
+
+export interface Promotion {
+  id: number;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  applicableItems: number[];
+  active: boolean;
 }
