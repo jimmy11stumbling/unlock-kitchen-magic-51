@@ -31,6 +31,8 @@ interface Announcement {
   active: boolean;
 }
 
+type AnnouncementInsert = Pick<Announcement, 'content' | 'priority' | 'active'>;
+
 export function Announcements() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [newAnnouncement, setNewAnnouncement] = useState("");
@@ -80,10 +82,11 @@ export function Announcements() {
 
   const fetchAnnouncements = async () => {
     const { data, error } = await supabase
-      .from('announcements')
-      .select('*')
-      .eq('active', true)
-      .order('created_at', { ascending: false });
+      .from("announcements")
+      .select("id, content, priority, created_at, updated_at, active")
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .returns<Announcement[]>();
 
     if (error) {
       toast({
@@ -94,21 +97,21 @@ export function Announcements() {
       return;
     }
 
-    setAnnouncements(data);
+    setAnnouncements(data || []);
   };
 
   const createAnnouncement = async () => {
     if (!newAnnouncement.trim()) return;
 
+    const newAnnouncementData: AnnouncementInsert = {
+      content: newAnnouncement.trim(),
+      priority,
+      active: true
+    };
+
     const { error } = await supabase
-      .from('announcements')
-      .insert([
-        {
-          content: newAnnouncement.trim(),
-          priority,
-          active: true
-        }
-      ]);
+      .from("announcements")
+      .insert([newAnnouncementData]);
 
     if (error) {
       toast({
@@ -129,9 +132,9 @@ export function Announcements() {
 
   const deactivateAnnouncement = async (id: string) => {
     const { error } = await supabase
-      .from('announcements')
+      .from("announcements")
       .update({ active: false })
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) {
       toast({
