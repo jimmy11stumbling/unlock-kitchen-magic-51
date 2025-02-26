@@ -31,6 +31,8 @@ import {
   generateMockSalesData 
 } from '@/hooks/dashboard/analytics/data/mockDashboardData';
 
+import { Announcements } from "@/components/dashboard/Announcements";
+
 interface DashboardMetrics {
   totalOrders: number;
   totalRevenue: number;
@@ -290,6 +292,8 @@ export default function Overview() {
           </TabsList>
         </Tabs>
       </div>
+
+      <Announcements />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="p-4">
