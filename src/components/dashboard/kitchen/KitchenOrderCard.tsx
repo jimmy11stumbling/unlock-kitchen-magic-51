@@ -13,6 +13,8 @@ import { CoursePlannerDialog } from "./CoursePlannerDialog";
 import { RecipeInstructionsDialog } from "./RecipeInstructionsDialog";
 import { OrderModificationLog } from "./OrderModificationLog";
 import { TemperatureMonitor } from "./TemperatureMonitor";
+import { OrderTicketPrinter } from "./OrderTicketPrinter";
+import { InventoryTracker } from "./InventoryTracker";
 
 interface KitchenOrderCardProps {
   order: KitchenOrder;
@@ -87,6 +89,7 @@ export function KitchenOrderCard({
         </div>
         <div className="flex gap-2">
           <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+          <OrderTicketPrinter order={order} />
           <Button
             variant="ghost"
             size="sm"
@@ -220,6 +223,8 @@ export function KitchenOrderCard({
           </div>
         ))}
 
+        <InventoryTracker order={order} />
+
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
           <span>Ordered at {new Date(order.created_at).toLocaleTimeString()}</span>
@@ -291,7 +296,6 @@ export function KitchenOrderCard({
                 user: 'John Chef',
                 details: 'Changed status to preparing'
               },
-              // Add more modification entries as needed
             ]}
           />
         </DialogContent>
