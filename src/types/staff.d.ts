@@ -194,6 +194,7 @@ export interface PayrollEntry {
   regularHours: number;
   overtimeHours: number;
   regularRate: number;
+  overtimeRate: number;
   grossPay: number;
   totalPay: number;
   deductions: {

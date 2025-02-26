@@ -1,33 +1,32 @@
 
-import type { Order, KitchenOrder, KitchenOrderItem } from "@/types/staff";
+import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
 
-export const processOrder = (order: Order): KitchenOrder => {
-  const kitchenItems: KitchenOrderItem[] = order.items.map(item => ({
-    menuItemId: Number(item.id),
-    quantity: item.quantity,
-    status: "pending",
-    cookingStation: determineStation(item.name),
-    assignedChef: "",
-    modifications: [],
-    allergenAlert: false
-  }));
+export const processOrder = (orderId: number) => {
+  const items: KitchenOrderItem[] = [
+    {
+      id: 1,
+      name: "Grilled Chicken",
+      menuItemId: 1,
+      quantity: 2,
+      status: "pending",
+      cookingStation: "grill",
+      assignedChef: "John",
+      modifications: [],
+      allergenAlert: false,
+      notes: ""
+    }
+  ];
 
-  return {
-    id: Math.floor(Math.random() * 1000),
-    orderId: order.id,
-    tableNumber: order.tableNumber,
-    items: kitchenItems,
+  const kitchenOrder: KitchenOrder = {
+    id: orderId,
+    orderId,
+    tableNumber: 1,
+    items,
     status: "pending",
     priority: "normal",
-    estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString()
+    estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString(),
+    createdAt: new Date().toISOString()
   };
-};
 
-const determineStation = (itemName: string): KitchenOrderItem["cookingStation"] => {
-  // Simple logic to determine cooking station
-  if (itemName.toLowerCase().includes("salad")) return "salad";
-  if (itemName.toLowerCase().includes("drink")) return "beverage";
-  if (itemName.toLowerCase().includes("dessert")) return "dessert";
-  if (itemName.toLowerCase().includes("fries")) return "fry";
-  return "grill"; // default station
+  return kitchenOrder;
 };

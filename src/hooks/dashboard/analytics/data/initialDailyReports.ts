@@ -1,12 +1,12 @@
-
 import type { DailyReport } from "@/types/staff";
 
 export const initialDailyReports: DailyReport[] = [
   {
-    date: "2024-03-23",
-    totalRevenue: 4950.25,
-    totalOrders: 165,
-    averageOrderValue: 30.00,
+    id: 1,
+    date: "2024-03-01",
+    totalRevenue: 5800,
+    totalOrders: 145,
+    averageOrderValue: 40,
     topSellingItems: [
       { 
         id: 1,
@@ -42,11 +42,12 @@ export const initialDailyReports: DailyReport[] = [
         orderCount: 32
       }
     ],
-    laborCosts: 1250.25,
-    inventoryCosts: 987.50,
-    netProfit: 2712.50, // Corrected: totalRevenue - (laborCosts + inventoryCosts)
+    laborCosts: 1200,
+    inventoryCosts: 2000,
+    netProfit: 2600
   },
   {
+    id: 2,
     date: "2024-03-22",
     totalRevenue: 5350.75,
     totalOrders: 178,
@@ -88,9 +89,10 @@ export const initialDailyReports: DailyReport[] = [
     ],
     laborCosts: 1337.69,
     inventoryCosts: 1070.15,
-    netProfit: 2942.91, // Corrected: totalRevenue - (laborCosts + inventoryCosts)
+    netProfit: 2942.91
   },
   {
+    id: 3,
     date: "2024-03-21",
     totalRevenue: 4890.80,
     totalOrders: 163,
@@ -132,6 +134,6 @@ export const initialDailyReports: DailyReport[] = [
     ],
     laborCosts: 1222.70,
     inventoryCosts: 978.16,
-    netProfit: 2689.94, // Corrected: totalRevenue - (laborCosts + inventoryCosts)
+    netProfit: 2689.94
   }
 ];

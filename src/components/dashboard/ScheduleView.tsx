@@ -1,10 +1,10 @@
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { StaffMember, Shift } from "@/types/staff"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { StaffMember, Shift } from "@/types/staff";
 
 interface ScheduleViewProps {
-  shifts: Shift[]
-  staff: StaffMember[]
+  shifts: Shift[];
+  staff: StaffMember[];
 }
 
 export const ScheduleView = ({ shifts, staff }: ScheduleViewProps) => {
@@ -24,11 +24,11 @@ export const ScheduleView = ({ shifts, staff }: ScheduleViewProps) => {
             <TableRow key={shift.id}>
               <TableCell>{staffMember?.name}</TableCell>
               <TableCell>{shift.date}</TableCell>
-              <TableCell>{shift.time}</TableCell>
+              <TableCell>{`${shift.startTime} - ${shift.endTime}`}</TableCell>
             </TableRow>
           );
         })}
       </TableBody>
     </Table>
-  )
-}
+  );
+};

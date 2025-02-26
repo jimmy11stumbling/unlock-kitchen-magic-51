@@ -21,9 +21,12 @@ const Staff = () => {
     staff, 
     addStaffMember, 
     updateStaffStatus, 
-    addShift,
     updateStaffInfo
   } = useDashboardState();
+
+  const handleAddShift = (staffId: number, date: string, startTime: string, endTime: string) => {
+    // Handle shift addition
+  };
 
   return (
     <div className="p-8 space-y-8">
@@ -94,7 +97,7 @@ const Staff = () => {
             staff={staff}
             onAddStaff={addStaffMember}
             onUpdateStatus={updateStaffStatus}
-            onAddShift={addShift}
+            onAddShift={handleAddShift}
             onUpdateInfo={updateStaffInfo}
           />
         </TabsContent>
