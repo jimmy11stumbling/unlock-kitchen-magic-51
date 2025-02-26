@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestError } from "@supabase/supabase-js";
 
 interface StaffMetrics {
   id: number;
@@ -21,7 +22,7 @@ interface StaffMember {
   performance_rating: number;
 }
 
-interface KitchenOrder {
+interface KitchenOrderResponse {
   id: number;
   status: string;
   created_at: string;
@@ -41,22 +42,24 @@ export function StaffPerformanceTracker() {
 
   const fetchStaffMetrics = async () => {
     try {
-      const { data: staffData, error: staffError } = await supabase
+      const staffResponse = await supabase
         .from('staff_members')
         .select('id, name, performance_rating')
         .eq('role', 'chef');
 
-      if (staffError) throw staffError;
+      if (staffResponse.error) throw staffResponse.error;
 
+      const staffData = staffResponse.data as StaffMember[];
       const metrics: StaffMetrics[] = [];
-      
-      for (const staff of (staffData || [])) {
-        const { data: orders } = await supabase
+
+      for (const staff of staffData) {
+        const ordersResponse = await supabase
           .from('kitchen_orders')
           .select('id, status, created_at, updated_at, estimated_delivery_time')
           .eq('assigned_chef', staff.id);
 
-        const completedOrders = (orders || []).filter(order => order.status === 'delivered');
+        const orders = (ordersResponse.data || []) as KitchenOrderResponse[];
+        const completedOrders = orders.filter(order => order.status === 'delivered');
         const onTimeOrders = completedOrders.filter(order => {
           const completionTime = new Date(order.updated_at);
           const estimatedTime = new Date(order.estimated_delivery_time);
