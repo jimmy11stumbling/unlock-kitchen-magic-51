@@ -6,20 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Using explicit types to avoid deep instantiation
-type BasicStaffMember = {
-  id: number;
-  name: string; 
-  performance_rating: number;
-};
-
-type BasicKitchenOrder = {
-  status: string;
-  created_at: string;
-  updated_at: string;
-  estimated_delivery_time: string;
-};
-
+// Flat types without any nesting or Supabase generic types
 type StaffMetrics = {
   id: number;
   name: string;
@@ -39,8 +26,7 @@ export function StaffPerformanceTracker() {
     return () => clearInterval(interval);
   }, []);
 
-  // Simplified calculation without complex type interactions
-  const calculateMetrics = (orders: BasicKitchenOrder[]) => {
+  const calculateMetrics = (orders: any[]) => {
     const completed = orders.filter(order => order.status === 'delivered');
     const onTime = completed.filter(order => {
       const deliveryTime = new Date(order.updated_at).getTime();
@@ -63,27 +49,25 @@ export function StaffPerformanceTracker() {
 
   const fetchStaffMetrics = async () => {
     try {
-      // Using explicit typing and casting to avoid deep instantiation
-      const { data, error } = await supabase
+      // Using raw query to avoid type instantiation issues
+      const { data: chefs, error: staffError } = await supabase
         .from('staff_members')
         .select('id, name, performance_rating')
-        .eq('role', 'chef')
-        .returns<BasicStaffMember[]>();
+        .eq('role', 'chef');
 
-      if (error) throw error;
-      if (!data?.length) return;
+      if (staffError) throw staffError;
+      if (!chefs?.length) return;
 
       const metrics: StaffMetrics[] = [];
 
-      for (const chef of data) {
-        const { data: orderData } = await supabase
+      for (const chef of chefs) {
+        // Using raw query without type instantiation
+        const { data: orders } = await supabase
           .from('kitchen_orders')
           .select('status, created_at, updated_at, estimated_delivery_time')
-          .eq('assigned_chef', chef.id)
-          .returns<BasicKitchenOrder[]>();
+          .eq('assigned_chef', chef.id);
 
-        const orders = orderData || [];
-        const { completed, avgPrepTime, onTimeRate } = calculateMetrics(orders);
+        const { completed, avgPrepTime, onTimeRate } = calculateMetrics(orders || []);
 
         metrics.push({
           id: chef.id,
