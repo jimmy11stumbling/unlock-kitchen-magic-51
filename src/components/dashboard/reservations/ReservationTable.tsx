@@ -1,6 +1,14 @@
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { Reservation } from "@/types/staff";
 
 interface ReservationTableProps {
@@ -21,8 +29,8 @@ export const ReservationTable = ({
           <TableHead>Customer</TableHead>
           <TableHead>Date</TableHead>
           <TableHead>Time</TableHead>
-          <TableHead>Party Size</TableHead>
           <TableHead>Table</TableHead>
+          <TableHead>Party Size</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
@@ -33,29 +41,41 @@ export const ReservationTable = ({
             <TableCell>{reservation.customerName}</TableCell>
             <TableCell>{reservation.date}</TableCell>
             <TableCell>{reservation.time}</TableCell>
+            <TableCell>{reservation.tableNumber}</TableCell>
             <TableCell>{reservation.partySize}</TableCell>
-            <TableCell>#{reservation.tableNumber}</TableCell>
             <TableCell>
-              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(reservation.status)}`}>
+              <Badge className={getStatusColor(reservation.status)}>
                 {reservation.status}
-              </span>
+              </Badge>
             </TableCell>
             <TableCell>
-              <Select
-                value={reservation.status}
-                onValueChange={(value: Reservation["status"]) =>
-                  onUpdateStatus(reservation.id, value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="confirmed">Confirm</SelectItem>
-                  <SelectItem value="cancelled">Cancel</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                {reservation.status === "pending" && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => onUpdateStatus(reservation.id, "confirmed")}
+                    >
+                      Confirm
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => onUpdateStatus(reservation.id, "cancelled")}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                )}
+                {reservation.status === "confirmed" && (
+                  <Button
+                    size="sm"
+                    onClick={() => onUpdateStatus(reservation.id, "completed")}
+                  >
+                    Complete
+                  </Button>
+                )}
+              </div>
             </TableCell>
           </TableRow>
         ))}

@@ -1,16 +1,18 @@
 
 import type { Reservation } from "@/types/staff";
 
-export const getStatusColor = (status: Reservation["status"]): string => {
+export const getStatusColor = (status: Reservation["status"]) => {
   switch (status) {
     case "confirmed":
-      return "text-green-600 bg-green-100";
+      return "bg-green-100 text-green-800";
     case "pending":
-      return "text-yellow-600 bg-yellow-100";
+      return "bg-yellow-100 text-yellow-800";
     case "cancelled":
-      return "text-red-600 bg-red-100";
+      return "bg-red-100 text-red-800";
+    case "completed":
+      return "bg-blue-100 text-blue-800";
     default:
-      return "text-gray-600 bg-gray-100";
+      return "bg-gray-100 text-gray-800";
   }
 };
 
@@ -19,12 +21,12 @@ export const isTimeSlotAvailable = (
   date: string,
   tableNumber: number,
   reservations: Reservation[]
-): boolean => {
+) => {
   return !reservations.some(
-    (r) =>
-      r.date === date &&
-      r.time === time &&
-      r.tableNumber === tableNumber &&
-      r.status !== "cancelled"
+    (reservation) =>
+      reservation.date === date &&
+      reservation.time === time &&
+      reservation.tableNumber === tableNumber &&
+      reservation.status !== "cancelled"
   );
 };
