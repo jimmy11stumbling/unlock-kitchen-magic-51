@@ -32,6 +32,8 @@ import {
 } from '@/hooks/dashboard/analytics/data/mockDashboardData';
 
 import { Announcements } from "@/components/dashboard/Announcements";
+import { SalesTracker } from "@/components/dashboard/SalesTracker";
+import { KitchenStatus } from "@/components/dashboard/KitchenStatus";
 
 interface DashboardMetrics {
   totalOrders: number;
@@ -94,7 +96,6 @@ export default function Overview() {
       const staffData = mockStaffData;
       const inventoryData = mockInventoryData;
 
-      // Enhanced calculations
       const calculatedMetrics = {
         totalOrders: ordersData.length,
         totalRevenue: calculateTotalRevenue(ordersData),
@@ -294,6 +295,11 @@ export default function Overview() {
       </div>
 
       <Announcements />
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <SalesTracker />
+        <KitchenStatus />
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="p-4">
