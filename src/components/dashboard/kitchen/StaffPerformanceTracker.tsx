@@ -78,36 +78,40 @@ export function StaffPerformanceTracker() {
 
   const fetchStaffMetrics = async () => {
     try {
-      const { data: chefs, error: staffError } = await supabase
+      // Fetch chefs data with type safety
+      const chefResult = await supabase
         .from('staff_members')
         .select()
         .eq('role', 'chef');
 
-      if (staffError) throw staffError;
-      if (!chefs) return;
+      if (chefResult.error) throw chefResult.error;
+      
+      const chefs = chefResult.data as unknown as DbStaffMember[];
+      if (!chefs?.length) return;
 
-      const metricsPromises = (chefs as DbStaffMember[]).map(async (chef) => {
-        const { data: orders } = await supabase
-          .from('kitchen_orders')
-          .select()
-          .eq('assigned_chef', chef.id);
+      // Process each chef's orders
+      const metrics = await Promise.all(
+        chefs.map(async (chef) => {
+          const ordersResult = await supabase
+            .from('kitchen_orders')
+            .select()
+            .eq('assigned_chef', chef.id);
 
-        const orderMetrics = calculateOrderMetrics(orders as DbKitchenOrder[] || []);
+          const orders = (ordersResult.data || []) as unknown as DbKitchenOrder[];
+          const orderMetrics = calculateOrderMetrics(orders);
 
-        const staffMetric: StaffMetrics = {
-          id: chef.id,
-          name: chef.name,
-          ordersCompleted: orderMetrics.completed,
-          averagePreparationTime: orderMetrics.avgPrepTime,
-          onTimeDeliveryRate: orderMetrics.onTimeRate,
-          qualityRating: chef.performance_rating || 0
-        };
+          return {
+            id: chef.id,
+            name: chef.name,
+            ordersCompleted: orderMetrics.completed,
+            averagePreparationTime: orderMetrics.avgPrepTime,
+            onTimeDeliveryRate: orderMetrics.onTimeRate,
+            qualityRating: chef.performance_rating || 0
+          } as StaffMetrics;
+        })
+      );
 
-        return staffMetric;
-      });
-
-      const resolvedMetrics = await Promise.all(metricsPromises);
-      setStaffMetrics(resolvedMetrics);
+      setStaffMetrics(metrics);
 
     } catch (error) {
       console.error('Error fetching staff metrics:', error);
