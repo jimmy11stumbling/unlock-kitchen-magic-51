@@ -35,6 +35,8 @@ import { Announcements } from "@/components/dashboard/Announcements";
 import { SalesTracker } from "@/components/dashboard/SalesTracker";
 import { KitchenStatus } from "@/components/dashboard/KitchenStatus";
 import { StaffPerformance } from "@/components/dashboard/StaffPerformance";
+import { InventoryStatus } from "@/components/dashboard/InventoryStatus";
+import { MenuAnalytics } from "@/components/dashboard/MenuAnalytics";
 
 interface DashboardMetrics {
   totalOrders: number;
@@ -304,6 +306,11 @@ export default function Overview() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <StaffPerformance />
+        <InventoryStatus />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <MenuAnalytics />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
