@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import { OrderModificationLog } from "./OrderModificationLog";
 import { TemperatureMonitor } from "./TemperatureMonitor";
 import { OrderTicketPrinter } from "./OrderTicketPrinter";
 import { InventoryTracker } from "./InventoryTracker";
+import { OrderTimer } from "./OrderTimer";
 
 interface KitchenOrderCardProps {
   order: KitchenOrder;
@@ -99,6 +99,15 @@ export function KitchenOrderCard({
           </Button>
         </div>
       </div>
+
+      {order.status === 'preparing' && (
+        <OrderTimer 
+          startTime={order.created_at} 
+          estimatedDeliveryTime={order.estimated_delivery_time}
+          status={order.status}
+          orderId={order.id}
+        />
+      )}
 
       <div className="space-y-4">
         <div className="flex gap-2">
