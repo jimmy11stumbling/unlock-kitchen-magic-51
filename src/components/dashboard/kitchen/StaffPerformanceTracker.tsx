@@ -71,8 +71,9 @@ export function StaffPerformanceTracker() {
     try {
       const { data: staffData, error: staffError } = await supabase
         .from('staff_members')
-        .select<'staff_members', BaseStaffMember>('id, name, performance_rating')
-        .eq('role', 'chef');
+        .select('id, name, performance_rating')
+        .eq('role', 'chef')
+        .returns<BaseStaffMember[]>();
 
       if (staffError) throw staffError;
       if (!staffData?.length) return;
@@ -80,8 +81,9 @@ export function StaffPerformanceTracker() {
       const metricsPromises = staffData.map(async (staff) => {
         const { data: ordersData } = await supabase
           .from('kitchen_orders')
-          .select<'kitchen_orders', BaseKitchenOrder>('status, created_at, updated_at, estimated_delivery_time')
-          .eq('assigned_chef', staff.id);
+          .select('status, created_at, updated_at, estimated_delivery_time')
+          .eq('assigned_chef', staff.id)
+          .returns<BaseKitchenOrder[]>();
 
         const orderMetrics = calculateOrderMetrics(ordersData || []);
 
