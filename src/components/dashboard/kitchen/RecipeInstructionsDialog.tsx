@@ -38,7 +38,7 @@ export function RecipeInstructionsDialog({ item }: RecipeInstructionsDialogProps
               </div>
               <div className="flex items-center">
                 <Thermometer className="h-4 w-4 mr-2" />
-                <span>Cook temp: 165°F</span>
+                <span>Cook temp: {item.prep_details?.temperature_requirements?.max || 165}°F</span>
               </div>
               {item.allergens?.length > 0 && (
                 <div className="flex items-center text-destructive">
@@ -49,39 +49,45 @@ export function RecipeInstructionsDialog({ item }: RecipeInstructionsDialogProps
             </div>
 
             {/* Ingredients */}
-            <div>
-              <h3 className="font-medium mb-2">Ingredients</h3>
-              <ul className="list-disc pl-5 space-y-1">
-                {item.prep_details?.ingredients?.map((ingredient, index) => (
-                  <li key={index}>{ingredient}</li>
-                ))}
-              </ul>
-            </div>
+            {item.prep_details?.ingredients && item.prep_details.ingredients.length > 0 && (
+              <div>
+                <h3 className="font-medium mb-2">Ingredients</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {item.prep_details.ingredients.map((ingredient, index) => (
+                    <li key={index}>{ingredient}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Equipment */}
-            <div>
-              <h3 className="font-medium mb-2">Equipment Needed</h3>
-              <ul className="list-disc pl-5 space-y-1">
-                {item.prep_details?.equipment_needed?.map((equipment, index) => (
-                  <li key={index}>{equipment}</li>
-                ))}
-              </ul>
-            </div>
+            {item.prep_details?.equipment_needed && item.prep_details.equipment_needed.length > 0 && (
+              <div>
+                <h3 className="font-medium mb-2">Equipment Needed</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {item.prep_details.equipment_needed.map((equipment, index) => (
+                    <li key={index}>{equipment}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Steps */}
-            <div>
-              <h3 className="font-medium mb-2">Preparation Steps</h3>
-              <div className="space-y-3">
-                {item.prep_details?.steps?.map((step, index) => (
-                  <div key={index} className="flex gap-3 p-3 border rounded-lg">
-                    <span className="font-medium text-muted-foreground">
-                      {index + 1}.
-                    </span>
-                    <p>{step}</p>
-                  </div>
-                ))}
+            {item.prep_details?.steps && item.prep_details.steps.length > 0 && (
+              <div>
+                <h3 className="font-medium mb-2">Preparation Steps</h3>
+                <div className="space-y-3">
+                  {item.prep_details.steps.map((step, index) => (
+                    <div key={index} className="flex gap-3 p-3 border rounded-lg">
+                      <span className="font-medium text-muted-foreground">
+                        {index + 1}.
+                      </span>
+                      <p>{step}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Quality Control */}
             <div>
@@ -89,7 +95,7 @@ export function RecipeInstructionsDialog({ item }: RecipeInstructionsDialogProps
               <div className="space-y-2">
                 <div className="flex items-center p-2 border rounded">
                   <Thermometer className="h-4 w-4 mr-2 text-orange-500" />
-                  <span>Internal temperature must reach 165°F</span>
+                  <span>Internal temperature must reach {item.prep_details?.temperature_requirements?.min || 165}°F</span>
                 </div>
                 {item.prep_details?.quality_checks?.map((check, index) => (
                   <div key={index} className="flex items-center p-2 border rounded">

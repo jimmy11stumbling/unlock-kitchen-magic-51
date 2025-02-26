@@ -57,6 +57,24 @@ export function KitchenOrderCard({
     return item.status === "preparing" && timeElapsed(item) > 15;
   };
 
+  const convertToMenuItem = (item: KitchenOrderItem): MenuItem => ({
+    id: item.menu_item_id,
+    name: item.name,
+    category: item.course || "main",
+    price: 0,
+    description: item.notes || "",
+    preparationTime: 15,
+    allergens: item.allergens || [],
+    available: true,
+    prep_details: {
+      temperature_requirements: {
+        min: 165,
+        max: 175,
+        unit: "F"
+      }
+    }
+  });
+
   return (
     <Card className={`p-4 ${order.priority === "rush" ? "border-red-500" : ""}`}>
       <div className="flex justify-between items-start mb-4">
@@ -186,7 +204,7 @@ export function KitchenOrderCard({
               )}
             </div>
 
-            {item.allergens?.length > 0 && (
+            {item.allergens && item.allergens.length > 0 && (
               <div className="mt-2 p-2 bg-red-50 rounded flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-red-500" />
                 <span className="text-sm text-red-700">
@@ -196,7 +214,7 @@ export function KitchenOrderCard({
             )}
 
             <div className="mt-2">
-              <RecipeInstructionsDialog item={item} />
+              <RecipeInstructionsDialog item={convertToMenuItem(item)} />
             </div>
           </div>
         ))}

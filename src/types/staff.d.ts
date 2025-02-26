@@ -100,6 +100,8 @@ export interface KitchenOrderItem {
   assigned_chef?: string;
   modifications?: string[];
   allergen_alert?: boolean;
+  allergens?: string[];
+  course?: "appetizer" | "main" | "dessert";
 }
 
 export interface KitchenOrder {
@@ -128,6 +130,17 @@ export interface MenuItem {
   available: boolean;
   image?: string;
   orderCount?: number;
+  prep_details?: {
+    ingredients?: string[];
+    equipment_needed?: string[];
+    steps?: string[];
+    quality_checks?: string[];
+    temperature_requirements?: {
+      min: number;
+      max: number;
+      unit: "F" | "C";
+    };
+  };
 }
 
 export interface OrderItem {
