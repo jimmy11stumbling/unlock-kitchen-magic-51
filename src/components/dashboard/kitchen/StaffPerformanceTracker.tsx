@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { PostgrestError } from "@supabase/supabase-js";
 
 interface StaffMetrics {
   id: number;
@@ -16,13 +15,13 @@ interface StaffMetrics {
   qualityRating: number;
 }
 
-interface StaffMember {
+type DbStaffMember = {
   id: number;
   name: string;
   performance_rating: number;
 }
 
-interface KitchenOrderResponse {
+type DbKitchenOrder = {
   id: number;
   status: string;
   created_at: string;
@@ -36,30 +35,32 @@ export function StaffPerformanceTracker() {
 
   useEffect(() => {
     fetchStaffMetrics();
-    const interval = setInterval(fetchStaffMetrics, 300000); // Update every 5 minutes
+    const interval = setInterval(fetchStaffMetrics, 300000);
     return () => clearInterval(interval);
   }, []);
 
   const fetchStaffMetrics = async () => {
     try {
-      const staffResponse = await supabase
+      const { data: staffMembers, error: staffError } = await supabase
         .from('staff_members')
-        .select('id, name, performance_rating')
+        .select<'staff_members', DbStaffMember>('id, name, performance_rating')
         .eq('role', 'chef');
 
-      if (staffResponse.error) throw staffResponse.error;
+      if (staffError) {
+        throw staffError;
+      }
 
-      const staffData = staffResponse.data as StaffMember[];
-      const metrics: StaffMetrics[] = [];
+      if (!staffMembers) {
+        return;
+      }
 
-      for (const staff of staffData) {
-        const ordersResponse = await supabase
+      const metricsPromises = staffMembers.map(async (staff) => {
+        const { data: orders } = await supabase
           .from('kitchen_orders')
-          .select('id, status, created_at, updated_at, estimated_delivery_time')
+          .select<'kitchen_orders', DbKitchenOrder>('id, status, created_at, updated_at, estimated_delivery_time')
           .eq('assigned_chef', staff.id);
 
-        const orders = (ordersResponse.data || []) as KitchenOrderResponse[];
-        const completedOrders = orders.filter(order => order.status === 'delivered');
+        const completedOrders = (orders || []).filter(order => order.status === 'delivered');
         const onTimeOrders = completedOrders.filter(order => {
           const completionTime = new Date(order.updated_at);
           const estimatedTime = new Date(order.estimated_delivery_time);
@@ -73,7 +74,7 @@ export function StaffPerformanceTracker() {
             return acc + (end.getTime() - start.getTime()) / (1000 * 60);
           }, 0) / completedOrders.length : 0;
 
-        metrics.push({
+        return {
           id: staff.id,
           name: staff.name,
           ordersCompleted: completedOrders.length,
@@ -81,9 +82,10 @@ export function StaffPerformanceTracker() {
           onTimeDeliveryRate: completedOrders.length ?
             (onTimeOrders.length / completedOrders.length) * 100 : 100,
           qualityRating: staff.performance_rating || 0
-        });
-      }
+        };
+      });
 
+      const metrics = await Promise.all(metricsPromises);
       setStaffMetrics(metrics);
     } catch (error) {
       console.error('Error fetching staff metrics:', error);
