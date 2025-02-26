@@ -70,9 +70,9 @@ export const ReservationTable = ({
                 {reservation.status === "confirmed" && (
                   <Button
                     size="sm"
-                    onClick={() => onUpdateStatus(reservation.id, "completed")}
+                    onClick={() => onUpdateStatus(reservation.id, "cancelled")}
                   >
-                    Complete
+                    Cancel
                   </Button>
                 )}
               </div>

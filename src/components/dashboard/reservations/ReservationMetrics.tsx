@@ -32,7 +32,7 @@ export const ReservationMetrics = ({ reservations }: ReservationMetricsProps) =>
       <Card className="p-4">
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-medium text-muted-foreground">Pending</h3>
-          <Badge variant="warning">{pendingReservations}</Badge>
+          <Badge variant="secondary">{pendingReservations}</Badge>
         </div>
       </Card>
     </div>
