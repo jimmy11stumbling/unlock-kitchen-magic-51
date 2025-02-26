@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -58,17 +57,16 @@ export function KitchenDashboard() {
         orderId: order.order_id,
         tableNumber: order.table_number,
         items: (Array.isArray(order.items) ? order.items : []).map((item: any) => ({
-          ...item,
-          menuItemId: Number(item.menuItemId), // Ensure menuItemId is a number
+          menuItemId: Number(item.menuItemId),
           quantity: Number(item.quantity),
-          status: item.status || 'pending',
-          cookingStation: item.cookingStation || 'grill',
+          status: validateStatus(item.status),
+          cookingStation: validateCookingStation(item.cookingStation),
           assignedChef: item.assignedChef || '',
           modifications: Array.isArray(item.modifications) ? item.modifications : [],
           allergenAlert: Boolean(item.allergenAlert)
         })),
-        status: order.status || 'pending',
-        priority: order.priority || 'normal',
+        status: validateStatus(order.status),
+        priority: validatePriority(order.priority),
         notes: order.notes,
         estimatedDeliveryTime: order.estimated_delivery_time
       })) || [];
@@ -83,6 +81,21 @@ export function KitchenDashboard() {
         variant: "destructive",
       });
     }
+  };
+
+  const validateStatus = (status: string): KitchenOrderItem['status'] => {
+    const validStatuses = ['pending', 'preparing', 'ready', 'delivered'];
+    return validStatuses.includes(status) ? status as KitchenOrderItem['status'] : 'pending';
+  };
+
+  const validatePriority = (priority: string): KitchenOrder['priority'] => {
+    const validPriorities = ['normal', 'high', 'rush'];
+    return validPriorities.includes(priority) ? priority as KitchenOrder['priority'] : 'normal';
+  };
+
+  const validateCookingStation = (station: string): KitchenOrderItem['cookingStation'] => {
+    const validStations = ['grill', 'fry', 'salad', 'dessert', 'beverage', 'hot', 'cold'];
+    return validStations.includes(station) ? station as KitchenOrderItem['cookingStation'] : 'grill';
   };
 
   const handleStatusUpdate = async (orderId: number, status: "preparing" | "ready" | "delivered") => {

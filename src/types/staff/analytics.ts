@@ -1,4 +1,6 @@
 
+import type { MenuItem } from './inventory';
+
 export interface SalesData {
   date: string;
   revenue: number;

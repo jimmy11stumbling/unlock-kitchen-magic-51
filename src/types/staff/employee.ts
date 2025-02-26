@@ -1,4 +1,6 @@
 
+import type { PayrollSettings } from './payroll';
+
 export type StaffRole = 'manager' | 'chef' | 'server' | 'host' | 'bartender';
 export type StaffStatus = 'active' | 'on_break' | 'off_duty';
 
