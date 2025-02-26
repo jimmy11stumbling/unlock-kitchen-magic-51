@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { KitchenOrder, Order } from "@/types/staff";
+import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
+import type { Json } from "@/hooks/dashboard/types/orderTypes";
 import { useToast } from "@/components/ui/use-toast";
 
 export const useKitchenState = () => {
@@ -14,6 +15,23 @@ export const useKitchenState = () => {
     subscribeToKitchenUpdates();
   }, []);
 
+  const parseKitchenItems = (items: Json): KitchenOrderItem[] => {
+    if (!Array.isArray(items)) return [];
+    return items.map(item => ({
+      id: Number(item.id),
+      name: String(item.name),
+      quantity: Number(item.quantity),
+      status: item.status as KitchenOrderItem['status'],
+      notes: item.notes as string | undefined,
+      menuItemId: Number(item.menuItemId),
+      startTime: item.startTime as string | undefined,
+      cookingStation: item.cookingStation as string | undefined,
+      assignedChef: item.assignedChef as string | undefined,
+      modifications: item.modifications as string[] | undefined,
+      allergenAlert: Boolean(item.allergenAlert)
+    }));
+  };
+
   const fetchKitchenOrders = async () => {
     try {
       const { data, error } = await supabase
@@ -23,16 +41,18 @@ export const useKitchenState = () => {
 
       if (error) throw error;
 
-      setKitchenOrders(data.map(order => ({
+      const parsedOrders: KitchenOrder[] = data.map(order => ({
         id: order.id,
         orderId: order.order_id,
         tableNumber: order.table_number,
-        items: order.items,
-        status: order.status,
-        priority: order.priority,
+        items: parseKitchenItems(order.items),
+        status: order.status as KitchenOrder['status'],
+        priority: order.priority as KitchenOrder['priority'],
         estimatedDeliveryTime: order.estimated_delivery_time,
         createdAt: order.created_at
-      })));
+      }));
+
+      setKitchenOrders(parsedOrders);
     } catch (error) {
       console.error('Error fetching kitchen orders:', error);
       toast({
@@ -94,7 +114,7 @@ export const useKitchenState = () => {
   const updateItemStatus = async (
     orderId: number,
     itemId: number,
-    status: KitchenOrder['items'][0]['status']
+    status: KitchenOrderItem['status']
   ) => {
     try {
       const order = kitchenOrders.find(o => o.id === orderId);
@@ -104,9 +124,24 @@ export const useKitchenState = () => {
         item.id === itemId ? { ...item, status } : item
       );
 
+      // Convert KitchenOrderItem[] to Json type for Supabase
+      const itemsForDb = updatedItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        status: item.status,
+        notes: item.notes,
+        menuItemId: item.menuItemId,
+        startTime: item.startTime,
+        cookingStation: item.cookingStation,
+        assignedChef: item.assignedChef,
+        modifications: item.modifications,
+        allergenAlert: item.allergenAlert
+      }));
+
       const { error } = await supabase
         .from('kitchen_orders')
-        .update({ items: updatedItems })
+        .update({ items: itemsForDb })
         .eq('id', orderId);
 
       if (error) throw error;
