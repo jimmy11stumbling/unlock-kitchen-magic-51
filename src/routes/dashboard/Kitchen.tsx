@@ -8,12 +8,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, Users, ChefHat, Flame } from "lucide-react";
 import { KitchenOrdersList } from "@/components/dashboard/kitchen/KitchenOrdersList";
 import { useDashboardState } from "@/hooks/useDashboardState";
-import { useToast } from "@/components/ui/use-toast";
-import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
+import type { KitchenOrder } from "@/types/staff";
 
 const Kitchen = () => {
   const { 
@@ -27,14 +25,13 @@ const Kitchen = () => {
   
   const [statusFilter, setStatusFilter] = useState<KitchenOrder["status"] | "all">("all");
   const [stationFilter, setStationFilter] = useState<string>("all");
-  const { toast } = useToast();
 
-  const activeStaff = staff.filter(member => 
+  const activeStaff = staff?.filter(member => 
     member.status === "active" && member.role === "chef"
-  );
+  ) || [];
 
   const getFilteredOrders = () => {
-    return kitchenOrders.filter(order => {
+    return (kitchenOrders || []).filter(order => {
       const matchesStatus = statusFilter === "all" || order.status === statusFilter;
       const matchesStation = stationFilter === "all" || order.items.some(
         item => item.cooking_station === stationFilter
@@ -46,14 +43,15 @@ const Kitchen = () => {
   const filteredOrders = getFilteredOrders();
 
   const calculateMetrics = () => {
-    const completedOrders = kitchenOrders.filter(order => order.status === "delivered").length;
-    const pendingOrders = kitchenOrders.filter(order => ["pending", "preparing"].includes(order.status)).length;
-    const rushOrders = kitchenOrders.filter(order => order.priority === "rush").length;
+    const orders = kitchenOrders || [];
+    const completedOrders = orders.filter(order => order.status === "delivered").length;
+    const pendingOrders = orders.filter(order => ["pending", "preparing"].includes(order.status)).length;
+    const rushOrders = orders.filter(order => order.priority === "rush").length;
     
     let totalPrepTime = 0;
     let completedCount = 0;
     
-    kitchenOrders.forEach(order => {
+    orders.forEach(order => {
       if (order.status === "delivered") {
         const start = new Date(order.created_at).getTime();
         const end = new Date(order.updated_at).getTime();
