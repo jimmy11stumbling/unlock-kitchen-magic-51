@@ -1,8 +1,10 @@
 
+declare const self: ServiceWorkerGlobalScope;
+
 const CACHE_NAME = 'app-cache-v1';
 const OFFLINE_URL = '/offline.html';
 
-self.addEventListener('install', (event: ExtendableEvent) => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll([
@@ -16,7 +18,7 @@ self.addEventListener('install', (event: ExtendableEvent) => {
   );
 });
 
-self.addEventListener('fetch', (event: FetchEvent) => {
+self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -36,7 +38,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
   );
 });
 
-self.addEventListener('activate', (event: ExtendableEvent) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
