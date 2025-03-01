@@ -52,9 +52,6 @@ export function KitchenDashboard() {
         <KitchenLayout activeOrders={kitchenOrders?.filter(order => order.status === 'preparing')} />
         <EquipmentMonitor />
         <QualityControl />
-        {kitchenOrders?.map(order => (
-          <InventoryTracker key={order.id} order={order} />
-        ))}
         <TemperatureMonitor stationId="main-kitchen" />
       </div>
     </div>
