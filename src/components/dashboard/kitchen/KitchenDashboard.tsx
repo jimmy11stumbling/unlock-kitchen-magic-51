@@ -16,6 +16,19 @@ export function KitchenDashboard() {
     updateItemStatus 
   } = useKitchenState();
 
+  // This ensures we preload the audio for quicker response when needed
+  useEffect(() => {
+    const audio = new Audio('/sounds/notification.mp3');
+    audio.preload = 'auto';
+    
+    // Just trigger loading without playing
+    audio.load();
+    
+    return () => {
+      audio.remove();
+    };
+  }, []);
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 p-6">
       {/* Orders Section - 8 columns on xl screens */}

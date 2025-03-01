@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_analyses: {
+        Row: {
+          analysis_type: string
+          created_at: string
+          id: string
+          project_id: string | null
+          results: Json | null
+        }
+        Insert: {
+          analysis_type: string
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          results?: Json | null
+        }
+        Update: {
+          analysis_type?: string
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          results?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_analyses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_models: {
         Row: {
           base_config: Json | null
@@ -2223,6 +2255,77 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      video_projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          settings: Json | null
+          status: string | null
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          settings?: Json | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          settings?: Json | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      video_segments: {
+        Row: {
+          created_at: string
+          effects: Json | null
+          end_time: number
+          id: string
+          project_id: string | null
+          start_time: number
+          transitions: Json | null
+        }
+        Insert: {
+          created_at?: string
+          effects?: Json | null
+          end_time: number
+          id?: string
+          project_id?: string | null
+          start_time: number
+          transitions?: Json | null
+        }
+        Update: {
+          created_at?: string
+          effects?: Json | null
+          end_time?: number
+          id?: string
+          project_id?: string | null
+          start_time?: number
+          transitions?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_segments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       waste_logs: {
         Row: {

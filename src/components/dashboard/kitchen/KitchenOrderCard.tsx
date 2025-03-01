@@ -105,7 +105,7 @@ export function KitchenOrderCard({
           startTime={order.created_at} 
           estimatedDeliveryTime={order.estimated_delivery_time}
           status={order.status}
-          orderId={order.id}
+          orderId={order.order_id}
         />
       )}
 
