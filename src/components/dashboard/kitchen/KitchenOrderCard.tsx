@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Clock } from "lucide-react";
-import type { KitchenOrder } from "@/types/staff";
+import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
 import { CoursePlannerDialog } from "./CoursePlannerDialog";
 import { OrderModificationLog } from "./OrderModificationLog";
 import { TemperatureMonitor } from "./TemperatureMonitor";
