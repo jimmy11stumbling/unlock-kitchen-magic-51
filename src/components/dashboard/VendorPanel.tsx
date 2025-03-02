@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, FileSpreadsheet, Calculator } from "lucide-react";
+import { Plus, FileSpreadsheet, Calculator, BarChart } from "lucide-react";
 import { vendorService } from "./vendors/services/vendorService";
 import { VendorList } from "./vendors/VendorList";
 import { ExpenseTable } from "./vendors/ExpenseTable";
 import { AccountingSummaryView } from "./vendors/AccountingSummary";
+import { BudgetAnalysis } from "./vendors/BudgetAnalysis";
 import { VendorForm } from "./vendors/forms/VendorForm";
 import { exportData } from "@/utils/exportUtils";
 
@@ -19,6 +20,7 @@ export const VendorPanel = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddVendor, setShowAddVendor] = useState(false);
+  const [activeTab, setActiveTab] = useState("vendors");
 
   const { data: vendors, refetch: refetchVendors } = useQuery({
     queryKey: ["vendors"],
@@ -73,11 +75,12 @@ export const VendorPanel = () => {
       </div>
 
       <Card className="p-6">
-        <Tabs defaultValue="vendors" className="space-y-4">
-          <TabsList className="grid grid-cols-3 w-full">
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="vendors">Vendors</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
             <TabsTrigger value="accounting">Accounting</TabsTrigger>
+            <TabsTrigger value="budget">Budget</TabsTrigger>
           </TabsList>
 
           <div className="flex gap-4 mb-4">
@@ -87,10 +90,18 @@ export const VendorPanel = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
             />
-            <Button variant="outline" onClick={() => refetchSummary()}>
-              <Calculator className="w-4 h-4 mr-2" />
-              Calculate Totals
-            </Button>
+            {activeTab === "accounting" && (
+              <Button variant="outline" onClick={() => refetchSummary()}>
+                <Calculator className="w-4 h-4 mr-2" />
+                Calculate Totals
+              </Button>
+            )}
+            {activeTab === "budget" && (
+              <Button variant="outline" onClick={() => refetchExpenses()}>
+                <BarChart className="w-4 h-4 mr-2" />
+                Refresh Analysis
+              </Button>
+            )}
           </div>
 
           <TabsContent value="vendors">
@@ -105,6 +116,7 @@ export const VendorPanel = () => {
             <ExpenseTable
               expenses={expenses || []}
               searchTerm={searchTerm}
+              onUpdate={handleRefreshData}
             />
           </TabsContent>
 
@@ -120,6 +132,10 @@ export const VendorPanel = () => {
                 monthlyTotals: {}
               }}
             />
+          </TabsContent>
+
+          <TabsContent value="budget">
+            <BudgetAnalysis />
           </TabsContent>
         </Tabs>
       </Card>

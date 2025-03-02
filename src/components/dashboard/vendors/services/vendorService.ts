@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { Vendor, Expense, AccountingSummary } from "@/types/vendor";
@@ -23,7 +22,8 @@ const mapTransactionToVendor = (transaction: FinancialTransaction): Vendor => ({
 
 const mapTransactionToExpense = (transaction: FinancialTransaction): Expense => ({
   id: Number(transaction.id),
-  vendorId: 0,
+  vendorId: transaction.category_id ? Number(transaction.category_id) : 0,
+  vendorName: transaction.reference_number || undefined,
   amount: transaction.amount,
   date: transaction.date,
   category: transaction.category_id || '',
@@ -31,7 +31,7 @@ const mapTransactionToExpense = (transaction: FinancialTransaction): Expense => 
   paymentMethod: transaction.payment_method,
   receiptUrl: undefined,
   taxDeductible: false,
-  status: 'pending',
+  status: transaction.reference_number?.includes('paid') ? 'paid' : 'pending',
   createdAt: transaction.created_at || '',
   updatedAt: transaction.updated_at || ''
 });
@@ -41,10 +41,19 @@ export const vendorService = {
     const { data, error } = await supabase
       .from('financial_transactions')
       .select('*')
-      .eq('type', 'expense');
+      .eq('type', 'expense')
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return (data || []).map(mapTransactionToVendor);
+    
+    const vendorMap = new Map<string, Vendor>();
+    (data || []).forEach(transaction => {
+      if (transaction.description && !vendorMap.has(transaction.description)) {
+        vendorMap.set(transaction.description, mapTransactionToVendor(transaction));
+      }
+    });
+    
+    return Array.from(vendorMap.values());
   },
 
   async addVendor(vendor: Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vendor> {
@@ -100,24 +109,39 @@ export const vendorService = {
     const { data, error } = await supabase
       .from('financial_transactions')
       .select('*')
-      .eq('type', 'expense');
+      .eq('type', 'expense')
+      .order('date', { ascending: false });
     
     if (error) throw error;
+    
     return (data || []).map(mapTransactionToExpense);
   },
 
-  async addExpense(expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> {
+  async addExpense(expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt' | 'vendorName'>): Promise<Expense> {
+    let vendorName = '';
+    if (expense.vendorId) {
+      const { data } = await supabase
+        .from('financial_transactions')
+        .select('description')
+        .eq('id', expense.vendorId)
+        .maybeSingle();
+        
+      vendorName = data?.description || '';
+    }
+    
+    const statusRef = expense.status === 'paid' ? 'paid-' + Date.now() : '';
+    
     const { data, error } = await supabase
       .from('financial_transactions')
       .insert({
         amount: expense.amount,
-        category_id: uuidv4(),
+        category_id: expense.vendorId.toString(),
         date: expense.date,
         description: expense.description,
         payment_method: expense.paymentMethod,
         type: 'expense',
         created_by: uuidv4(),
-        reference_number: ''
+        reference_number: vendorName ? `${vendorName} ${statusRef}` : statusRef
       })
       .select()
       .maybeSingle();
@@ -125,7 +149,64 @@ export const vendorService = {
     if (error) throw error;
     if (!data) throw new Error('Failed to create expense');
     
-    return mapTransactionToExpense(data);
+    return {
+      ...mapTransactionToExpense(data),
+      vendorName,
+      vendorId: expense.vendorId,
+      category: expense.category,
+      taxDeductible: expense.taxDeductible,
+      status: expense.status
+    };
+  },
+
+  async updateExpense(id: string, updates: Partial<Omit<Expense, 'id' | 'createdAt' | 'updatedAt' | 'vendorName'>>): Promise<Expense> {
+    let vendorName = '';
+    if (updates.vendorId) {
+      const { data } = await supabase
+        .from('financial_transactions')
+        .select('description')
+        .eq('id', updates.vendorId)
+        .maybeSingle();
+        
+      vendorName = data?.description || '';
+    }
+    
+    const statusRef = updates.status === 'paid' ? 'paid-' + Date.now() : '';
+    
+    const { data, error } = await supabase
+      .from('financial_transactions')
+      .update({
+        amount: updates.amount,
+        category_id: updates.vendorId?.toString(),
+        date: updates.date,
+        description: updates.description,
+        payment_method: updates.paymentMethod,
+        reference_number: vendorName ? `${vendorName} ${statusRef}` : statusRef
+      })
+      .eq('id', id)
+      .select()
+      .maybeSingle();
+    
+    if (error) throw error;
+    if (!data) throw new Error('Expense not found');
+    
+    return {
+      ...mapTransactionToExpense(data),
+      vendorName,
+      vendorId: updates.vendorId || 0,
+      category: updates.category || '',
+      taxDeductible: updates.taxDeductible || false,
+      status: updates.status || 'pending'
+    };
+  },
+
+  async deleteExpense(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('financial_transactions')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
   },
 
   async getAccountingSummary(): Promise<AccountingSummary> {
@@ -166,9 +247,7 @@ export const vendorService = {
     return summary;
   },
 
-  // Additional methods for vendor details functionality
   async getVendorOrders(vendorId: number): Promise<any[]> {
-    // Mock implementation - in a real app, this would fetch from the database
     return [
       {
         id: uuidv4(),
@@ -194,7 +273,6 @@ export const vendorService = {
   },
 
   async getVendorPayments(vendorId: number): Promise<any[]> {
-    // Mock implementation
     return [
       {
         id: uuidv4(),
@@ -216,7 +294,6 @@ export const vendorService = {
   },
 
   async createNewOrder(vendorId: number): Promise<any> {
-    // Mock implementation
     return {
       id: uuidv4(),
       vendorId,
@@ -226,7 +303,6 @@ export const vendorService = {
   },
 
   async createPayment(paymentData: any): Promise<any> {
-    // Mock implementation
     return {
       id: uuidv4(),
       ...paymentData,
@@ -236,12 +312,10 @@ export const vendorService = {
   },
 
   async generateOrderPdf(orderId: string): Promise<string> {
-    // Mock implementation
     return `https://example.com/orders/${orderId}.pdf`;
   },
 
   async getVendorContacts(vendorId: number): Promise<any[]> {
-    // Mock implementation
     return [
       {
         id: uuidv4(),
@@ -261,7 +335,6 @@ export const vendorService = {
   },
 
   async addVendorContact(vendorId: number, contactData: any): Promise<any> {
-    // Mock implementation
     return {
       id: uuidv4(),
       ...contactData,
@@ -270,7 +343,6 @@ export const vendorService = {
   },
 
   async updateVendorContact(contactId: string, contactData: any): Promise<any> {
-    // Mock implementation
     return {
       id: contactId,
       ...contactData
@@ -278,12 +350,10 @@ export const vendorService = {
   },
 
   async deleteVendorContact(contactId: string): Promise<void> {
-    // Mock implementation
     return;
   },
 
   async getVendorNotes(vendorId: number): Promise<any[]> {
-    // Mock implementation
     return [
       {
         id: uuidv4(),
@@ -301,7 +371,6 @@ export const vendorService = {
   },
 
   async addVendorNote(vendorId: number, content: string): Promise<any> {
-    // Mock implementation
     return {
       id: uuidv4(),
       content,
@@ -311,7 +380,6 @@ export const vendorService = {
   },
 
   async updateVendorNote(noteId: string, content: string): Promise<any> {
-    // Mock implementation
     return {
       id: noteId,
       content,
@@ -320,7 +388,6 @@ export const vendorService = {
   },
 
   async getVendorDocuments(vendorId: number): Promise<any[]> {
-    // Mock implementation
     return [
       {
         id: uuidv4(),
@@ -342,7 +409,6 @@ export const vendorService = {
   },
 
   async uploadDocument(formData: FormData): Promise<any> {
-    // Mock implementation
     const file = formData.get('file') as File;
     const name = formData.get('name') as string;
     
@@ -354,5 +420,74 @@ export const vendorService = {
       uploadedAt: new Date().toISOString(),
       url: '#'
     };
+  },
+
+  async getBudgetAnalysis(): Promise<any> {
+    const expenses = await this.getExpenses();
+    
+    const monthlyBudgets: Record<string, { 
+      planned: number; 
+      actual: number; 
+      variance: number;
+    }> = {};
+    
+    const plannedMonthlyBudget = 15000;
+    
+    expenses.forEach(expense => {
+      const month = expense.date.substring(0, 7);
+      if (!monthlyBudgets[month]) {
+        monthlyBudgets[month] = {
+          planned: plannedMonthlyBudget,
+          actual: 0,
+          variance: 0
+        };
+      }
+      
+      monthlyBudgets[month].actual += expense.amount;
+      monthlyBudgets[month].variance = 
+        monthlyBudgets[month].planned - monthlyBudgets[month].actual;
+    });
+    
+    return {
+      monthlyBudgets,
+      totalPlanned: Object.values(monthlyBudgets).reduce((sum, month) => sum + month.planned, 0),
+      totalActual: Object.values(monthlyBudgets).reduce((sum, month) => sum + month.actual, 0)
+    };
+  },
+
+  async getTopVendors(): Promise<any[]> {
+    const expenses = await this.getExpenses();
+    
+    const vendorMap = new Map<number, {
+      id: number;
+      name: string;
+      totalSpent: number;
+      lastTransaction: string;
+      transactionCount: number;
+    }>();
+    
+    expenses.forEach(expense => {
+      if (!vendorMap.has(expense.vendorId)) {
+        vendorMap.set(expense.vendorId, {
+          id: expense.vendorId,
+          name: expense.vendorName || `Vendor #${expense.vendorId}`,
+          totalSpent: 0,
+          lastTransaction: expense.date,
+          transactionCount: 0
+        });
+      }
+      
+      const vendor = vendorMap.get(expense.vendorId)!;
+      vendor.totalSpent += expense.amount;
+      vendor.transactionCount += 1;
+      
+      if (new Date(expense.date) > new Date(vendor.lastTransaction)) {
+        vendor.lastTransaction = expense.date;
+      }
+    });
+    
+    return Array.from(vendorMap.values())
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, 10);
   }
 };

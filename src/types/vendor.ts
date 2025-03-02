@@ -20,6 +20,7 @@ export interface Vendor {
 export interface Expense {
   id: number;
   vendorId: number;
+  vendorName?: string;
   amount: number;
   date: string;
   category: string;
@@ -40,4 +41,67 @@ export interface AccountingSummary {
   expensesByCategory: Record<string, number>;
   expensesByVendor: Record<string, number>;
   monthlyTotals: Record<string, number>;
+}
+
+export interface VendorContact {
+  id: string;
+  vendorId: number;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+}
+
+export interface VendorOrder {
+  id: string;
+  vendorId: number;
+  date: string;
+  amount: number;
+  status: string;
+  items: OrderItem[];
+}
+
+export interface OrderItem {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface VendorPayment {
+  id: string;
+  vendorId: number;
+  date: string;
+  amount: number;
+  method: string;
+  status: string;
+  reference: string;
+}
+
+export interface VendorDocument {
+  id: string;
+  vendorId: number;
+  name: string;
+  type: string;
+  size: number;
+  uploadedAt: string;
+  url: string;
+}
+
+export interface VendorNote {
+  id: string;
+  vendorId: number;
+  content: string;
+  createdAt: string;
+  createdBy: string;
+  updatedAt?: string;
+}
+
+export interface BudgetAnalysis {
+  monthlyBudgets: Record<string, {
+    planned: number;
+    actual: number;
+    variance: number;
+  }>;
+  totalPlanned: number;
+  totalActual: number;
 }
