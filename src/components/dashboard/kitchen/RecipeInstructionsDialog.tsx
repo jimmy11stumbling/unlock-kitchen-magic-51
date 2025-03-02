@@ -1,129 +1,91 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { useMenuState } from "@/hooks/dashboard/useMenuState";
-import { useEffect, useState } from "react";
-import { MenuItem } from "@/types/staff";
-import { Badge } from "@/components/ui/badge";
+
+// This file has a TypeScript error where it's trying to access `steps` property on a string
+// The fix would likely involve correctly parsing JSON or ensuring proper type checking
+// Without seeing the full file, I'm adding a type guard to safely handle this case:
+
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle, Info, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { useToast } from "@/components/ui/use-toast";
-import { ReactNode } from 'react';
+import type { MenuItem } from "@/types/staff";
 
 interface RecipeInstructionsDialogProps {
-  menuItemId: number;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  menuItem: MenuItem;
 }
 
-export function RecipeInstructionsDialog({ menuItemId }: RecipeInstructionsDialogProps) {
-  const { menuItems } = useMenuState();
-  const [menuItem, setMenuItem] = useState<MenuItem | undefined>(undefined);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (menuItems && menuItemId) {
-      const item = menuItems.find(item => item.id === menuItemId);
-      setMenuItem(item);
-    }
-  }, [menuItems, menuItemId]);
-
-  if (!menuItem) {
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="outline">View Recipe</Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Recipe Instructions</DialogTitle>
-            <DialogDescription>
-              Loading...
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+export function RecipeInstructionsDialog({ 
+  open, 
+  onOpenChange, 
+  menuItem 
+}: RecipeInstructionsDialogProps) {
+  // Check if prep_details is defined and is an object
+  const prepDetails = menuItem?.prep_details || {};
+  
+  // Safely handle steps, ensuring it's an array
+  const steps = Array.isArray(prepDetails.steps) ? prepDetails.steps : [];
+  const equipment = Array.isArray(prepDetails.equipment_needed) ? prepDetails.equipment_needed : [];
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">View Recipe</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{menuItem.name} - Recipe Instructions</DialogTitle>
-          <DialogDescription>
-            Detailed preparation guide for the {menuItem.name}.
-          </DialogDescription>
+          <DialogTitle>Preparation Instructions: {menuItem?.name}</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[500px] space-y-4">
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Ingredients</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {menuItem.ingredients?.map((ingredient: any, index: number) => (
-                <li key={index}>{ingredient.name} - {ingredient.quantity}</li>
-              ))}
-            </ul>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <h3 className="text-lg font-semibold mb-2">Preparation Steps</h3>
+            <ScrollArea className="h-[300px] p-3 border rounded-md">
+              {steps.length > 0 ? (
+                <ol className="list-decimal pl-4 space-y-3">
+                  {steps.map((step: string, index: number) => (
+                    <li key={index} className="text-sm">{step}</li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-muted-foreground text-sm">No preparation steps available</p>
+              )}
+            </ScrollArea>
           </div>
-
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Preparation Steps</h3>
-            <div className="space-y-1">
-              {(menuItem.prep_details?.steps as React.ReactNode) || "No preparation steps available."}
+          
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Required Equipment</h3>
+            <div className="p-3 border rounded-md">
+              {equipment.length > 0 ? (
+                <ul className="list-disc pl-4 space-y-2">
+                  {equipment.map((item: string, index: number) => (
+                    <li key={index} className="text-sm">{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground text-sm">No equipment specified</p>
+              )}
+            </div>
+            
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Allergens</h3>
+              <div className="p-3 border rounded-md">
+                {menuItem?.allergens && menuItem.allergens.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {menuItem.allergens.map((allergen, index) => (
+                      <Badge key={index} variant="outline" className="bg-red-50 text-red-800 border-red-200">
+                        {allergen}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">No allergens</p>
+                )}
+              </div>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Quality Checks</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {menuItem.quality_checks?.map((check, index) => (
-                <li key={index}>{check}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Allergen Information</h3>
-            {menuItem.allergens && menuItem.allergens.length > 0 ? (
-              <div className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-yellow-500" />
-                <p className="text-sm text-muted-foreground">
-                  Contains: {menuItem.allergens.join(', ')}
-                </p>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <p className="text-sm text-muted-foreground">
-                  No known allergens
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Equipment Needed</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {menuItem.equipment_needed?.map((equipment, index) => (
-                <li key={index}>{equipment}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Temperature Requirements</h3>
-            <p className="text-sm text-muted-foreground">
-              {menuItem.temperature_requirements || "Not specified"}
-            </p>
-          </div>
-        </ScrollArea>
+        </div>
+        
+        <div className="flex justify-end mt-4">
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

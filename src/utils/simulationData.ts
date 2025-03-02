@@ -11,7 +11,6 @@ const generateTables = (): TableLayoutType[] => {
       section: "Main",
       status: "available",
       activeOrder: null,
-      reservationId: null,
       shape: "rectangle",
       position: { x: 100, y: 100 },
       // Make sure these properties match the TableLayout interface
@@ -20,7 +19,11 @@ const generateTables = (): TableLayoutType[] => {
       width: 80,
       height: 80,
       tableNumber: 1,
-      seats: 4
+      seats: 4,
+      currentOrderId: null,
+      rotation: 0,
+      serverAssigned: undefined,
+      notes: ""
     },
     {
       id: 2,
@@ -29,8 +32,7 @@ const generateTables = (): TableLayoutType[] => {
       section: "Main",
       status: "available",
       activeOrder: null,
-      reservationId: null,
-      shape: "circle",
+      shape: "round",
       position: { x: 200, y: 100 },
       // Make sure these properties match the TableLayout interface
       positionX: 200,
@@ -38,7 +40,11 @@ const generateTables = (): TableLayoutType[] => {
       width: 60,
       height: 60,
       tableNumber: 2,
-      seats: 2
+      seats: 2,
+      currentOrderId: null,
+      rotation: 0,
+      serverAssigned: undefined,
+      notes: ""
     }
   ];
 };

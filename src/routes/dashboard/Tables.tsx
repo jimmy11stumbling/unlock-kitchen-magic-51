@@ -17,8 +17,8 @@ const Tables = () => {
 
   return (
     <TablePanel
-      tables={tables as unknown as TableLayout[]}
-      onAddTable={addTable as any}
+      tables={tables as TableLayout[]}
+      onAddTable={(table: Omit<TableLayout, "id">) => addTable(table)}
       onUpdateStatus={updateTableStatus}
       onStartOrder={(tableId) => {
         const orderId = startOrder(tableId);
