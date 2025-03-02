@@ -123,7 +123,7 @@ export const vendorService = {
       const { data } = await supabase
         .from('financial_transactions')
         .select('description')
-        .eq('id', expense.vendorId)
+        .eq('id', expense.vendorId.toString())
         .maybeSingle();
         
       vendorName = data?.description || '';
@@ -165,7 +165,7 @@ export const vendorService = {
       const { data } = await supabase
         .from('financial_transactions')
         .select('description')
-        .eq('id', updates.vendorId)
+        .eq('id', updates.vendorId.toString())
         .maybeSingle();
         
       vendorName = data?.description || '';
