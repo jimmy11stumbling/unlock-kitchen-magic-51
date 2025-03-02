@@ -9,11 +9,14 @@ export const useSalesAnalytics = () => {
 
   const addSalesData = (data: Omit<SalesData, "profit">) => {
     try {
+      // Calculate profit from revenue and costs
       const profit = data.revenue - data.costs;
+      
       const newSalesData: SalesData = {
         ...data,
         profit,
       };
+      
       setSalesData([...salesData, newSalesData]);
     } catch (err) {
       setError("Failed to add sales data");

@@ -1,4 +1,38 @@
 
+export interface Vendor {
+  id: number;
+  name: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  address: string;
+  website?: string;
+  category: string;
+  status: 'active' | 'inactive' | 'pending';
+  paymentTerms: string;
+  notes?: string;
+  rating?: number;
+  contacts?: VendorContact[];
+  documents?: VendorDocument[];
+}
+
+export interface Expense {
+  id: number;
+  vendorId: number;
+  vendorName: string;
+  amount: number;
+  date: string;
+  description: string;
+  category: string;
+  paymentMethod: string;
+  status: 'paid' | 'pending' | 'overdue';
+  receiptUrl?: string;
+  notes?: string;
+  approvedBy?: string;
+  approvedDate?: string;
+  taxDeductible?: boolean;
+}
+
 export interface VendorContact {
   id: string;
   name: string;
@@ -20,7 +54,7 @@ export interface VendorDocument {
   id: string;
   name: string;
   type: string;
-  fileUrl?: string;
+  fileUrl: string;
   uploadedAt: string;
   size: number;
 }
@@ -50,4 +84,11 @@ export interface AccountingSummary {
   paid: number;
   overdue: number;
   lastMonthExpenses?: number;
+  totalExpenses: number;
+  totalPaid: number;
+  totalPending: number;
+  taxDeductibleAmount?: number;
+  expensesByCategory: Record<string, number>;
+  expensesByVendor: Record<string, number>;
+  monthlyTotals: Record<string, number>;
 }

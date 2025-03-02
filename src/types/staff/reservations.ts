@@ -11,6 +11,8 @@ export interface Reservation {
   email?: string;
   status: ReservationStatus;
   tableAssigned?: number;
+  tableNumber?: number;
   specialRequests?: string;
+  notes?: string;
   createdAt?: string;
 }

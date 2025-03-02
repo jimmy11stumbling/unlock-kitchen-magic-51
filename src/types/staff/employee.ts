@@ -1,4 +1,8 @@
 
+import { PayrollEntry, PayrollSettings } from './payroll';
+
+export type StaffStatus = 'active' | 'on_leave' | 'terminated' | 'on_duty' | 'off_duty' | 'on_break';
+
 export interface StaffMember {
   id: number;
   name: string;
@@ -9,7 +13,7 @@ export interface StaffMember {
   schedule?: Record<string, string>;
   hourlyRate?: number;
   overtimeRate?: number;
-  status?: 'active' | 'on_leave' | 'terminated' | 'on_duty' | 'off_duty';
+  status?: StaffStatus;
   department?: string;
   performanceRating?: number;
   address?: string;
@@ -21,6 +25,8 @@ export interface StaffMember {
   };
   shift?: string;
   notes?: string;
+  salary?: number;
+  payrollSettings?: PayrollSettings;
   payrollEntries?: PayrollEntry[];
 }
 

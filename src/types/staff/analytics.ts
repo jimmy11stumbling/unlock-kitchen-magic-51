@@ -1,12 +1,14 @@
 
 export interface SalesData {
-  id: number;
+  id?: number;
   date: string;
   totalSales: number;
   profit: number;
   customerCount: number;
   avgOrderValue: number;
-  topSellingCategories: {
+  revenue: number;
+  costs: number;
+  topSellingCategories?: {
     category: string;
     sales: number;
     percentOfTotal: number;

@@ -1,6 +1,7 @@
 
-import type { Reservation, ReservationStatus } from "@/types/staff";
+import type { ReservationStatus } from "@/types/staff";
 
+// Get status color for display
 export const getStatusColor = (status: ReservationStatus): string => {
   switch (status) {
     case 'pending':
@@ -20,56 +21,40 @@ export const getStatusColor = (status: ReservationStatus): string => {
   }
 };
 
-export const getStatusOptions = (): { value: ReservationStatus; label: string }[] => [
-  { value: 'pending', label: 'Pending' },
-  { value: 'confirmed', label: 'Confirmed' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'seated', label: 'Seated' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'no-show', label: 'No-Show' }
-];
-
-export const getFilteredReservations = (
-  reservations: Reservation[],
-  selectedDate: Date | null,
-  statusFilter: ReservationStatus | 'all',
-  searchTerm: string
-): Reservation[] => {
-  return reservations.filter(reservation => {
-    // Filter by date if selected
-    if (selectedDate) {
-      const reservationDate = new Date(reservation.date);
-      if (
-        reservationDate.getDate() !== selectedDate.getDate() ||
-        reservationDate.getMonth() !== selectedDate.getMonth() ||
-        reservationDate.getFullYear() !== selectedDate.getFullYear()
-      ) {
-        return false;
-      }
-    }
-
-    // Filter by status if not 'all'
-    if (statusFilter !== 'all' && reservation.status !== statusFilter) {
-      return false;
-    }
-
-    // Filter by search term
-    if (searchTerm && !reservation.customerName.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-
-    return true;
-  });
+// Format time to more readable format
+export const formatTime = (time: string): string => {
+  try {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  } catch (error) {
+    return time;
+  }
 };
 
-export const getFormattedTime = (time: string): string => {
-  const [hours, minutes] = time.split(':');
-  const hour = parseInt(hours, 10);
-  
-  if (isNaN(hour)) return time;
-  
-  const suffix = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  
-  return `${displayHour}:${minutes} ${suffix}`;
+// Get next allowed statuses based on current status
+export const getNextAllowedStatuses = (currentStatus: ReservationStatus): ReservationStatus[] => {
+  switch (currentStatus) {
+    case 'pending':
+      return ['confirmed', 'cancelled'];
+    case 'confirmed':
+      return ['seated', 'cancelled', 'no-show'];
+    case 'seated':
+      return ['completed'];
+    case 'completed':
+      return [];
+    case 'cancelled':
+      return ['pending']; // Allow reactivation
+    case 'no-show':
+      return ['pending']; // Allow rebooking
+    default:
+      return [];
+  }
+};
+
+// Get all statuses
+export const getAllStatuses = (): ReservationStatus[] => {
+  return ['pending', 'confirmed', 'seated', 'completed', 'cancelled', 'no-show'];
 };
