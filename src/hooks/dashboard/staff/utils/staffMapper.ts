@@ -1,87 +1,112 @@
-
-import type { StaffMember, StaffStatus } from "@/types/staff";
-import type { Json } from "@/integrations/supabase/types";
-
-// Helper to convert Json to strongly typed object safely
-const safeJsonParse = <T>(json: Json | null, defaultValue: T): T => {
-  if (!json) return defaultValue;
-  if (typeof json === 'object') return json as unknown as T;
-  try {
-    return JSON.parse(json as string) as T;
-  } catch (e) {
-    return defaultValue;
-  }
-};
-
-// Map between application status and database status
-const mapStatusToDatabase = (status: StaffStatus): "active" | "on_break" | "off_duty" => {
-  switch (status) {
-    case "active":
-    case "on_duty":
-      return "active";
-    case "on_break":
-      return "on_break";
-    case "off_duty":
-    case "on_leave":
-    case "terminated":
-      return "off_duty";
-    default:
-      return "active";
-  }
-};
-
-const mapDatabaseToStatus = (dbStatus: string): StaffStatus => {
-  switch (dbStatus) {
-    case "active":
-      return "active";
-    case "on_break":
-      return "on_break";
-    case "off_duty":
-      return "off_duty";
-    default:
-      return "active";
-  }
-};
+import type { StaffMember, StaffStatus } from '@/types/staff';
 
 export const staffMappers = {
-  mapDatabaseToStaffMember: (dbStaff: any): StaffMember => {
-    return {
-      id: dbStaff.id,
-      name: dbStaff.name,
-      email: dbStaff.email,
-      phone: dbStaff.phone,
-      role: dbStaff.role,
-      status: mapDatabaseToStatus(dbStaff.status),
-      department: dbStaff.department,
-      hireDate: dbStaff.hire_date,
-      schedule: safeJsonParse(dbStaff.schedule, {}),
-      salary: dbStaff.salary,
-      performanceRating: dbStaff.performance_rating || 0,
-      certifications: dbStaff.certifications || [],
-      notes: dbStaff.notes,
-      emergencyContact: safeJsonParse(dbStaff.emergency_contact, { name: "", phone: "", relationship: "" }),
-      shift: dbStaff.shift,
-    };
+  mapStatusToDatabase: (status: StaffStatus): 'active' | 'on_break' | 'off_duty' => {
+    // Handle the mapping from StaffStatus to database status
+    if (status === 'terminated') {
+      return 'off_duty'; // Map terminated to off_duty as a fallback
+    }
+    return status as 'active' | 'on_break' | 'off_duty';
   },
 
-  mapStaffMemberToDatabase: (staff: Partial<StaffMember>): any => {
-    const dbStaff: any = {};
+  mapDatabaseStatusToStaffStatus: (status: 'active' | 'on_break' | 'off_duty'): StaffStatus => {
+    return status as StaffStatus;
+  },
+
+  mapStaffMemberToDatabase: (staffMember: Partial<StaffMember>): any => {
+    const mapped: any = { ...staffMember };
     
-    if (staff.name !== undefined) dbStaff.name = staff.name;
-    if (staff.email !== undefined) dbStaff.email = staff.email;
-    if (staff.phone !== undefined) dbStaff.phone = staff.phone;
-    if (staff.role !== undefined) dbStaff.role = staff.role;
-    if (staff.status !== undefined) dbStaff.status = mapStatusToDatabase(staff.status);
-    if (staff.department !== undefined) dbStaff.department = staff.department;
-    if (staff.hireDate !== undefined) dbStaff.hire_date = staff.hireDate;
-    if (staff.schedule !== undefined) dbStaff.schedule = staff.schedule;
-    if (staff.salary !== undefined) dbStaff.salary = staff.salary;
-    if (staff.performanceRating !== undefined) dbStaff.performance_rating = staff.performanceRating;
-    if (staff.certifications !== undefined) dbStaff.certifications = staff.certifications;
-    if (staff.notes !== undefined) dbStaff.notes = staff.notes;
-    if (staff.emergencyContact !== undefined) dbStaff.emergency_contact = staff.emergencyContact;
-    if (staff.shift !== undefined) dbStaff.shift = staff.shift;
+    // Convert status if present
+    if (mapped.status) {
+      mapped.status = this.mapStatusToDatabase(mapped.status);
+    }
     
-    return dbStaff;
+    // Handle schedule, emergency_contact, etc. conversion to JSON
+    if (mapped.schedule && typeof mapped.schedule !== 'string') {
+      mapped.schedule = JSON.stringify(mapped.schedule);
+    }
+    
+    if (mapped.emergencyContact && typeof mapped.emergencyContact !== 'string') {
+      mapped.emergency_contact = JSON.stringify(mapped.emergencyContact);
+      delete mapped.emergencyContact;
+    }
+    
+    if (mapped.bankInfo && typeof mapped.bankInfo !== 'string') {
+      mapped.bank_info = JSON.stringify(mapped.bankInfo);
+      delete mapped.bankInfo;
+    }
+    
+    if (mapped.benefits && typeof mapped.benefits !== 'string') {
+      mapped.benefits = JSON.stringify(mapped.benefits);
+    }
+    
+    return mapped;
+  },
+
+  mapDatabaseToStaffMember: (data: any): StaffMember => {
+    const staff: any = { ...data };
+    
+    // Convert schedule from JSON to object
+    if (staff.schedule && typeof staff.schedule === 'string') {
+      try {
+        staff.schedule = JSON.parse(staff.schedule);
+      } catch (e) {
+        console.error('Error parsing schedule JSON:', e);
+        staff.schedule = {};
+      }
+    } else if (typeof staff.schedule === 'object') {
+      // Already an object, keep as is
+    } else {
+      staff.schedule = {};
+    }
+    
+    // Convert emergency_contact from JSON to object
+    if (staff.emergency_contact) {
+      try {
+        if (typeof staff.emergency_contact === 'string') {
+          staff.emergencyContact = JSON.parse(staff.emergency_contact);
+        } else {
+          staff.emergencyContact = staff.emergency_contact;
+        }
+      } catch (e) {
+        console.error('Error parsing emergency contact JSON:', e);
+        staff.emergencyContact = { name: '', phone: '', relationship: '' };
+      }
+      delete staff.emergency_contact;
+    }
+    
+    // Convert bank_info from JSON to object
+    if (staff.bank_info) {
+      try {
+        if (typeof staff.bank_info === 'string') {
+          staff.bankInfo = JSON.parse(staff.bank_info);
+        } else {
+          staff.bankInfo = staff.bank_info;
+        }
+      } catch (e) {
+        console.error('Error parsing bank info JSON:', e);
+        staff.bankInfo = {};
+      }
+      delete staff.bank_info;
+    }
+    
+    // Convert benefits from JSON to object
+    if (staff.benefits) {
+      try {
+        if (typeof staff.benefits === 'string') {
+          staff.benefits = JSON.parse(staff.benefits);
+        }
+      } catch (e) {
+        console.error('Error parsing benefits JSON:', e);
+        staff.benefits = {};
+      }
+    }
+    
+    // Convert status
+    if (staff.status) {
+      staff.status = this.mapDatabaseStatusToStaffStatus(staff.status);
+    }
+    
+    return staff as StaffMember;
   }
 };

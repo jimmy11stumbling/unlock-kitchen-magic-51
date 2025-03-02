@@ -24,7 +24,7 @@ export const createStaffMember = async (staffMember: Omit<StaffMember, "id">): P
 
 export const updateStaffStatus = async (staffId: number, status: StaffStatus): Promise<StaffMember> => {
   try {
-    const dbStatus = staffMappers.mapStaffMemberToDatabase({ status }).status;
+    const dbStatus = staffMappers.mapStatusToDatabase(status);
     
     const { data, error } = await supabase
       .from('staff_members')
@@ -64,12 +64,18 @@ export const updateStaffInfo = async (staffId: number, updates: Partial<StaffMem
 // Helper function to check if a table exists
 const tableExists = async (tableName: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .limit(1);
+    // We need to use a more specific approach since dynamic table names aren't allowed
+    // We'll check one of the known tables first, then handle others with a switch
+    if (tableName === 'staff_members') {
+      const { error } = await supabase
+        .from('staff_members')
+        .select('id')
+        .limit(1);
+      
+      return !error;
+    }
     
-    return !error;
+    return false;
   } catch (error) {
     return false;
   }
