@@ -1,16 +1,15 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { GraduationCap, UserPlus } from "lucide-react";
 import type { StaffMember } from "@/types/staff";
-import { AddShiftForm } from "./schedule/AddShiftForm";
-import { WeeklySchedule } from "./schedule/WeeklySchedule";
-import { PersonalInfoForm } from "./schedule/PersonalInfoForm";
-import { UserPlus, Info } from "lucide-react";
 import { StaffMetricsCard } from "./schedule/StaffMetricsCard";
-import { CertificationsCard } from "./schedule/CertificationsCard";
 import { DocumentsCard } from "./schedule/DocumentsCard";
 import { EmptyScheduleCard } from "./schedule/EmptyScheduleCard";
 
@@ -19,166 +18,201 @@ interface ScheduleManagerProps {
   onAddShift: (staffId: number, date: string, time: string) => void;
   calculateWeeklyHours: (staffId: number) => number;
   selectedStaffId: number | null;
-  onUpdateStaffInfo?: (staffId: number, updates: Partial<StaffMember>) => void;
+  onUpdateStaffInfo: (staffId: number, updates: Partial<StaffMember>) => Promise<void>;
 }
 
 export const ScheduleManager = ({
   staff,
   onAddShift,
-  selectedStaffId,
   calculateWeeklyHours,
+  selectedStaffId,
   onUpdateStaffInfo
 }: ScheduleManagerProps) => {
   const [activeTab, setActiveTab] = useState("schedule");
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [shiftDate, setShiftDate] = useState("");
+  const [shiftTime, setShiftTime] = useState("");
+  const [certificationInput, setCertificationInput] = useState("");
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (selectedStaffId) {
-      const staffMember = staff.find(s => s.id === selectedStaffId);
-      setSelectedStaff(staffMember || null);
-    } else {
-      setSelectedStaff(null);
-    }
-  }, [selectedStaffId, staff]);
+  // Get the selected staff member
+  const selectedStaff = staff.find(s => s.id === selectedStaffId);
 
-  const handleUpdatePersonalInfo = (updates: Partial<StaffMember>) => {
-    if (selectedStaffId && onUpdateStaffInfo) {
-      onUpdateStaffInfo(selectedStaffId, updates);
-    }
-  };
-
-  const handleAddShift = (date: string, time: string) => {
-    if (selectedStaffId) {
-      onAddShift(selectedStaffId, date, time);
-    } else {
+  const handleAddCertification = async () => {
+    if (!selectedStaff || !certificationInput.trim()) return;
+    
+    const updatedCertifications = [
+      ...(selectedStaff.certifications || []),
+      certificationInput.trim()
+    ];
+    
+    try {
+      await onUpdateStaffInfo(selectedStaff.id, {
+        certifications: updatedCertifications
+      });
+      
+      toast({
+        title: "Certification Added",
+        description: `Added ${certificationInput} to ${selectedStaff.name}'s certifications.`
+      });
+      
+      setCertificationInput("");
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Please select a staff member first",
+        description: "Failed to add certification",
         variant: "destructive"
       });
     }
   };
 
-  const handleAddCertification = () => {
-    if (!selectedStaffId) return;
-    
-    const newCert = prompt("Enter certification name:");
-    if (newCert && onUpdateStaffInfo) {
-      const currentStaff = staff.find(s => s.id === selectedStaffId);
-      if (currentStaff) {
-        const updatedCerts = [...(currentStaff.certifications || []), newCert];
-        onUpdateStaffInfo(selectedStaffId, { certifications: updatedCerts });
-        toast({
-          title: "Certification Added",
-          description: `Added ${newCert} to ${currentStaff.name}'s certifications`
-        });
-      }
-    }
-  };
-
-  const handleUpdatePerformance = () => {
-    if (!selectedStaffId) return;
-    
-    const newRating = prompt("Enter new performance rating (1-5):");
-    const parsedRating = parseFloat(newRating || "");
-    
-    if (!isNaN(parsedRating) && parsedRating >= 1 && parsedRating <= 5 && onUpdateStaffInfo) {
-      onUpdateStaffInfo(selectedStaffId, { performanceRating: parsedRating });
+  const handleAddShift = () => {
+    if (!selectedStaffId || !shiftDate || !shiftTime) {
       toast({
-        title: "Performance Updated",
-        description: `Updated performance rating to ${parsedRating}/5`
-      });
-    } else if (!isNaN(parsedRating)) {
-      toast({
-        title: "Invalid Rating",
-        description: "Rating must be between 1 and 5",
+        title: "Missing Information",
+        description: "Please select a date and time for the shift.",
         variant: "destructive"
       });
+      return;
     }
+
+    onAddShift(selectedStaffId, shiftDate, shiftTime);
+    
+    toast({
+      title: "Shift Added",
+      description: `Added shift on ${shiftDate} for ${selectedStaff?.name}`
+    });
+    
+    setShiftDate("");
+    setShiftTime("");
   };
 
-  const handleAddMetric = (staffId: number, metricType: string, value: string) => {
-    if (!value.trim()) return;
-    
-    const updates: Partial<StaffMember> = {};
-    
-    switch (metricType) {
-      case "certification":
-        const staffMember = staff.find(s => s.id === staffId);
-        if (staffMember) {
-          updates.certifications = [...(staffMember.certifications || []), value];
-        }
-        break;
-      case "performance":
-        const rating = parseFloat(value);
-        if (!isNaN(rating) && rating >= 1 && rating <= 5) {
-          updates.performanceRating = rating;
-        }
-        break;
-    }
-    
-    if (selectedStaffId && onUpdateStaffInfo) {
-      onUpdateStaffInfo(selectedStaffId, updates);
-    }
-  };
+  // Render empty state if no staff member is selected
+  if (!selectedStaff) {
+    return <EmptyScheduleCard />;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Staff Management</h2>
-        <Button variant="outline" className="gap-2">
-          <UserPlus className="h-4 w-4" />
-          Add Staff Member
-        </Button>
+        <h2 className="text-2xl font-bold">{selectedStaff.name}</h2>
+        <div className="flex items-center gap-2">
+          <span className={`px-2 py-1 text-xs rounded ${
+            selectedStaff.performanceRating > 7 
+              ? 'bg-green-100 text-green-800' 
+              : selectedStaff.performanceRating > 4 
+                ? 'bg-yellow-100 text-yellow-800' 
+                : 'bg-red-100 text-red-800'
+          }`}>
+            Performance: {selectedStaff.performanceRating}/10
+          </span>
+        </div>
       </div>
 
-      {selectedStaff ? (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-5 gap-4">
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
-            <TabsTrigger value="personal">Personal Info</TabsTrigger>
-            <TabsTrigger value="payment">Payment Details</TabsTrigger>
-            <TabsTrigger value="qualifications">Qualifications</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="schedule">Schedule</TabsTrigger>
+          <TabsTrigger value="certifications">Certifications</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="schedule" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <AddShiftForm onAddShift={handleAddShift} />
-              <WeeklySchedule staff={selectedStaff} />
+        <TabsContent value="schedule" className="space-y-4">
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4">Add Shift</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Input 
+                  id="date" 
+                  type="date" 
+                  value={shiftDate}
+                  onChange={(e) => setShiftDate(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="time">Shift Time</Label>
+                <Select value={shiftTime} onValueChange={setShiftTime}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select shift time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="09:00-17:00">9:00 AM - 5:00 PM</SelectItem>
+                    <SelectItem value="08:00-16:00">8:00 AM - 4:00 PM</SelectItem>
+                    <SelectItem value="16:00-00:00">4:00 PM - 12:00 AM</SelectItem>
+                    <SelectItem value="00:00-08:00">12:00 AM - 8:00 AM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-end">
+                <Button onClick={handleAddShift} className="w-full">Add Shift</Button>
+              </div>
             </div>
-          </TabsContent>
+          </Card>
 
-          <TabsContent value="personal">
-            <PersonalInfoForm 
-              staff={selectedStaff}
-              onUpdateInfo={handleUpdatePersonalInfo}
-            />
-          </TabsContent>
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4">Current Schedule</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(selectedStaff.schedule || {}).map(([day, time]) => (
+                <div key={day} className="flex justify-between items-center p-3 border rounded-md">
+                  <div>
+                    <span className="font-medium capitalize">{day}</span>
+                  </div>
+                  <div>
+                    <span className={time === "OFF" ? "text-gray-400" : "text-green-600 font-medium"}>
+                      {time === "OFF" ? "Day Off" : time}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
 
-          <TabsContent value="payment">
-            <StaffMetricsCard 
-              selectedStaff={selectedStaff} 
-              calculateWeeklyHours={calculateWeeklyHours}
-            />
-          </TabsContent>
+          <StaffMetricsCard 
+            selectedStaff={selectedStaff} 
+            calculateWeeklyHours={calculateWeeklyHours} 
+          />
+        </TabsContent>
 
-          <TabsContent value="qualifications">
-            <CertificationsCard 
-              selectedStaff={selectedStaff}
-              onAddCertification={handleAddCertification}
-              onUpdatePerformance={handleUpdatePerformance}
-            />
-          </TabsContent>
+        <TabsContent value="certifications" className="space-y-4">
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4">Add Certification</h3>
+            <div className="flex space-x-2">
+              <div className="flex-1">
+                <Input 
+                  placeholder="Enter certification name" 
+                  value={certificationInput}
+                  onChange={(e) => setCertificationInput(e.target.value)}
+                />
+              </div>
+              <Button onClick={handleAddCertification}>
+                <GraduationCap className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            </div>
+          </Card>
+          
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4">Current Certifications</h3>
+            {selectedStaff.certifications && selectedStaff.certifications.length > 0 ? (
+              <div className="space-y-2">
+                {selectedStaff.certifications.map((cert, index) => (
+                  <div key={index} className="flex items-center p-3 border rounded-md">
+                    <GraduationCap className="h-5 w-5 mr-2 text-blue-500" />
+                    <span>{cert}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No certifications on file</p>
+            )}
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="documents">
-            <DocumentsCard selectedStaff={selectedStaff} />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <EmptyScheduleCard />
-      )}
+        <TabsContent value="documents">
+          <DocumentsCard selectedStaff={selectedStaff} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
