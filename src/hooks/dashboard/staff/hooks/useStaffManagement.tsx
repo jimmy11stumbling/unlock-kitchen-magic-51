@@ -1,163 +1,198 @@
 
-import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { StaffMember } from '@/types/staff/employee';
-import { mapDatabaseToStaffMember } from '../utils/staffMapper';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { staffMappers } from "../utils/staffMapper";
+import { readQueries } from "../services/queries/readQueries";
+import { writeQueries } from "../services/queries/writeQueries";
+import type { StaffMember, StaffStatus } from "@/types/staff";
+import type { Json } from "@/integrations/supabase/types";
 
 export const useStaffManagement = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [staff, setStaff] = useState<StaffMember[]>([]);
-  
-  // Instead of using useReadStaffMembers which doesn't exist, let's implement fetchStaffMembers
-  const fetchStaffMembers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchStaffMembers = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
-        .from('staff_members')
-        .select('*');
-        
-      if (error) throw new Error(error.message);
-      
-      // Map database result to StaffMember type
-      const staffMembers = (data || []).map(item => mapDatabaseToStaffMember(item));
-      setStaff(staffMembers);
-      return staffMembers;
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch staff members');
+        .from("staff_members")
+        .select("*");
+
+      if (error) throw error;
+
+      if (data) {
+        const mappedStaff = data.map(staffMappers.mapDatabaseToStaffMember);
+        setStaff(mappedStaff);
+        return mappedStaff;
+      }
+      return [];
+    } catch (err) {
+      console.error("Error fetching staff:", err);
+      setError("Failed to fetch staff");
       return [];
     } finally {
       setLoading(false);
     }
-  }, []);
-  
-  const createStaffMember = useCallback(async (data: Omit<StaffMember, 'id'>) => {
-    setLoading(true);
-    setError(null);
-    
+  };
+
+  const seedInitialStaffData = async () => {
     try {
-      // Transform staff member data for database
-      const { data: result, error } = await supabase
-        .from('staff_members')
-        .insert([{
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          role: data.role,
-          department: data.department,
-          status: data.status || 'active'
-        }])
+      // Insert each staff member individually to avoid array issues
+      const initialData = [
+        {
+          name: "John Manager",
+          email: "john@restaurant.com",
+          phone: "555-123-4567",
+          role: "manager" as const,
+          department: "Management",
+          status: "active" as "active" | "on_break" | "off_duty" // Convert to compatible type
+        },
+        {
+          name: "Maria Chef",
+          email: "maria@restaurant.com",
+          phone: "555-234-5678",
+          role: "chef" as const,
+          department: "Kitchen",
+          status: "active" as "active" | "on_break" | "off_duty"
+        }
+      ];
+      
+      for (const staff of initialData) {
+        await supabase.from("staff_members").insert(staff);
+      }
+
+      await fetchStaffMembers();
+    } catch (err) {
+      console.error("Error seeding staff data:", err);
+      setError("Failed to seed initial staff data");
+    }
+  };
+
+  const addStaffMember = async (data: Omit<StaffMember, "id">) => {
+    try {
+      const formattedData = staffMappers.mapStaffMemberToDatabase(data);
+      // Ensure status is one of the valid values for the database
+      const safeStatus = formattedData.status as string;
+      const safeData = {
+        ...formattedData,
+        status: (["active", "on_break", "off_duty"].includes(safeStatus) 
+          ? safeStatus 
+          : "active") as "active" | "on_break" | "off_duty"
+      };
+
+      const { data: newStaff, error } = await supabase
+        .from("staff_members")
+        .insert(safeData)
         .select()
         .single();
-      
-      if (error) throw new Error(error.message);
-      
-      const newStaffMember = mapDatabaseToStaffMember(result);
-      setStaff(prev => [...prev, newStaffMember]);
-      
-      return newStaffMember;
-    } catch (err: any) {
-      setError(err.message || 'Failed to add staff member');
+
+      if (error) throw error;
+
+      if (newStaff) {
+        const mappedStaff = staffMappers.mapDatabaseToStaffMember(newStaff);
+        setStaff(prev => [...prev, mappedStaff]);
+        return mappedStaff;
+      }
+
+      throw new Error("Failed to add staff member");
+    } catch (err) {
+      console.error("Error adding staff member:", err);
+      setError("Failed to add staff member");
       throw err;
-    } finally {
-      setLoading(false);
     }
-  }, []);
-  
-  const updateStaffStatus = useCallback(async (staffId: number, newStatus: string) => {
-    setLoading(true);
-    setError(null);
-    
+  };
+
+  const updateStaffMember = async (updatedMember: Partial<StaffMember>) => {
     try {
-      const { error } = await supabase
-        .from('staff_members')
-        .update({ status: newStatus })
-        .eq('id', staffId);
+      if (!updatedMember.id) throw new Error("Staff member ID is required for updates");
+
+      // Convert StaffMember to database format and ensure status is compatible
+      let dbData = staffMappers.mapStaffMemberToDatabase(updatedMember as StaffMember);
       
-      if (error) throw new Error(error.message);
-      
-      setStaff(prev => prev.map(member => 
-        member.id === staffId ? { ...member, status: newStatus as any } : member
-      ));
-      
-      return true;
-    } catch (err: any) {
-      setError(err.message || 'Failed to update staff status');
+      // Safety check for status field
+      if (dbData.status && typeof dbData.status === 'string') {
+        dbData.status = (["active", "on_break", "off_duty"].includes(dbData.status) 
+          ? dbData.status 
+          : "active") as "active" | "on_break" | "off_duty";
+      }
+
+      const { data, error } = await supabase
+        .from("staff_members")
+        .update(dbData)
+        .eq("id", updatedMember.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const mappedStaff = staffMappers.mapDatabaseToStaffMember(data);
+        setStaff(prev => 
+          prev.map(member => 
+            member.id === mappedStaff.id ? mappedStaff : member
+          )
+        );
+        return mappedStaff;
+      }
+
+      throw new Error("Failed to update staff member");
+    } catch (err) {
+      console.error("Error updating staff member:", err);
+      setError("Failed to update staff member");
       throw err;
-    } finally {
-      setLoading(false);
     }
-  }, []);
-  
-  const updateStaffInfo = useCallback(async (staffId: number, updates: Partial<StaffMember>) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const { error } = await supabase
-        .from('staff_members')
-        .update(updates)
-        .eq('id', staffId);
-      
-      if (error) throw new Error(error.message);
-      
-      setStaff(prev => prev.map(member => 
-        member.id === staffId ? { ...member, ...updates } : member
-      ));
-      
-      return { ...staff.find(s => s.id === staffId), ...updates };
-    } catch (err: any) {
-      setError(err.message || 'Failed to update staff information');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [staff]);
-  
-  const getStaffMember = useCallback((id: number) => {
-    return staff.find(member => member.id === id) || null;
-  }, [staff]);
-  
-  const calculateAttendance = useCallback((staffId: number): number => {
-    const member = getStaffMember(staffId);
+  };
+
+  const calculateWeeklyHours = (staffId: number) => {
+    const member = staff.find(s => s.id === staffId);
     if (!member?.schedule) return 0;
-    
-    const scheduledDays = Object.values(member.schedule).filter(day => 
-      typeof day === 'string' && day !== "OFF"
-    ).length;
-    
-    return Math.round((scheduledDays / 7) * 100);
-  }, [getStaffMember]);
-  
-  const calculateWeeklyHours = useCallback((staffId: number): number => {
-    const member = getStaffMember(staffId);
-    if (!member?.schedule) return 0;
-    
+
     return Object.values(member.schedule)
-      .filter(time => typeof time === 'string' && time !== "OFF")
+      .filter(time => time !== "OFF")
       .reduce((total, time) => {
-        if (typeof time !== 'string' || !time.includes('-')) return total;
+        if (typeof time !== 'string' || !time.includes("-")) return total;
         
-        const [start, end] = time.split('-');
-        const startHour = parseInt(start.split(':')[0]);
-        const endHour = parseInt(end.split(':')[0]);
+        const [start, end] = time.split("-");
+        if (!start || !end) return total;
+        
+        const startHour = parseInt(start.split(":")[0]);
+        const endHour = parseInt(end.split(":")[0]);
         
         return total + (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);
       }, 0);
-  }, [getStaffMember]);
-  
+  };
+
+  const deleteStaffMember = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from("staff_members")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setStaff(prev => prev.filter(member => member.id !== id));
+      return true;
+    } catch (err) {
+      console.error("Error deleting staff member:", err);
+      setError("Failed to delete staff member");
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    fetchStaffMembers();
+  }, []);
+
   return {
     staff,
     loading,
     error,
     fetchStaffMembers,
-    addStaffMember: createStaffMember,
-    updateStaffStatus,
-    updateStaffInfo,
-    getStaffMember,
-    calculateAttendance,
-    calculateWeeklyHours
+    addStaffMember,
+    updateStaffMember,
+    deleteStaffMember,
+    calculateWeeklyHours,
   };
 };

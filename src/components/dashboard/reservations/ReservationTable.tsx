@@ -1,4 +1,5 @@
 
+import React from "react";
 import {
   Table,
   TableBody,
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { Reservation, ReservationStatus } from "@/types/staff";
+import type { Reservation, ReservationStatus } from "@/types/reservations";
 import { getNextAllowedStatuses } from "./utils";
 
 interface ReservationTableProps {
@@ -57,8 +58,8 @@ export const ReservationTable = ({
             <TableCell>
               <div>
                 <div>{reservation.customerName}</div>
-                {reservation.phoneNumber && (
-                  <div className="text-sm text-muted-foreground">{reservation.phoneNumber}</div>
+                {reservation.customerPhone && (
+                  <div className="text-sm text-muted-foreground">{reservation.customerPhone}</div>
                 )}
               </div>
             </TableCell>
