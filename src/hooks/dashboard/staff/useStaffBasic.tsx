@@ -13,6 +13,7 @@ const initialStaff: StaffMember[] = [
     phone: "555-123-4567",
     status: "active",
     salary: 65000,
+    hireDate: "2020-01-15", // Add hireDate
     schedule: {
       monday: "09:00-17:00",
       tuesday: "09:00-17:00",
@@ -23,7 +24,7 @@ const initialStaff: StaffMember[] = [
       sunday: "OFF"
     },
     certifications: ["Food Safety", "Management"],
-    performance_rating: 9,
+    performanceRating: 9,
     notes: "Restaurant manager with 8 years of experience",
     department: "management",
   },
@@ -35,6 +36,7 @@ const initialStaff: StaffMember[] = [
     phone: "555-987-6543",
     status: "active",
     salary: 55000,
+    hireDate: "2021-03-10", // Add hireDate
     schedule: {
       monday: "14:00-22:00",
       tuesday: "14:00-22:00",
@@ -45,7 +47,7 @@ const initialStaff: StaffMember[] = [
       sunday: "OFF"
     },
     certifications: ["Culinary Arts", "Food Safety"],
-    performance_rating: 8,
+    performanceRating: 8,
     notes: "Head chef specializing in Italian cuisine",
     department: "kitchen",
   },
@@ -57,6 +59,7 @@ const initialStaff: StaffMember[] = [
     phone: "555-456-7890",
     status: "on_break",
     salary: 35000,
+    hireDate: "2022-05-20", // Add hireDate
     schedule: {
       monday: "OFF",
       tuesday: "16:00-24:00",
@@ -67,7 +70,7 @@ const initialStaff: StaffMember[] = [
       sunday: "OFF"
     },
     certifications: ["Customer Service"],
-    performance_rating: 7,
+    performanceRating: 7,
     notes: "Server with 3 years of experience",
     department: "service",
   },
@@ -79,6 +82,7 @@ const initialStaff: StaffMember[] = [
     phone: "555-789-0123",
     status: "active",
     salary: 42000,
+    hireDate: "2021-11-15", // Add hireDate
     schedule: {
       monday: "16:00-24:00",
       tuesday: "16:00-24:00",
@@ -89,7 +93,7 @@ const initialStaff: StaffMember[] = [
       sunday: "OFF"
     },
     certifications: ["Mixology", "Beverage Management"],
-    performance_rating: 9,
+    performanceRating: 9,
     notes: "Experienced bartender with creative cocktail skills",
     department: "bar",
   },
@@ -101,6 +105,7 @@ const initialStaff: StaffMember[] = [
     phone: "555-234-5678",
     status: "off_duty",
     salary: 32000,
+    hireDate: "2022-10-05", // Add hireDate
     schedule: {
       monday: "15:00-23:00",
       tuesday: "15:00-23:00",
@@ -111,7 +116,7 @@ const initialStaff: StaffMember[] = [
       sunday: "OFF"
     },
     certifications: ["Customer Service"],
-    performance_rating: 8,
+    performanceRating: 8,
     notes: "Host with excellent customer service skills",
     department: "service",
   }

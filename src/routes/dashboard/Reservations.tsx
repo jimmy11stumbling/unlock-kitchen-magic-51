@@ -1,13 +1,13 @@
 
-import { ReservationsPanel } from "@/components/dashboard/ReservationsPanel";
-import { useDashboardState } from "@/hooks/useDashboardState";
+import React from 'react';
+import { ReservationsPanel } from '@/components/dashboard/ReservationsPanel';
+import { useReservationState } from '@/hooks/dashboard/useReservationState';
 
 const Reservations = () => {
-  const { reservations, addReservation, updateReservationStatus } = useDashboardState();
+  const { reservations, addReservation, updateReservationStatus } = useReservationState();
 
   return (
-    <div className="p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Reservations</h1>
+    <div className="container mx-auto p-4">
       <ReservationsPanel
         reservations={reservations}
         onAddReservation={addReservation}

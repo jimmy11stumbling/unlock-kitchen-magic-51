@@ -5,11 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import type { PayrollEntry, StaffMember } from "@/types/staff";
-import { PayrollTable } from "./components/PayrollTable";
-import { PayrollChart } from "./components/PayrollChart";
+import PayrollTable from "./components/PayrollTable";
+import PayrollChart from "./components/PayrollChart";
 import { PayrollSettings } from "./components/PayrollSettings";
-import { TaxCalculator } from "./components/TaxCalculator";
-import { ReportsGenerator } from "./components/ReportsGenerator";
+import TaxCalculator from "./components/TaxCalculator";
+import ReportsGenerator from "./components/ReportsGenerator";
 import { PayrollTabContent } from "./components/PayrollTabContent";
 
 export const PayrollPanel = ({ staff }: { staff: StaffMember[] }) => {
@@ -27,7 +27,10 @@ export const PayrollPanel = ({ staff }: { staff: StaffMember[] }) => {
       grossPay: 2100,
       totalPay: 2100,
       deductions: {
-        tax: 420,
+        federalTax: 420,
+        stateTax: 105,
+        medicareTax: 50,
+        socialSecurityTax: 150,
         insurance: 105,
         retirement: 84
       },
@@ -48,9 +51,12 @@ export const PayrollPanel = ({ staff }: { staff: StaffMember[] }) => {
       grossPay: 1760,
       totalPay: 1760,
       deductions: {
-        tax: 352,
+        federalTax: 352,
+        stateTax: 88,
+        medicareTax: 45,
+        socialSecurityTax: 120,
         insurance: 88,
-        retirement: 70.4
+        retirement: 70
       },
       netPay: 1249.6,
       status: "pending",
@@ -71,9 +77,12 @@ export const PayrollPanel = ({ staff }: { staff: StaffMember[] }) => {
 
   const handleUpdateSettings = async (staffId: number, settings: any) => {
     // Mock API call to update settings
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     console.log("Updated settings for staff", staffId, settings);
-    return true;
+    toast({
+      title: "Settings Updated",
+      description: "Payroll settings have been saved successfully."
+    });
   };
 
   return (
@@ -113,7 +122,17 @@ export const PayrollPanel = ({ staff }: { staff: StaffMember[] }) => {
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
             
-            <PayrollTabContent activeTab={activeTab} staffId={selectedStaffId} payrollEntries={payrollEntries} />
+            <TabsContent value="entries">
+              <PayrollTabContent 
+                staff={staff}
+                selectedStaffId={selectedStaffId}
+                payrollHistory={payrollEntries.filter(entry => entry.staffId === selectedStaffId)}
+              />
+            </TabsContent>
+            
+            <TabsContent value="reports">
+              <ReportsGenerator staff={staff} />
+            </TabsContent>
             
             <TabsContent value="settings">
               <PayrollSettings 

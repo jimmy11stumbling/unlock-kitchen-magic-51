@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import type { TableLayout, Order, MenuItem, KitchenOrder, KitchenOrderItem } from "@/types/staff";
 
@@ -62,25 +63,25 @@ export const useTableState = () => {
     const createKitchenOrder = (orderId: number, tableNumber: number, items: any[]) => {
       const kitchenItems: KitchenOrderItem[] = items.map((item, index) => ({
         id: index + 1,
-        menu_item_id: item.id,
+        menuItemId: item.id,
         name: item.name,
         quantity: item.quantity,
         status: "pending",
-        cooking_station: item.station || "grill",
+        cookingStation: item.station || "grill",
         notes: item.notes
       }));
 
       const order: KitchenOrder = {
         id: Math.floor(Math.random() * 1000),
-        order_id: orderId,
-        table_number: tableNumber,
-        server_name: "Server",
+        orderId: orderId,
+        tableNumber: tableNumber,
+        serverName: "Server",
         items: kitchenItems,
         status: "pending",
         priority: "normal",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        estimated_delivery_time: new Date(Date.now() + 30 * 60000).toISOString(),
+        estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString(),
         coursing: "standard"
       };
 

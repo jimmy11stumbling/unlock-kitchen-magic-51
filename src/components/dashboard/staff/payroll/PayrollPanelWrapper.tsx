@@ -24,11 +24,6 @@ export const PayrollPanelWrapper: React.FC<PayrollPanelWrapperProps> = ({ staff 
   };
 
   return (
-    <PayrollPanel
-      staff={staff}
-      onGeneratePayroll={handleGeneratePayroll}
-      onGeneratePayStub={handleGeneratePayStub}
-      onUpdatePayrollSettings={handleUpdatePayrollSettings}
-    />
+    <PayrollPanel staff={staff} />
   );
 };

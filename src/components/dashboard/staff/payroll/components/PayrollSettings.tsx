@@ -7,26 +7,34 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import type { PayrollSettings } from "@/types/staff";
+import type { PayrollSettings as PayrollSettingsType } from "@/types/staff";
 import type { StaffMember } from "@/types/staff";
 
 export interface PayrollSettingsProps {
   selectedStaffId: number;
   staff: StaffMember[];
-  onUpdateSettings: (staffId: number, settings: PayrollSettings) => Promise<void>;
+  onUpdateSettings: (staffId: number, settings: PayrollSettingsType) => Promise<void>;
 }
 
 export const PayrollSettings = ({ selectedStaffId, staff, onUpdateSettings }: PayrollSettingsProps) => {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<PayrollSettings>({
+  const [settings, setSettings] = useState<PayrollSettingsType>({
+    federalTaxWithholding: 15,
+    stateTaxWithholding: 5,
+    directDeposit: true,
+    payFrequency: "biweekly",
+    accountType: "checking",
+    accountNumber: "",
+    routingNumber: "",
+    // Additional properties used in the component
     taxRate: 15,
     overtimeThreshold: 40,
     overtimeMultiplier: 1.5,
+    paySchedule: "biweekly",
     deductionRates: {
       insurance: 5,
       retirement: 4
-    },
-    paySchedule: "biweekly"
+    }
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -45,6 +53,8 @@ export const PayrollSettings = ({ selectedStaffId, staff, onUpdateSettings }: Pa
     try {
       await onUpdateSettings(selectedStaffId, {
         ...settings,
+        federalTaxWithholding: Number(settings.federalTaxWithholding),
+        stateTaxWithholding: Number(settings.stateTaxWithholding),
         taxRate: Number(settings.taxRate),
         overtimeThreshold: Number(settings.overtimeThreshold)
       });
@@ -132,11 +142,11 @@ export const PayrollSettings = ({ selectedStaffId, staff, onUpdateSettings }: Pa
               <Input
                 id="insuranceRate"
                 type="number"
-                value={settings.deductionRates.insurance}
+                value={settings.deductionRates?.insurance}
                 onChange={(e) => setSettings({
                   ...settings, 
                   deductionRates: {
-                    ...settings.deductionRates,
+                    ...settings.deductionRates!,
                     insurance: Number(e.target.value)
                   }
                 })}
@@ -148,11 +158,11 @@ export const PayrollSettings = ({ selectedStaffId, staff, onUpdateSettings }: Pa
               <Input
                 id="retirementRate"
                 type="number"
-                value={settings.deductionRates.retirement}
+                value={settings.deductionRates?.retirement}
                 onChange={(e) => setSettings({
                   ...settings, 
                   deductionRates: {
-                    ...settings.deductionRates,
+                    ...settings.deductionRates!,
                     retirement: Number(e.target.value)
                   }
                 })}

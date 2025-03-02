@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { TableLayout } from "@/types/staff";
+import type { TableLayout } from "@/types/staff/table";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -23,10 +23,17 @@ export const TablePanel = ({
 }: TablePanelProps) => {
   const { toast } = useToast();
   const [newTable, setNewTable] = useState<Omit<TableLayout, "id">>({
+    tableNumber: 1,
     number: 1,
     capacity: 4,
+    seats: 4,
     status: "available",
     section: "indoor",
+    shape: "round",
+    positionX: 0,
+    positionY: 0,
+    width: 100,
+    height: 100,
     activeOrder: null,
   });
 
@@ -76,7 +83,11 @@ export const TablePanel = ({
                 <Input
                   type="number"
                   value={newTable.number}
-                  onChange={(e) => setNewTable({ ...newTable, number: Number(e.target.value) })}
+                  onChange={(e) => setNewTable({ 
+                    ...newTable, 
+                    number: Number(e.target.value),
+                    tableNumber: Number(e.target.value)
+                  })}
                 />
               </div>
               <div>
@@ -84,7 +95,11 @@ export const TablePanel = ({
                 <Input
                   type="number"
                   value={newTable.capacity}
-                  onChange={(e) => setNewTable({ ...newTable, capacity: Number(e.target.value) })}
+                  onChange={(e) => setNewTable({ 
+                    ...newTable, 
+                    capacity: Number(e.target.value),
+                    seats: Number(e.target.value)
+                  })}
                 />
               </div>
               <div>
@@ -108,12 +123,23 @@ export const TablePanel = ({
               <Button
                 className="w-full"
                 onClick={() => {
-                  onAddTable(newTable);
+                  onAddTable({
+                    ...newTable,
+                    tableNumber: newTable.number,
+                    seats: newTable.capacity
+                  });
                   setNewTable({
+                    tableNumber: tables.length + 1,
                     number: tables.length + 1,
                     capacity: 4,
+                    seats: 4,
                     status: "available",
                     section: "indoor",
+                    shape: "round",
+                    positionX: 0,
+                    positionY: 0,
+                    width: 100,
+                    height: 100,
                     activeOrder: null,
                   });
                 }}

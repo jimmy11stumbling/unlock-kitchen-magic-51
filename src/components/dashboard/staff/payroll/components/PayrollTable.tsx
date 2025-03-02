@@ -1,55 +1,83 @@
 
 import React from 'react';
-import { PayrollEntry } from '@/types/staff/payroll';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PayrollEntry } from '@/types/staff';
+import { Button } from '@/components/ui/button';
+import { FileText } from 'lucide-react';
 
 interface PayrollTableProps {
   entries: PayrollEntry[];
+  onGeneratePayStub?: (payrollId: number) => void;
 }
 
-const PayrollTable: React.FC<PayrollTableProps> = ({ entries }) => {
+const PayrollTable: React.FC<PayrollTableProps> = ({ entries, onGeneratePayStub }) => {
   return (
-    <div className="border rounded-md overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross Pay</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Pay</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {entries.length > 0 ? (
-            entries.map((entry) => (
-              <tr key={entry.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(entry.payPeriodStart).toLocaleDateString()} - {new Date(entry.payPeriodEnd).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {entry.regularHours + (entry.overtimeHours || 0)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${entry.grossPay.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${entry.netPay.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
-                  {entry.status}
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                No payroll entries found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Period</TableHead>
+          <TableHead>Hours</TableHead>
+          <TableHead>Gross Pay</TableHead>
+          <TableHead>Deductions</TableHead>
+          <TableHead>Net Pay</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {entries.length > 0 ? (
+          entries.map((entry) => (
+            <TableRow key={entry.id}>
+              <TableCell>
+                <div className="font-medium">{entry.payPeriodStart}</div>
+                <div className="text-sm text-muted-foreground">to {entry.payPeriodEnd}</div>
+              </TableCell>
+              <TableCell>
+                <div>{entry.regularHours} Reg</div>
+                {entry.overtimeHours > 0 && (
+                  <div className="text-orange-500">{entry.overtimeHours} OT</div>
+                )}
+              </TableCell>
+              <TableCell>${entry.grossPay.toFixed(2)}</TableCell>
+              <TableCell>
+                <div>Federal: ${entry.deductions.federalTax.toFixed(2)}</div>
+                <div>State: ${entry.deductions.stateTax.toFixed(2)}</div>
+                {entry.deductions.healthInsurance && (
+                  <div>Insurance: ${entry.deductions.healthInsurance.toFixed(2)}</div>
+                )}
+              </TableCell>
+              <TableCell className="font-medium">${entry.netPay.toFixed(2)}</TableCell>
+              <TableCell>
+                <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                  entry.status === 'paid' ? 'bg-green-100 text-green-800' :
+                  entry.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  entry.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
+                </span>
+              </TableCell>
+              <TableCell>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onGeneratePayStub && onGeneratePayStub(entry.id)}
+                >
+                  <FileText className="h-4 w-4 mr-1" />
+                  Pay Stub
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={7} className="text-center py-4">
+              No payroll entries found
+            </TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
   );
 };
 

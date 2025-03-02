@@ -9,7 +9,7 @@ export interface StaffMember {
   email?: string;
   phone?: string;
   role: 'manager' | 'chef' | 'server' | 'bartender' | 'host';
-  hireDate: string;
+  hireDate?: string; // Make this optional
   schedule?: Record<string, string>;
   hourlyRate?: number;
   overtimeRate?: number;
@@ -26,11 +26,11 @@ export interface StaffMember {
   };
   shift?: string;
   notes?: string;
-  salary?: number; // Add missing property
+  salary?: number;
   payrollSettings?: PayrollSettings;
   payrollEntries?: PayrollEntry[];
-  startDate?: string; // Add missing property
-  bankInfo?: any; // Add missing property
+  startDate?: string;
+  bankInfo?: any;
 }
 
 export interface Shift {

@@ -1,121 +1,108 @@
 
 import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 
 const TaxCalculator: React.FC = () => {
-  const [income, setIncome] = useState<string>('');
-  const [federalRate, setFederalRate] = useState<string>('22');
-  const [stateRate, setStateRate] = useState<string>('5');
-  const [results, setResults] = useState<null | {
-    federalTax: number;
-    stateTax: number;
-    socialSecurity: number;
-    medicare: number;
-    totalTaxes: number;
-    netIncome: number;
-  }>(null);
+  const [income, setIncome] = useState<number>(50000);
+  const [federalRate, setFederalRate] = useState<number>(15);
+  const [stateRate, setStateRate] = useState<number>(5);
+  const [otherDeductions, setOtherDeductions] = useState<number>(7);
 
-  const calculateTaxes = () => {
-    const grossIncome = parseFloat(income);
-    if (isNaN(grossIncome)) return;
-
-    const fedRate = parseFloat(federalRate) / 100;
-    const stRate = parseFloat(stateRate) / 100;
-    
-    const federalTax = grossIncome * fedRate;
-    const stateTax = grossIncome * stRate;
-    const socialSecurity = grossIncome * 0.062; // 6.2%
-    const medicare = grossIncome * 0.0145; // 1.45%
-    
-    const totalTaxes = federalTax + stateTax + socialSecurity + medicare;
-    const netIncome = grossIncome - totalTaxes;
-    
-    setResults({
-      federalTax,
-      stateTax,
-      socialSecurity,
-      medicare,
-      totalTaxes,
-      netIncome
-    });
-  };
+  const federalTax = income * (federalRate / 100);
+  const stateTax = income * (stateRate / 100);
+  const otherDeductionsAmount = income * (otherDeductions / 100);
+  const totalDeductions = federalTax + stateTax + otherDeductionsAmount;
+  const netIncome = income - totalDeductions;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Payroll Tax Calculator</CardTitle>
+        <CardTitle>Tax Calculator</CardTitle>
+        <CardDescription>Estimate taxes and take-home pay</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="income">Annual Income</Label>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-500">$</span>
+            <Input
+              id="income"
+              type="number"
+              value={income}
+              onChange={(e) => setIncome(Number(e.target.value))}
+            />
+          </div>
+        </div>
+        
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="income">Gross Income</Label>
-              <Input
-                id="income"
-                type="number"
-                value={income}
-                onChange={(e) => setIncome(e.target.value)}
-                placeholder="Enter gross income"
-              />
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <Label htmlFor="federal-tax">Federal Tax ({federalRate}%)</Label>
+              <span>${federalTax.toFixed(2)}</span>
             </div>
-            <div>
-              <Label htmlFor="federal-rate">Federal Tax Rate (%)</Label>
-              <Input
-                id="federal-rate"
-                type="number"
-                value={federalRate}
-                onChange={(e) => setFederalRate(e.target.value)}
-                min="0"
-                max="100"
-              />
-            </div>
-            <div>
-              <Label htmlFor="state-rate">State Tax Rate (%)</Label>
-              <Input
-                id="state-rate"
-                type="number"
-                value={stateRate}
-                onChange={(e) => setStateRate(e.target.value)}
-                min="0"
-                max="100"
-              />
-            </div>
+            <Slider
+              id="federal-tax"
+              min={0}
+              max={40}
+              step={0.5}
+              value={[federalRate]}
+              onValueChange={(values) => setFederalRate(values[0])}
+            />
           </div>
           
-          <Button onClick={calculateTaxes} className="w-full">Calculate Taxes</Button>
-          
-          {results && (
-            <div className="mt-4 border rounded-md p-4 space-y-2">
-              <div className="grid grid-cols-2">
-                <span className="text-gray-600">Federal Tax:</span>
-                <span className="font-medium">${results.federalTax.toFixed(2)}</span>
-              </div>
-              <div className="grid grid-cols-2">
-                <span className="text-gray-600">State Tax:</span>
-                <span className="font-medium">${results.stateTax.toFixed(2)}</span>
-              </div>
-              <div className="grid grid-cols-2">
-                <span className="text-gray-600">Social Security:</span>
-                <span className="font-medium">${results.socialSecurity.toFixed(2)}</span>
-              </div>
-              <div className="grid grid-cols-2">
-                <span className="text-gray-600">Medicare:</span>
-                <span className="font-medium">${results.medicare.toFixed(2)}</span>
-              </div>
-              <div className="grid grid-cols-2 border-t pt-2 font-semibold">
-                <span>Total Taxes:</span>
-                <span>${results.totalTaxes.toFixed(2)}</span>
-              </div>
-              <div className="grid grid-cols-2 border-t pt-2 font-semibold">
-                <span>Net Income:</span>
-                <span>${results.netIncome.toFixed(2)}</span>
-              </div>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <Label htmlFor="state-tax">State Tax ({stateRate}%)</Label>
+              <span>${stateTax.toFixed(2)}</span>
             </div>
-          )}
+            <Slider
+              id="state-tax"
+              min={0}
+              max={15}
+              step={0.5}
+              value={[stateRate]}
+              onValueChange={(values) => setStateRate(values[0])}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <Label htmlFor="other-deductions">Other Deductions ({otherDeductions}%)</Label>
+              <span>${otherDeductionsAmount.toFixed(2)}</span>
+            </div>
+            <Slider
+              id="other-deductions"
+              min={0}
+              max={25}
+              step={0.5}
+              value={[otherDeductions]}
+              onValueChange={(values) => setOtherDeductions(values[0])}
+            />
+          </div>
         </div>
+        
+        <div className="rounded-lg bg-muted p-4">
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Gross Income:</span>
+              <span>${income.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Total Deductions:</span>
+              <span className="text-red-500">-${totalDeductions.toFixed(2)}</span>
+            </div>
+            <div className="border-t pt-2 mt-2 flex justify-between font-medium">
+              <span>Net Income:</span>
+              <span className="text-green-600">${netIncome.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+        
+        <Button className="w-full">Generate Detailed Report</Button>
       </CardContent>
     </Card>
   );

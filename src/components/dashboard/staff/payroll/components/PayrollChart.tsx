@@ -1,45 +1,52 @@
 
 import React from 'react';
-import { PayrollEntry } from '@/types/staff/payroll';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PayrollEntry } from '@/types/staff';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface PayrollChartProps {
   entries: PayrollEntry[];
 }
 
 const PayrollChart: React.FC<PayrollChartProps> = ({ entries }) => {
-  // Transform entries into chart data
-  const chartData = entries.map(entry => ({
-    period: `${new Date(entry.payPeriodStart).toLocaleDateString()} - ${new Date(entry.payPeriodEnd).toLocaleDateString()}`,
+  // Sort entries by date
+  const sortedEntries = [...entries].sort((a, b) => 
+    new Date(a.payPeriodStart).getTime() - new Date(b.payPeriodStart).getTime()
+  );
+
+  // Create chart data
+  const chartData = sortedEntries.map(entry => ({
+    period: `${new Date(entry.payPeriodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
     grossPay: entry.grossPay,
     netPay: entry.netPay,
     deductions: entry.grossPay - entry.netPay
   }));
 
   return (
-    <div className="h-72 w-full">
-      {entries.length > 0 ? (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="period" angle={-45} textAnchor="end" height={70} />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="grossPay" name="Gross Pay" fill="#8884d8" />
-            <Bar dataKey="netPay" name="Net Pay" fill="#82ca9d" />
-            <Bar dataKey="deductions" name="Deductions" fill="#ffc658" />
-          </BarChart>
-        </ResponsiveContainer>
-      ) : (
-        <div className="flex items-center justify-center h-full w-full bg-gray-50 rounded-md">
-          <p className="text-gray-500">No payroll data available to display chart</p>
+    <Card>
+      <CardHeader>
+        <CardTitle>Payroll Summary</CardTitle>
+        <CardDescription>View your earnings and deductions over time</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 30 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="period" />
+              <YAxis />
+              <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+              <Bar dataKey="grossPay" name="Gross Pay" fill="#4f46e5" />
+              <Bar dataKey="netPay" name="Net Pay" fill="#84cc16" />
+              <Bar dataKey="deductions" name="Deductions" fill="#f97316" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,371 +1,205 @@
+
 import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { StaffMember } from "@/types/staff";
-
-const defaultStaffData: Omit<StaffMember, "id" | "status"> = {
-  name: "",
-  role: "server",
-  shift: "morning",
-  salary: 0,
-  email: "",
-  phone: "",
-  address: "",
-  emergencyContact: {
-    name: "",
-    phone: "",
-    relationship: ""
-  },
-  startDate: new Date().toISOString().split("T")[0],
-  department: "service",
-  certifications: [],
-  performanceRating: 3,
-  notes: "",
-  schedule: {
-    monday: "OFF",
-    tuesday: "OFF",
-    wednesday: "OFF",
-    thursday: "OFF",
-    friday: "OFF",
-    saturday: "OFF",
-    sunday: "OFF"
-  },
-  bankInfo: {
-    accountNumber: "",
-    routingNumber: "",
-    accountType: "checking"
-  }
-};
-
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  role: z.enum(["manager", "chef", "server", "host", "bartender"]),
-  salary: z.number().min(0, {
-    message: "Salary must be a positive number.",
-  }),
-  email: z.string().email({
-    message: "Invalid email address.",
-  }),
-  phone: z.string().regex(/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/, {
-    message: "Invalid phone number.",
-  }),
-  address: z.string().min(5, {
-    message: "Address must be at least 5 characters.",
-  }),
-  emergencyContactName: z.string().min(2, {
-    message: "Emergency contact name must be at least 2 characters.",
-  }),
-  emergencyContactPhone: z.string().regex(/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/, {
-    message: "Invalid emergency contact phone number.",
-  }),
-  emergencyContactRelationship: z.string().min(2, {
-    message: "Emergency contact relationship must be at least 2 characters.",
-  }),
-  startDate: z.string(),
-  department: z.string(),
-  notes: z.string().optional(),
-});
 
 interface AddStaffDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  onClose: () => void;
   onAddStaff: (data: Omit<StaffMember, "id" | "status">) => Promise<StaffMember>;
 }
 
-export function AddStaffDialog({ open, setOpen, onAddStaff }: AddStaffDialogProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: defaultStaffData.name,
-      role: defaultStaffData.role,
-      salary: defaultStaffData.salary,
-      email: defaultStaffData.email,
-      phone: defaultStaffData.phone,
-      address: defaultStaffData.address,
-      emergencyContactName: defaultStaffData.emergencyContact.name,
-      emergencyContactPhone: defaultStaffData.emergencyContact.phone,
-      emergencyContactRelationship: defaultStaffData.emergencyContact.relationship,
-      startDate: defaultStaffData.startDate,
-      department: defaultStaffData.department,
-      notes: defaultStaffData.notes || "",
+export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProps) => {
+  const [formData, setFormData] = useState<Omit<StaffMember, "id" | "status">>({
+    name: "",
+    role: "server",
+    shift: "morning",
+    salary: 35000,
+    hireDate: new Date().toISOString().split('T')[0], // Current date as default hire date
+    email: "",
+    phone: "",
+    address: "",
+    emergencyContact: {
+      name: "",
+      phone: "",
+      relationship: "",
+    },
+    startDate: new Date().toISOString().split('T')[0],
+    department: "service",
+    certifications: [],
+    notes: "",
+    bankInfo: {
+      accountType: "checking",
+      accountNumber: "",
+      routingNumber: "",
     },
   });
+  const [loading, setLoading] = useState(false);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    const staffData: Omit<StaffMember, "id" | "status"> = {
-      name: values.name,
-      role: values.role,
-      shift: "morning", // Default value
-      salary: values.salary,
-      email: values.email,
-      phone: values.phone,
-      address: values.address,
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleEmergencyContactChange = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
       emergencyContact: {
-        name: values.emergencyContactName,
-        phone: values.emergencyContactPhone,
-        relationship: values.emergencyContactRelationship,
+        ...prev.emergencyContact!,
+        [field]: value,
       },
-      startDate: values.startDate,
-      department: values.department,
-      certifications: [], // Default value
-      performanceRating: 3, // Default value
-      notes: values.notes || "",
-      schedule: {
-        monday: "OFF",
-        tuesday: "OFF",
-        wednesday: "OFF",
-        thursday: "OFF",
-        friday: "OFF",
-        saturday: "OFF",
-        sunday: "OFF",
-      },
-      bankInfo: {
-        accountNumber: "",
-        routingNumber: "",
-        accountType: "checking",
-      },
-    };
+    }));
+  };
 
+  const handleSubmit = async () => {
+    setLoading(true);
     try {
-      await onAddStaff(staffData);
-      setOpen(false);
-      form.reset();
+      await onAddStaff(formData);
+      onClose();
     } catch (error) {
-      console.error("Failed to add staff member:", error);
+      console.error("Error adding staff:", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Add Staff Member</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Add Staff Member</DialogTitle>
+          <DialogTitle>Add New Staff Member</DialogTitle>
         </DialogHeader>
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Role</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="manager">Manager</SelectItem>
-                            <SelectItem value="chef">Chef</SelectItem>
-                            <SelectItem value="server">Server</SelectItem>
-                            <SelectItem value="host">Host</SelectItem>
-                            <SelectItem value="bartender">Bartender</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="salary"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Salary</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="50000" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="johndoe@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          <div className="space-y-1">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+            />
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input placeholder="(555) 123-4567" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="123 Main St" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+          <div className="space-y-1">
+            <Label htmlFor="role">Role</Label>
+            <Select
+              value={formData.role}
+              onValueChange={(value) => handleChange("role", value)}
+            >
+              <SelectTrigger id="role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="chef">Chef</SelectItem>
+                <SelectItem value="server">Server</SelectItem>
+                <SelectItem value="bartender">Bartender</SelectItem>
+                <SelectItem value="host">Host</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="emergencyContactName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Emergency Contact Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Jane Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="emergencyContactPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Emergency Contact Phone</FormLabel>
-                        <FormControl>
-                          <Input placeholder="(555) 987-6543" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="emergencyContactRelationship"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Emergency Contact Relationship</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Spouse" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+          <div className="space-y-1">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+            />
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="department"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Department</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Service" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+          <div className="space-y-1">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => handleChange("phone", e.target.value)}
+            />
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Any additional notes"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Additional information about the staff member.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+          <div className="space-y-1">
+            <Label htmlFor="salary">Salary</Label>
+            <Input
+              id="salary"
+              type="number"
+              value={formData.salary}
+              onChange={(e) => handleChange("salary", Number(e.target.value))}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="startDate">Start Date</Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={formData.startDate}
+              onChange={(e) => handleChange("startDate", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="hireDate">Hire Date</Label>
+            <Input
+              id="hireDate"
+              type="date"
+              value={formData.hireDate}
+              onChange={(e) => handleChange("hireDate", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => handleChange("address", e.target.value)}
+            />
+          </div>
+
+          <div className="col-span-2 space-y-2 mt-2">
+            <h3 className="font-medium">Emergency Contact</h3>
+            <div className="grid grid-cols-3 gap-x-4">
+              <div className="space-y-1">
+                <Label htmlFor="emergency-name">Name</Label>
+                <Input
+                  id="emergency-name"
+                  value={formData.emergencyContact?.name || ""}
+                  onChange={(e) => handleEmergencyContactChange("name", e.target.value)}
                 />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="emergency-phone">Phone</Label>
+                <Input
+                  id="emergency-phone"
+                  value={formData.emergencyContact?.phone || ""}
+                  onChange={(e) => handleEmergencyContactChange("phone", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="emergency-relationship">Relationship</Label>
+                <Input
+                  id="emergency-relationship"
+                  value={formData.emergencyContact?.relationship || ""}
+                  onChange={(e) => handleEmergencyContactChange("relationship", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
-                <Button type="submit">Submit</Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? "Adding..." : "Add Staff Member"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
