@@ -9,11 +9,12 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import { CalendarIcon, Receipt } from "lucide-react";
+import { Receipt } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { vendorService } from "./services/vendorService";
+import { PaymentDetailsDialog } from "./payments/PaymentDetailsDialog";
+import { AddPaymentDialog } from "./payments/AddPaymentDialog";
 
 interface Payment {
   id: string;
@@ -126,76 +127,17 @@ export const PaymentHistory = ({ payments, vendorId }: PaymentHistoryProps) => {
       </div>
 
       {/* Payment Details Dialog */}
-      <Dialog open={selectedPayment !== null} onOpenChange={() => setSelectedPayment(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Payment Details</DialogTitle>
-          </DialogHeader>
-          {selectedPayment && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium">Payment ID</h4>
-                  <p>PMT-{selectedPayment.id.substring(0, 8)}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium">Date</h4>
-                  <div className="flex items-center">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    <span>{new Date(selectedPayment.date).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium">Amount</h4>
-                  <p className="text-lg font-bold">${selectedPayment.amount.toFixed(2)}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium">Method</h4>
-                  <p className="capitalize">{selectedPayment.method.replace('_', ' ')}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium">Status</h4>
-                  <Badge
-                    variant={
-                      selectedPayment.status === "completed"
-                        ? "default"
-                        : selectedPayment.status === "pending"
-                        ? "secondary"
-                        : "destructive"
-                    }
-                  >
-                    {selectedPayment.status}
-                  </Badge>
-                </div>
-                <div>
-                  <h4 className="font-medium">Reference</h4>
-                  <p>{selectedPayment.reference || "No reference provided"}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PaymentDetailsDialog 
+        payment={selectedPayment} 
+        onClose={() => setSelectedPayment(null)} 
+      />
 
       {/* Add Payment Dialog */}
-      <Dialog open={showAddPayment} onOpenChange={setShowAddPayment}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Record New Payment</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p>This will create a new payment record for this vendor.</p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowAddPayment(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreatePayment}>
-                Create Payment
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AddPaymentDialog 
+        isOpen={showAddPayment} 
+        onClose={() => setShowAddPayment(false)}
+        onConfirm={handleCreatePayment}
+      />
     </div>
   );
 };
