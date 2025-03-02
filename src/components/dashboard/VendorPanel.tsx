@@ -15,6 +15,7 @@ import { AccountingSummaryView } from "./vendors/AccountingSummary";
 import { BudgetAnalysis } from "./vendors/BudgetAnalysis";
 import { VendorForm } from "./vendors/forms/VendorForm";
 import { exportData } from "@/utils/exportUtils";
+import type { Vendor, Expense, AccountingSummary } from "@/types/vendor";
 
 export const VendorPanel = () => {
   const { toast } = useToast();
@@ -24,17 +25,17 @@ export const VendorPanel = () => {
 
   const { data: vendors, refetch: refetchVendors } = useQuery({
     queryKey: ["vendors"],
-    queryFn: vendorService.getVendors
+    queryFn: () => vendorService.getVendors()
   });
 
   const { data: expenses, refetch: refetchExpenses } = useQuery({
     queryKey: ["expenses"],
-    queryFn: vendorService.getExpenses
+    queryFn: () => vendorService.getExpenses()
   });
 
   const { data: summary, refetch: refetchSummary } = useQuery({
     queryKey: ["accounting-summary"],
-    queryFn: vendorService.getAccountingSummary
+    queryFn: () => vendorService.getAccountingSummary()
   });
 
   const handleRefreshData = () => {
@@ -56,6 +57,55 @@ export const VendorPanel = () => {
         variant: "destructive"
       });
     }
+  };
+
+  // Adapt data to match the expected types
+  const adaptedVendors: Vendor[] = vendors ? vendors.map((vendor: any) => ({
+    id: vendor.id,
+    name: vendor.name,
+    email: vendor.email || '',
+    phone: vendor.phone || '',
+    address: vendor.address || '',
+    taxId: vendor.taxId || '',
+    status: vendor.status || 'active',
+    paymentTerms: vendor.paymentTerms || 'net_30',
+    notes: vendor.notes || '',
+    createdAt: vendor.createdAt || new Date().toISOString(),
+    updatedAt: vendor.updatedAt || new Date().toISOString()
+  })) : [];
+
+  const adaptedExpenses: Expense[] = expenses ? expenses.map((expense: any) => ({
+    id: expense.id,
+    vendorId: expense.vendorId,
+    vendorName: expense.vendorName,
+    amount: expense.amount,
+    date: expense.date,
+    category: expense.category,
+    description: expense.description,
+    paymentMethod: expense.paymentMethod,
+    receiptUrl: expense.receiptUrl,
+    taxDeductible: expense.taxDeductible || false,
+    status: expense.paymentStatus || 'pending',
+    createdAt: expense.createdAt || new Date().toISOString(),
+    updatedAt: expense.updatedAt || new Date().toISOString()
+  })) : [];
+
+  const adaptedSummary: AccountingSummary = summary ? {
+    totalExpenses: summary.totalExpenses,
+    totalPaid: summary.totalPaid,
+    totalPending: summary.totalPending,
+    taxDeductibleAmount: summary.taxDeductibleAmount,
+    expensesByCategory: summary.expensesByCategory || {},
+    expensesByVendor: summary.expensesByVendor || {},
+    monthlyTotals: summary.monthlyTotals || {}
+  } : {
+    totalExpenses: 0,
+    totalPaid: 0,
+    totalPending: 0,
+    taxDeductibleAmount: 0,
+    expensesByCategory: {},
+    expensesByVendor: {},
+    monthlyTotals: {}
   };
 
   return (
@@ -106,7 +156,7 @@ export const VendorPanel = () => {
 
           <TabsContent value="vendors">
             <VendorList
-              vendors={vendors || []}
+              vendors={adaptedVendors}
               searchTerm={searchTerm}
               onUpdate={handleRefreshData}
             />
@@ -114,7 +164,7 @@ export const VendorPanel = () => {
 
           <TabsContent value="expenses">
             <ExpenseTable
-              expenses={expenses || []}
+              expenses={adaptedExpenses}
               searchTerm={searchTerm}
               onUpdate={handleRefreshData}
             />
@@ -122,15 +172,7 @@ export const VendorPanel = () => {
 
           <TabsContent value="accounting">
             <AccountingSummaryView
-              summary={summary || {
-                totalExpenses: 0,
-                totalPaid: 0,
-                totalPending: 0,
-                taxDeductibleAmount: 0,
-                expensesByCategory: {},
-                expensesByVendor: {},
-                monthlyTotals: {}
-              }}
+              summary={adaptedSummary}
             />
           </TabsContent>
 

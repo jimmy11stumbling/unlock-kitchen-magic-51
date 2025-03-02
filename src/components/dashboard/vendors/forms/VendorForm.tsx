@@ -1,19 +1,17 @@
 
 import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import type { Vendor } from "@/types/vendor";
+import { Loader2 } from "lucide-react";
 import { vendorService } from "../services/vendorService";
+import type { Vendor } from "@/types/vendor";
 
 interface VendorFormProps {
   vendor?: Vendor;
@@ -21,174 +19,234 @@ interface VendorFormProps {
   onSuccess: () => void;
 }
 
+const vendorFormSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email").or(z.string().length(0)),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  taxId: z.string().optional(),
+  status: z.enum(["active", "inactive"]),
+  paymentTerms: z.string().min(1, "Please select payment terms"),
+  notes: z.string().optional(),
+});
+
+type VendorFormValues = z.infer<typeof vendorFormSchema>;
+
 export const VendorForm = ({ vendor, onClose, onSuccess }: VendorFormProps) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<Omit<Vendor, "id" | "createdAt" | "updatedAt">>({
-    name: vendor?.name || "",
-    email: vendor?.email || "",
-    phone: vendor?.phone || "",
-    address: vendor?.address || "",
-    taxId: vendor?.taxId || "",
-    status: vendor?.status || "active",
-    paymentTerms: vendor?.paymentTerms || "bank_transfer", // Changed default from 'net_30' to 'bank_transfer'
-    notes: vendor?.notes || ""
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<VendorFormValues>({
+    resolver: zodResolver(vendorFormSchema),
+    defaultValues: vendor ? {
+      name: vendor.name,
+      email: vendor.email,
+      phone: vendor.phone,
+      address: vendor.address,
+      taxId: vendor.taxId,
+      status: vendor.status as "active" | "inactive",
+      paymentTerms: vendor.paymentTerms,
+      notes: vendor.notes,
+    } : {
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      taxId: "",
+      status: "active",
+      paymentTerms: "net_30",
+      notes: "",
+    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const onSubmit = async (data: VendorFormValues) => {
+    setIsSubmitting(true);
     try {
       if (vendor) {
-        await vendorService.updateVendor(vendor.id.toString(), formData);
+        await vendorService.updateVendor(vendor.id, data);
         toast({
-          title: "Vendor updated",
-          description: "Vendor information has been updated successfully"
+          title: "Success",
+          description: "Vendor updated successfully",
         });
       } else {
-        await vendorService.addVendor(formData);
+        await vendorService.addVendor(data);
         toast({
-          title: "Vendor added",
-          description: "New vendor has been added successfully"
+          title: "Success",
+          description: "Vendor added successfully",
         });
       }
-      
       onSuccess();
       onClose();
     } catch (error) {
+      console.error("Failed to save vendor:", error);
       toast({
         title: "Error",
-        description: vendor ? "Failed to update vendor" : "Failed to add vendor",
-        variant: "destructive"
+        description: "Failed to save vendor",
+        variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Vendor Name *</Label>
-        <Input
-          id="name"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
           name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Enter vendor name"
-          required
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Vendor Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter vendor name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
             name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Email address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="contact@vendor.com" type="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
+
+          <FormField
+            control={form.control}
             name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="Phone number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input placeholder="555-123-4567" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="address">Address</Label>
-        <Input
-          id="address"
+
+        <FormField
+          control={form.control}
           name="address"
-          value={formData.address}
-          onChange={handleChange}
-          placeholder="Vendor address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Input placeholder="123 Business St, City, State" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="taxId">Tax ID</Label>
-          <Input
-            id="taxId"
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
             name="taxId"
-            value={formData.taxId}
-            onChange={handleChange}
-            placeholder="Tax ID or Business Number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tax ID</FormLabel>
+                <FormControl>
+                  <Input placeholder="XX-XXXXXXX" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(value) => handleSelectChange("status", value)}
-          >
-            <SelectTrigger id="status">
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="paymentTerms">Payment Terms</Label>
-        <Select
-          value={formData.paymentTerms}
-          onValueChange={(value) => handleSelectChange("paymentTerms", value)}
-        >
-          <SelectTrigger id="paymentTerms">
-            <SelectValue placeholder="Select payment terms" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="cash">Cash</SelectItem>
-            <SelectItem value="card">Credit Card</SelectItem>
-            <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-            <SelectItem value="check">Check</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea
-          id="notes"
-          name="notes"
-          value={formData.notes}
-          onChange={handleChange}
-          placeholder="Additional notes about this vendor"
-          className="min-h-[100px]"
+
+        <FormField
+          control={form.control}
+          name="paymentTerms"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Payment Terms</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment terms" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="net_15">Net 15</SelectItem>
+                  <SelectItem value="net_30">Net 30</SelectItem>
+                  <SelectItem value="net_45">Net 45</SelectItem>
+                  <SelectItem value="net_60">Net 60</SelectItem>
+                  <SelectItem value="immediate">Immediate</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit">
-          {vendor ? "Update Vendor" : "Add Vendor"}
-        </Button>
-      </div>
-    </form>
+
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Additional information about this vendor" 
+                  className="resize-none" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {vendor ? "Update Vendor" : "Add Vendor"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };

@@ -48,7 +48,7 @@ export const VendorList = ({ vendors, searchTerm, onUpdate }: VendorListProps) =
 
   const handleDelete = async (id: number) => {
     try {
-      await vendorService.deleteVendor(id.toString());
+      await vendorService.deleteVendor(id);
       toast({
         title: "Vendor deleted",
         description: "Vendor has been removed successfully"
