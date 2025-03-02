@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { KitchenLayout } from "./KitchenLayout";
 import { EquipmentMonitor } from "./EquipmentMonitor";

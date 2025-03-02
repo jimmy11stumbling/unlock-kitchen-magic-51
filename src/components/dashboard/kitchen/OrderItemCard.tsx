@@ -1,12 +1,22 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { ItemStatusControls } from "./ItemStatusControls";
-import { Coffee, Utensils, AlertTriangle, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { 
+  ChevronDown, 
+  Play, 
+  CheckCircle2, 
+  Clock, 
+  XCircle,
+  AlertTriangle
+} from "lucide-react";
 import type { KitchenOrderItem } from "@/types/staff";
 
 interface OrderItemCardProps {
@@ -21,139 +31,170 @@ interface OrderItemCardProps {
 }
 
 export function OrderItemCard({ item, orderId, onUpdateItemStatus }: OrderItemCardProps) {
-  const [itemNotes, setItemNotes] = useState(item.notes || "");
+  const [startTime, setStartTime] = useState<Date | null>(
+    item.start_time ? new Date(item.start_time) : null
+  );
 
-  const getItemStatusColor = (status: string) => {
+  const getStatusColor = (status: KitchenOrderItem["status"]) => {
     switch (status) {
-      case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "preparing": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "ready": return "bg-green-100 text-green-800 border-green-200";
-      case "delivered": return "bg-gray-100 text-gray-800 border-gray-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "pending": return "bg-gray-100 text-gray-800";
+      case "preparing": return "bg-yellow-100 text-yellow-800";
+      case "ready": return "bg-green-100 text-green-800";
+      case "delivered": return "bg-blue-100 text-blue-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  const getCookingStationIcon = (station: string | undefined) => {
-    switch (station) {
-      case "grill": return <Utensils className="h-4 w-4" />;
-      case "fry": return <Utensils className="h-4 w-4" />;
-      case "salad": return <Utensils className="h-4 w-4" />;
-      case "dessert": return <Coffee className="h-4 w-4" />;
-      case "beverage": return <Coffee className="h-4 w-4" />;
-      default: return <Utensils className="h-4 w-4" />;
-    }
+  const handleStart = () => {
+    const now = new Date();
+    setStartTime(now);
+    onUpdateItemStatus(orderId, item.id, 'preparing');
   };
-  
-  const getElapsedTime = (startTime: string | undefined) => {
+
+  const handleComplete = () => {
+    onUpdateItemStatus(orderId, item.id, 'ready');
+  };
+
+  const handleResetStatus = () => {
+    setStartTime(null);
+    onUpdateItemStatus(orderId, item.id, 'pending');
+  };
+
+  const handleStatusChange = (status: KitchenOrderItem["status"]) => {
+    if (status === 'preparing' && !startTime) {
+      setStartTime(new Date());
+    }
+    onUpdateItemStatus(orderId, item.id, status);
+  };
+
+  const getElapsedTime = () => {
     if (!startTime) return null;
     
-    const start = new Date(startTime);
     const now = new Date();
-    const elapsed = Math.floor((now.getTime() - start.getTime()) / 60000); // minutes
+    const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
     
-    return elapsed;
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
-  
-  const elapsedTime = getElapsedTime(item.start_time);
+
+  const chefs = [
+    "John Doe",
+    "Maria Garcia",
+    "David Kim",
+    "Sarah Johnson",
+    "Ahmed Hassan"
+  ];
 
   return (
-    <Card className={`p-4 border-l-4 ${getItemStatusColor(item.status)}`}>
+    <Card className={`p-3 ${
+      item.allergen_alert ? "border-red-300 bg-red-50" : ""
+    }`}>
       <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h4 className="font-semibold">{item.name}</h4>
-            <Badge variant="outline">x{item.quantity}</Badge>
-            
-            {item.allergen_alert && (
-              <Badge variant="destructive" className="flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3" />
-                Allergen
-              </Badge>
-            )}
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-2 text-sm">
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium">
+              {item.name} {item.quantity > 1 && <span className="text-muted-foreground">× {item.quantity}</span>}
+            </h4>
+            <Badge className={getStatusColor(item.status)}>
+              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+            </Badge>
             {item.cooking_station && (
-              <Badge variant="secondary" className="flex items-center gap-1 capitalize">
-                {getCookingStationIcon(item.cooking_station)}
-                {item.cooking_station}
+              <Badge variant="outline">
+                {item.cooking_station.charAt(0).toUpperCase() + item.cooking_station.slice(1)}
               </Badge>
-            )}
-            
-            {item.assigned_chef && (
-              <Badge variant="outline">Chef: {item.assigned_chef}</Badge>
-            )}
-            
-            {item.status === "preparing" && elapsedTime !== null && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>{elapsedTime} min</span>
-              </div>
             )}
           </div>
           
           {item.notes && (
-            <p className="mt-2 text-sm text-muted-foreground italic">
-              Note: {item.notes}
+            <p className="text-sm mt-1 text-muted-foreground">
+              <span className="font-medium">Notes:</span> {item.notes}
             </p>
+          )}
+          
+          {item.allergen_alert && (
+            <div className="flex items-center gap-1 mt-1 text-red-600 text-sm">
+              <AlertTriangle className="h-3 w-3" />
+              <span className="font-medium">Allergen Alert:</span> 
+              {item.allergens?.join(', ')}
+            </div>
+          )}
+          
+          {startTime && item.status === 'preparing' && (
+            <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>Elapsed: {getElapsedTime()}</span>
+            </div>
           )}
         </div>
         
-        <Badge className={`${getItemStatusColor(item.status)} capitalize`}>
-          {item.status}
-        </Badge>
+        <div className="flex gap-2">
+          {item.status === 'pending' ? (
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex items-center gap-1 text-xs"
+              onClick={handleStart}
+            >
+              <Play className="h-3 w-3" /> Start
+            </Button>
+          ) : item.status === 'preparing' ? (
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex items-center gap-1 text-xs bg-green-50 hover:bg-green-100 text-green-700"
+              onClick={handleComplete}
+            >
+              <CheckCircle2 className="h-3 w-3" /> Complete
+            </Button>
+          ) : (
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex items-center gap-1 text-xs"
+              onClick={handleResetStatus}
+            >
+              <XCircle className="h-3 w-3" /> Reset
+            </Button>
+          )}
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleStatusChange('pending')}>
+                Mark as Pending
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleStatusChange('preparing')}>
+                Mark as Preparing
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleStatusChange('ready')}>
+                Mark as Ready
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleStatusChange('delivered')}>
+                Mark as Delivered
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                Assign to Chef
+              </DropdownMenuItem>
+              {chefs.map(chef => (
+                <DropdownMenuItem 
+                  key={chef}
+                  className="text-xs"
+                  onClick={() => onUpdateItemStatus(orderId, item.id, item.status, chef)}
+                >
+                  {chef}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-      
-      {/* Show modifications if any */}
-      {item.modifications && item.modifications.length > 0 && (
-        <div className="mt-3 pt-3 border-t">
-          <p className="text-xs font-medium mb-1">Modifications:</p>
-          <ul className="text-xs text-muted-foreground space-y-1">
-            {item.modifications.map((mod, index) => (
-              <li key={index}>• {mod}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      
-      {item.status !== "delivered" && (
-        <div className="mt-3 pt-3 border-t">
-          <div className="flex justify-between">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">Add Notes</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Item Notes</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <Textarea 
-                    value={itemNotes} 
-                    onChange={(e) => setItemNotes(e.target.value)}
-                    placeholder="Add preparation notes or instructions"
-                    className="min-h-[100px]"
-                  />
-                  <Button 
-                    onClick={() => {
-                      // In a real app, we would update the notes in the database
-                      console.log("Updating notes for item", item.id, itemNotes);
-                    }}
-                  >
-                    Save Notes
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            
-            <ItemStatusControls
-              item={item}
-              orderId={orderId}
-              onUpdateItemStatus={onUpdateItemStatus}
-            />
-          </div>
-        </div>
-      )}
     </Card>
   );
 }

@@ -50,8 +50,8 @@ const KITCHEN_STATIONS: Station[] = [
   }
 ];
 
-interface KitchenLayoutProps {
-  orders?: KitchenOrder[];
+export interface KitchenLayoutProps {
+  orders: KitchenOrder[];
 }
 
 export function KitchenLayout({ orders = [] }: KitchenLayoutProps) {

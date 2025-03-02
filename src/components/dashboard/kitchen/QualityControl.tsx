@@ -1,165 +1,127 @@
 
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { CheckCircle, AlertTriangle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { CheckSquare, X } from "lucide-react";
 
-interface QualityCheck {
-  id: number;
-  station: string;
-  temperature: number;
-  cleanliness: 'pass' | 'fail';
-  foodSafety: 'pass' | 'fail';
-  timestamp: string;
-  checkedBy: string;
-  notes?: string;
+interface ChecklistItem {
+  id: string;
+  label: string;
+  checked: boolean;
+  category: 'sanitation' | 'quality' | 'safety';
 }
 
 export function QualityControl() {
-  const [qualityChecks, setQualityChecks] = useState<QualityCheck[]>([]);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    fetchQualityChecks();
-    const interval = setInterval(fetchQualityChecks, 900000); // Update every 15 minutes
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchQualityChecks = async () => {
-    try {
-      // In a real application, this would fetch from a quality_checks table
-      // For now, we'll simulate some quality check data
-      const mockChecks: QualityCheck[] = [
-        {
-          id: 1,
-          station: "Grill Station",
-          temperature: 165,
-          cleanliness: 'pass',
-          foodSafety: 'pass',
-          timestamp: new Date().toISOString(),
-          checkedBy: "John Doe",
-          notes: "All equipment properly sanitized"
-        },
-        {
-          id: 2,
-          station: "Prep Station",
-          temperature: 38,
-          cleanliness: 'pass',
-          foodSafety: 'pass',
-          timestamp: new Date().toISOString(),
-          checkedBy: "Jane Smith",
-        }
-      ];
-
-      setQualityChecks(mockChecks);
-    } catch (error) {
-      console.error('Error fetching quality checks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch quality check data",
-        variant: "destructive",
-      });
-    }
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([
+    { id: 'temp-monitoring', label: 'Temperature monitoring systems active', checked: true, category: 'safety' },
+    { id: 'food-storage', label: 'Food storage guidelines followed', checked: true, category: 'sanitation' },
+    { id: 'stations-clean', label: 'Workstations clean and sanitized', checked: false, category: 'sanitation' },
+    { id: 'hand-washing', label: 'Hand washing stations stocked', checked: true, category: 'sanitation' },
+    { id: 'allergen-protocol', label: 'Allergen protocols in place', checked: true, category: 'safety' },
+    { id: 'taste-testing', label: 'Taste testing completed', checked: false, category: 'quality' },
+    { id: 'presentation-standards', label: 'Presentation standards reviewed', checked: false, category: 'quality' },
+    { id: 'safety-equipment', label: 'Safety equipment operational', checked: true, category: 'safety' },
+  ]);
+  
+  const handleToggle = (id: string) => {
+    setChecklist(prev => 
+      prev.map(item => 
+        item.id === id ? { ...item, checked: !item.checked } : item
+      )
+    );
   };
-
-  const performQualityCheck = async (station: string) => {
-    try {
-      const newCheck: QualityCheck = {
-        id: Date.now(),
-        station,
-        temperature: Math.round(Math.random() * (180 - 160) + 160),
-        cleanliness: Math.random() > 0.1 ? 'pass' : 'fail',
-        foodSafety: Math.random() > 0.1 ? 'pass' : 'fail',
-        timestamp: new Date().toISOString(),
-        checkedBy: "Current User", // In a real app, this would be the logged-in user
-      };
-
-      setQualityChecks(prev => [...prev, newCheck]);
-
-      if (newCheck.cleanliness === 'fail' || newCheck.foodSafety === 'fail') {
-        toast({
-          title: "Quality Check Failed",
-          description: `Station ${station} requires immediate attention`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Quality Check Passed",
-          description: `Station ${station} meets all standards`,
-        });
-      }
-    } catch (error) {
-      console.error('Error performing quality check:', error);
-      toast({
-        title: "Error",
-        description: "Failed to perform quality check",
-        variant: "destructive",
-      });
+  
+  const clearAll = () => {
+    setChecklist(prev => 
+      prev.map(item => ({ ...item, checked: false }))
+    );
+  };
+  
+  const checkAll = () => {
+    setChecklist(prev => 
+      prev.map(item => ({ ...item, checked: true }))
+    );
+  };
+  
+  const getProgress = () => {
+    const checked = checklist.filter(item => item.checked).length;
+    return Math.round((checked / checklist.length) * 100);
+  };
+  
+  const getCategoryColor = (category: ChecklistItem['category']) => {
+    switch (category) {
+      case 'sanitation': return 'bg-blue-100 text-blue-800';
+      case 'quality': return 'bg-purple-100 text-purple-800';
+      case 'safety': return 'bg-red-100 text-red-800';
     }
   };
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <CheckCircle className="h-5 w-5" />
-          <h3 className="text-lg font-semibold">Quality Control</h3>
-        </div>
-        <Button onClick={() => performQualityCheck("All Stations")}>
-          Perform Check
-        </Button>
-      </div>
-
-      <div className="space-y-4">
-        {qualityChecks.map((check) => (
-          <div
-            key={check.id}
-            className="border rounded-lg p-4 space-y-2"
-          >
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium">{check.station}</h4>
-              <Badge variant={
-                check.cleanliness === 'pass' && check.foodSafety === 'pass' 
-                  ? 'success' 
-                  : 'destructive'
-              }>
-                {check.cleanliness === 'pass' && check.foodSafety === 'pass' 
-                  ? 'Passed' 
-                  : 'Failed'}
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Temperature</p>
-                <p className="font-medium">{check.temperature}°F</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Checked By</p>
-                <p className="font-medium">{check.checkedBy}</p>
-              </div>
-            </div>
-
-            {(check.cleanliness === 'fail' || check.foodSafety === 'fail') && (
-              <div className="flex items-center gap-2 mt-2 p-2 bg-red-50 rounded">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-                <span className="text-sm text-red-700">
-                  Requires immediate attention
-                </span>
-              </div>
-            )}
-
-            {check.notes && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Notes: {check.notes}
-              </p>
-            )}
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-base">Quality Control</CardTitle>
+          <div className="flex gap-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearAll}
+              className="h-7 px-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={checkAll}
+              className="h-7 px-2"
+            >
+              <CheckSquare className="h-4 w-4" />
+            </Button>
           </div>
-        ))}
-      </div>
+        </div>
+        <div className="flex items-center mt-1">
+          <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-green-500 rounded-full" 
+              style={{ width: `${getProgress()}%` }}
+            />
+          </div>
+          <span className="ml-2 text-sm text-muted-foreground">
+            {getProgress()}%
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {checklist.map((item) => (
+            <div key={item.id} className="flex items-start space-x-2">
+              <Checkbox 
+                id={item.id} 
+                checked={item.checked}
+                onCheckedChange={() => handleToggle(item.id)}
+              />
+              <div className="flex flex-col">
+                <Label 
+                  htmlFor={item.id}
+                  className={`text-sm ${item.checked ? 'line-through text-muted-foreground' : ''}`}
+                >
+                  {item.label}
+                </Label>
+                <Badge 
+                  variant="outline" 
+                  className={`mt-1 text-[10px] ${getCategoryColor(item.category)}`}
+                >
+                  {item.category}
+                </Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
     </Card>
   );
 }
