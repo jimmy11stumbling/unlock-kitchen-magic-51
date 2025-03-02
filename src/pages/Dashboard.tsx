@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import Menu from "@/routes/dashboard/Menu";

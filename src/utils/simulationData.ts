@@ -1,4 +1,3 @@
-
 import type { InventoryItem, StaffMember, MenuItem, TableLayout, Reservation, Order, KitchenOrder, Shift } from "@/types/staff";
 
 // Helper function for random dates
@@ -127,7 +126,6 @@ const generateTables = (): TableLayout[] => {
       reservationId: null,
       shape: "rectangle",
       position: { x: 100, y: 100 },
-      tableNumber: 1,
       seats: 4,
       positionX: 100,
       positionY: 100,
@@ -144,7 +142,6 @@ const generateTables = (): TableLayout[] => {
       reservationId: null,
       shape: "circle",
       position: { x: 200, y: 100 },
-      tableNumber: 2,
       seats: 2,
       positionX: 200,
       positionY: 100,

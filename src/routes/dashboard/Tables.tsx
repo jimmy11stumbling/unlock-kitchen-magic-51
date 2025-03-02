@@ -1,13 +1,31 @@
 
-// Update type definitions to ensure compatibility
-// Replace TablePanel props usage around line 28-29
-<TablePanel
-  tables={tables as any} // Cast to any to work around type conflict
-  onAddTable={addTable as any} // Cast to any to work around type conflict
-  onUpdateStatus={updateTableStatus}
-  onStartOrder={(tableId) => {
-    const orderId = startOrder(tableId);
-    if (orderId) setSelectedOrderId(orderId);
-    return orderId;
-  }}
-/>
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { TablePanel } from "@/components/dashboard/TablePanel";
+import { useDashboardState } from "@/hooks/useDashboardState";
+
+const Tables = () => {
+  const { toast } = useToast();
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const { 
+    tables, 
+    addTable, 
+    updateTableStatus,
+    startOrder
+  } = useDashboardState();
+
+  return (
+    <TablePanel
+      tables={tables}
+      onAddTable={addTable}
+      onUpdateStatus={updateTableStatus}
+      onStartOrder={(tableId) => {
+        const orderId = startOrder(tableId);
+        if (orderId) setSelectedOrderId(orderId);
+        return orderId;
+      }}
+    />
+  );
+};
+
+export default Tables;

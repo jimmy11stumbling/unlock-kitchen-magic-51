@@ -17,7 +17,7 @@ export function AddStaffDialog({
   onOpenChange, 
   onAddStaff 
 }: AddStaffDialogProps) {
-  const [newStaff, setNewStaff] = useState<Omit<StaffMember, "id" | "status">>({
+  const defaultValues = {
     name: "",
     role: "server",
     email: "",
@@ -40,7 +40,8 @@ export function AddStaffDialog({
       accountNumber: "",
       routingNumber: "",
     },
-  });
+  };
+  const [newStaff, setNewStaff] = useState<Omit<StaffMember, "id" | "status">>(defaultValues);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (field: string, value: any) => {

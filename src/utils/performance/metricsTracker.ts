@@ -52,3 +52,15 @@ export const calculateAverageHoursWorked = (staffMembers: StaffMember[]): number
   
   return staffMembers.length > 0 ? totalHours / staffMembers.length : 0;
 };
+
+export const calculateTotalRevenue = (orders: any[]): number => {
+  return orders.reduce((totalRevenue, order) => {
+    return totalRevenue + (typeof order.total === 'number' ? order.total : 0);
+  }, 0);
+};
+
+export const calculateTotalItems = (orders: any[]): number => {
+  return orders.reduce((count, order) => {
+    return count + (Array.isArray(order.items) ? order.items.length : 0);
+  }, 0);
+};
