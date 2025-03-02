@@ -7,7 +7,7 @@ interface AccountingSummaryProps {
   summary: AccountingSummary;
 }
 
-export const AccountingSummary = ({ summary }: AccountingSummaryProps) => {
+export const AccountingSummaryView = ({ summary }: AccountingSummaryProps) => {
   const formatCurrency = (value: number) => {
     return `$${value.toFixed(2)}`;
   };
@@ -160,3 +160,6 @@ export const AccountingSummary = ({ summary }: AccountingSummaryProps) => {
     </div>
   );
 };
+
+// For backward compatibility, export the component as AccountingSummary as well
+export { AccountingSummaryView as AccountingSummary };

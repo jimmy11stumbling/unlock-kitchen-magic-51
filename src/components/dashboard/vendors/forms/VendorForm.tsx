@@ -30,7 +30,7 @@ export const VendorForm = ({ vendor, onClose, onSuccess }: VendorFormProps) => {
     address: vendor?.address || "",
     taxId: vendor?.taxId || "",
     status: vendor?.status || "active",
-    paymentTerms: vendor?.paymentTerms || "net_30",
+    paymentTerms: vendor?.paymentTerms || "bank_transfer", // Changed default from 'net_30' to 'bank_transfer'
     notes: vendor?.notes || ""
   });
 
@@ -161,14 +161,10 @@ export const VendorForm = ({ vendor, onClose, onSuccess }: VendorFormProps) => {
             <SelectValue placeholder="Select payment terms" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="prepaid">Prepaid</SelectItem>
-            <SelectItem value="cod">Cash on Delivery</SelectItem>
-            <SelectItem value="net_7">Net 7</SelectItem>
-            <SelectItem value="net_15">Net 15</SelectItem>
-            <SelectItem value="net_30">Net 30</SelectItem>
-            <SelectItem value="net_60">Net 60</SelectItem>
-            <SelectItem value="credit_card">Credit Card</SelectItem>
+            <SelectItem value="cash">Cash</SelectItem>
+            <SelectItem value="card">Credit Card</SelectItem>
             <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+            <SelectItem value="check">Check</SelectItem>
           </SelectContent>
         </Select>
       </div>

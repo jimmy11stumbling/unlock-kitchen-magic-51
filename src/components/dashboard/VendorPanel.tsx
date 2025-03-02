@@ -11,7 +11,7 @@ import { Plus, FileSpreadsheet, Calculator } from "lucide-react";
 import { vendorService } from "./vendors/services/vendorService";
 import { VendorList } from "./vendors/VendorList";
 import { ExpenseTable } from "./vendors/ExpenseTable";
-import { AccountingSummary } from "./vendors/AccountingSummary";
+import { AccountingSummaryView } from "./vendors/AccountingSummary";
 import { VendorForm } from "./vendors/forms/VendorForm";
 import { exportData } from "@/utils/exportUtils";
 
@@ -109,7 +109,7 @@ export const VendorPanel = () => {
           </TabsContent>
 
           <TabsContent value="accounting">
-            <AccountingSummary
+            <AccountingSummaryView
               summary={summary || {
                 totalExpenses: 0,
                 totalPaid: 0,
