@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { TablePanel } from "@/components/dashboard/TablePanel";
 import { useDashboardState } from "@/hooks/useDashboardState";
+import type { TableLayout as TableType } from "@/types/staff/table";
 
 const Tables = () => {
   const { toast } = useToast();
@@ -16,8 +17,8 @@ const Tables = () => {
 
   return (
     <TablePanel
-      tables={tables}
-      onAddTable={addTable}
+      tables={tables as unknown as TableType[]}
+      onAddTable={addTable as any}
       onUpdateStatus={updateTableStatus}
       onStartOrder={(tableId) => {
         const orderId = startOrder(tableId);
