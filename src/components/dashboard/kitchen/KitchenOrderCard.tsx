@@ -9,7 +9,7 @@ import { CoursePlannerDialog } from "./CoursePlannerDialog";
 import { OrderModificationLog } from "./OrderModificationLog";
 import { TemperatureMonitor } from "./TemperatureMonitor";
 import { InventoryTracker } from "./InventoryTracker";
-import { OrderTimer } from "./OrderTimer";
+import { OrderProgress } from "./OrderProgress";
 import { OrderHeader } from "./OrderHeader";
 import { OrderItemCard } from "./OrderItemCard";
 import { OrderActions } from "./OrderActions";
@@ -42,12 +42,13 @@ export function KitchenOrderCard({
       />
 
       {order.status === 'preparing' && (
-        <OrderTimer 
-          startTime={order.created_at} 
-          estimatedDeliveryTime={order.estimated_delivery_time}
-          status={order.status}
-          orderId={order.order_id}
-        />
+        <div className="my-4">
+          <OrderProgress 
+            items={order.items} 
+            createdAt={order.created_at} 
+            estimatedDeliveryTime={order.estimated_delivery_time}
+          />
+        </div>
       )}
 
       <div className="space-y-4">

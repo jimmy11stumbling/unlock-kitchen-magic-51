@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { KitchenLayout } from "./KitchenLayout";
 import { EquipmentMonitor } from "./EquipmentMonitor";
 import { KitchenOrderCard } from "./KitchenOrderCard";
@@ -7,6 +7,13 @@ import { QualityControl } from "./QualityControl";
 import { TemperatureMonitor } from "./TemperatureMonitor";
 import { InventoryTracker } from "./InventoryTracker";
 import { useKitchenState } from "@/hooks/dashboard/useKitchenState";
+import { KitchenNotifications } from "./KitchenNotifications";
+import { KitchenAnalytics } from "./KitchenAnalytics";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Filter } from "lucide-react";
 
 export function KitchenDashboard() {
   const { 
@@ -15,6 +22,10 @@ export function KitchenDashboard() {
     updateOrderPriority,
     updateItemStatus 
   } = useKitchenState();
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
 
   // This ensures we preload the audio for quicker response when needed
   useEffect(() => {
@@ -29,30 +40,145 @@ export function KitchenDashboard() {
     };
   }, []);
 
+  const filteredOrders = useMemo(() => {
+    if (!kitchenOrders) return [];
+    
+    return kitchenOrders.filter(order => {
+      // Search by order ID, table number, or server name
+      const matchesSearch = 
+        order.order_id.toString().includes(searchTerm) ||
+        order.table_number.toString().includes(searchTerm) ||
+        order.server_name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Filter by status
+      const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+      
+      // Filter by priority
+      const matchesPriority = priorityFilter === "all" || order.priority === priorityFilter;
+      
+      return matchesSearch && matchesStatus && matchesPriority;
+    });
+  }, [kitchenOrders, searchTerm, statusFilter, priorityFilter]);
+
+  const activeOrders = useMemo(() => {
+    return kitchenOrders?.filter(order => order.status === 'preparing' || order.status === 'pending') || [];
+  }, [kitchenOrders]);
+
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 p-6">
-      {/* Orders Section - 8 columns on xl screens */}
-      <div className="xl:col-span-8 space-y-4">
-        <h2 className="text-2xl font-bold mb-4">Active Orders</h2>
-        <div className="grid gap-4">
-          {kitchenOrders?.filter(order => order.status !== 'delivered').map(order => (
-            <KitchenOrderCard
-              key={order.id}
-              order={order}
-              onUpdateStatus={updateKitchenOrderStatus}
-              onUpdatePriority={updateOrderPriority}
-              onUpdateItemStatus={updateItemStatus}
-            />
-          ))}
+    <div className="space-y-6 p-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Kitchen Dashboard</h1>
+        <div className="flex items-center gap-4">
+          <KitchenNotifications activeOrders={activeOrders} />
         </div>
       </div>
 
-      {/* Kitchen Layout & Equipment - 4 columns on xl screens */}
-      <div className="xl:col-span-4 space-y-6">
-        <KitchenLayout activeOrders={kitchenOrders?.filter(order => order.status === 'preparing')} />
-        <EquipmentMonitor />
-        <QualityControl />
-        <TemperatureMonitor stationId="main-kitchen" />
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* Orders Section - 8 columns on xl screens */}
+        <div className="xl:col-span-8 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1 space-y-2">
+              <Label>Search Orders</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by order #, table, or server"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 w-full sm:w-auto">
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="preparing">Preparing</SelectItem>
+                    <SelectItem value="ready">Ready</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Priority</Label>
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Priorities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priorities</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="rush">Rush</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <Tabs defaultValue="active">
+            <TabsList>
+              <TabsTrigger value="active">
+                Active Orders ({activeOrders.length})
+              </TabsTrigger>
+              <TabsTrigger value="all">
+                All Orders ({kitchenOrders?.length || 0})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="active" className="space-y-4 mt-4">
+              {activeOrders.length === 0 ? (
+                <div className="text-center py-12 border rounded-lg bg-muted/20">
+                  <p className="text-muted-foreground">No active orders at this time</p>
+                </div>
+              ) : (
+                activeOrders.map(order => (
+                  <KitchenOrderCard
+                    key={order.id}
+                    order={order}
+                    onUpdateStatus={updateKitchenOrderStatus}
+                    onUpdatePriority={updateOrderPriority}
+                    onUpdateItemStatus={updateItemStatus}
+                  />
+                ))
+              )}
+            </TabsContent>
+            
+            <TabsContent value="all" className="space-y-4 mt-4">
+              {filteredOrders.length === 0 ? (
+                <div className="text-center py-12 border rounded-lg bg-muted/20">
+                  <p className="text-muted-foreground">No orders match your filters</p>
+                </div>
+              ) : (
+                filteredOrders.map(order => (
+                  <KitchenOrderCard
+                    key={order.id}
+                    order={order}
+                    onUpdateStatus={updateKitchenOrderStatus}
+                    onUpdatePriority={updateOrderPriority}
+                    onUpdateItemStatus={updateItemStatus}
+                  />
+                ))
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Kitchen Layout & Equipment - 4 columns on xl screens */}
+        <div className="xl:col-span-4 space-y-6">
+          <KitchenAnalytics orders={kitchenOrders || []} />
+          <KitchenLayout activeOrders={activeOrders} />
+          <EquipmentMonitor />
+          <QualityControl />
+          <TemperatureMonitor stationId="main-kitchen" />
+        </div>
       </div>
     </div>
   );

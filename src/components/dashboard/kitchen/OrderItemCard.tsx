@@ -1,9 +1,13 @@
 
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, ChefHat, Timer } from "lucide-react";
-import { RecipeInstructionsDialog } from "./RecipeInstructionsDialog";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { ItemStatusControls } from "./ItemStatusControls";
-import type { KitchenOrderItem, MenuItem } from "@/types/staff";
+import { Coffee, Utensils, AlertTriangle, Clock } from "lucide-react";
+import type { KitchenOrderItem } from "@/types/staff";
 
 interface OrderItemCardProps {
   item: KitchenOrderItem;
@@ -17,93 +21,139 @@ interface OrderItemCardProps {
 }
 
 export function OrderItemCard({ item, orderId, onUpdateItemStatus }: OrderItemCardProps) {
-  const timeElapsed = (item: KitchenOrderItem) => {
-    if (!item.start_time) return 0;
-    return Math.floor(
-      (new Date().getTime() - new Date(item.start_time).getTime()) / 1000 / 60
-    );
-  };
+  const [itemNotes, setItemNotes] = useState(item.notes || "");
 
-  const isOverdue = (item: KitchenOrderItem) => {
-    return item.status === "preparing" && timeElapsed(item) > 15;
-  };
-
-  const convertToMenuItem = (item: KitchenOrderItem): MenuItem => ({
-    id: item.menu_item_id,
-    name: item.name,
-    category: item.course || "main",
-    price: 0,
-    description: item.notes || "",
-    preparationTime: 15,
-    allergens: item.allergens || [],
-    available: true,
-    prep_details: {
-      temperature_requirements: {
-        min: 165,
-        max: 175,
-        unit: "F"
-      }
+  const getItemStatusColor = (status: string) => {
+    switch (status) {
+      case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "preparing": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "ready": return "bg-green-100 text-green-800 border-green-200";
+      case "delivered": return "bg-gray-100 text-gray-800 border-gray-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
-  });
+  };
+
+  const getCookingStationIcon = (station: string | undefined) => {
+    switch (station) {
+      case "grill": return <Utensils className="h-4 w-4" />;
+      case "fry": return <Utensils className="h-4 w-4" />;
+      case "salad": return <Utensils className="h-4 w-4" />;
+      case "dessert": return <Coffee className="h-4 w-4" />;
+      case "beverage": return <Coffee className="h-4 w-4" />;
+      default: return <Utensils className="h-4 w-4" />;
+    }
+  };
+  
+  const getElapsedTime = (startTime: string | undefined) => {
+    if (!startTime) return null;
+    
+    const start = new Date(startTime);
+    const now = new Date();
+    const elapsed = Math.floor((now.getTime() - start.getTime()) / 60000); // minutes
+    
+    return elapsed;
+  };
+  
+  const elapsedTime = getElapsedTime(item.start_time);
 
   return (
-    <div 
-      className={`p-3 rounded-lg border ${
-        item.status === "ready" ? "bg-green-50" :
-        item.status === "preparing" ? "bg-blue-50" :
-        "bg-gray-50"
-      }`}
-    >
-      <div className="flex justify-between">
+    <Card className={`p-4 border-l-4 ${getItemStatusColor(item.status)}`}>
+      <div className="flex justify-between items-start">
         <div>
-          <div className="font-medium">
-            {item.quantity}x {item.name}
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-semibold">{item.name}</h4>
+            <Badge variant="outline">x{item.quantity}</Badge>
+            
+            {item.allergen_alert && (
+              <Badge variant="destructive" className="flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                Allergen
+              </Badge>
+            )}
           </div>
+          
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            {item.cooking_station && (
+              <Badge variant="secondary" className="flex items-center gap-1 capitalize">
+                {getCookingStationIcon(item.cooking_station)}
+                {item.cooking_station}
+              </Badge>
+            )}
+            
+            {item.assigned_chef && (
+              <Badge variant="outline">Chef: {item.assigned_chef}</Badge>
+            )}
+            
+            {item.status === "preparing" && elapsedTime !== null && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                <span>{elapsedTime} min</span>
+              </div>
+            )}
+          </div>
+          
           {item.notes && (
-            <p className="text-sm text-muted-foreground">{item.notes}</p>
+            <p className="mt-2 text-sm text-muted-foreground italic">
+              Note: {item.notes}
+            </p>
           )}
         </div>
-        <Badge variant="outline">
-          {item.cooking_station || "No Station"}
+        
+        <Badge className={`${getItemStatusColor(item.status)} capitalize`}>
+          {item.status}
         </Badge>
       </div>
-
-      <div className="mt-2 flex items-center gap-2 text-sm">
-        {item.status === "preparing" && (
-          <>
-            <Timer className="h-4 w-4" />
-            <span>{timeElapsed(item)}m</span>
-            {isOverdue(item) && (
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-            )}
-          </>
-        )}
-        {item.assigned_chef && (
-          <div className="flex items-center gap-1 text-muted-foreground ml-auto">
-            <ChefHat className="h-4 w-4" />
-            <span>{item.assigned_chef}</span>
-          </div>
-        )}
-      </div>
-
-      <ItemStatusControls
-        item={item}
-        orderId={orderId}
-        onUpdateItemStatus={onUpdateItemStatus}
-      />
-
-      {item.allergens && item.allergens.length > 0 && (
-        <div className="mt-2 p-2 bg-red-50 rounded flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-red-500" />
-          <span className="text-sm text-red-700">
-            Allergens: {item.allergens.join(", ")}
-          </span>
+      
+      {/* Show modifications if any */}
+      {item.modifications && item.modifications.length > 0 && (
+        <div className="mt-3 pt-3 border-t">
+          <p className="text-xs font-medium mb-1">Modifications:</p>
+          <ul className="text-xs text-muted-foreground space-y-1">
+            {item.modifications.map((mod, index) => (
+              <li key={index}>• {mod}</li>
+            ))}
+          </ul>
         </div>
       )}
-
-      <div className="mt-2">
-        <RecipeInstructionsDialog item={convertToMenuItem(item)} />
-      </div>
-    </div>
+      
+      {item.status !== "delivered" && (
+        <div className="mt-3 pt-3 border-t">
+          <div className="flex justify-between">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">Add Notes</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Item Notes</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <Textarea 
+                    value={itemNotes} 
+                    onChange={(e) => setItemNotes(e.target.value)}
+                    placeholder="Add preparation notes or instructions"
+                    className="min-h-[100px]"
+                  />
+                  <Button 
+                    onClick={() => {
+                      // In a real app, we would update the notes in the database
+                      console.log("Updating notes for item", item.id, itemNotes);
+                    }}
+                  >
+                    Save Notes
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <ItemStatusControls
+              item={item}
+              orderId={orderId}
+              onUpdateItemStatus={onUpdateItemStatus}
+            />
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
