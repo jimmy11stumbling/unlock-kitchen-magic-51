@@ -7,7 +7,7 @@ import { useAnalyticsState } from "./dashboard/useAnalyticsState";
 import { useLoyaltyState } from "./dashboard/useLoyaltyState";
 import { useTableState } from "./dashboard/useTableState";
 import { useKitchenState } from "./dashboard/useKitchenState";
-import { useStaffState } from "./dashboard/useStaffState"; // Import from the correct path
+import { useStaffState } from "./dashboard/useStaffState"; // Fixed import
 
 export const useDashboardState = () => {
   const staffState = useStaffState();

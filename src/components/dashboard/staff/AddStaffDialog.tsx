@@ -17,7 +17,7 @@ export function AddStaffDialog({
   onOpenChange, 
   onAddStaff 
 }: AddStaffDialogProps) {
-  const [staffData, setStaffData] = useState<Omit<StaffMember, "id" | "status">>({
+  const [newStaff, setNewStaff] = useState<Omit<StaffMember, "id" | "status">>({
     name: "",
     role: "server",
     email: "",
@@ -44,11 +44,11 @@ export function AddStaffDialog({
   const [loading, setLoading] = useState(false);
 
   const handleChange = (field: string, value: any) => {
-    setStaffData((prev) => ({ ...prev, [field]: value }));
+    setNewStaff((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleEmergencyContactChange = (field: string, value: string) => {
-    setStaffData((prev) => ({
+    setNewStaff((prev) => ({
       ...prev,
       emergencyContact: {
         ...prev.emergencyContact!,
@@ -60,7 +60,7 @@ export function AddStaffDialog({
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await onAddStaff(staffData);
+      await onAddStaff(newStaff);
       onOpenChange();
     } catch (error) {
       console.error("Error adding staff:", error);
@@ -76,20 +76,20 @@ export function AddStaffDialog({
           <DialogTitle>Add New Staff Member</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-          <div className="space-y-1">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
-              value={staffData.name}
+              value={newStaff.name}
               onChange={(e) => handleChange("name", e.target.value)}
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
             <Select
-              value={staffData.role}
+              value={newStaff.role}
               onValueChange={(value) => handleChange("role", value)}
             >
               <SelectTrigger id="role">
@@ -105,78 +105,69 @@ export function AddStaffDialog({
             </Select>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              value={staffData.email}
+              value={newStaff.email}
               onChange={(e) => handleChange("email", e.target.value)}
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
-              value={staffData.phone}
+              value={newStaff.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
             />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label htmlFor="salary">Salary</Label>
             <Input
               id="salary"
               type="number"
-              value={staffData.salary}
+              value={newStaff.salary}
               onChange={(e) => handleChange("salary", Number(e.target.value))}
             />
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="hireDate">Hire Date</Label>
+          <div className="space-y-2">
+            <Label htmlFor="hire-date">Hire Date</Label>
             <Input
-              id="hireDate"
+              id="hire-date"
               type="date"
-              value={staffData.hireDate}
-              onChange={(e) => handleChange("hireDate", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="address">Address</Label>
-            <Input
-              id="address"
-              value={staffData.address}
-              onChange={(e) => handleChange("address", e.target.value)}
+              value={newStaff.hireDate}
+              onChange={(e) => setNewStaff({...newStaff, hireDate: e.target.value})}
             />
           </div>
 
           <div className="col-span-2 space-y-2 mt-2">
             <h3 className="font-medium">Emergency Contact</h3>
             <div className="grid grid-cols-3 gap-x-4">
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <Label htmlFor="emergency-name">Name</Label>
                 <Input
                   id="emergency-name"
-                  value={staffData.emergencyContact?.name || ""}
+                  value={newStaff.emergencyContact?.name || ""}
                   onChange={(e) => handleEmergencyContactChange("name", e.target.value)}
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <Label htmlFor="emergency-phone">Phone</Label>
                 <Input
                   id="emergency-phone"
-                  value={staffData.emergencyContact?.phone || ""}
+                  value={newStaff.emergencyContact?.phone || ""}
                   onChange={(e) => handleEmergencyContactChange("phone", e.target.value)}
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <Label htmlFor="emergency-relationship">Relationship</Label>
                 <Input
                   id="emergency-relationship"
-                  value={staffData.emergencyContact?.relationship || ""}
+                  value={newStaff.emergencyContact?.relationship || ""}
                   onChange={(e) => handleEmergencyContactChange("relationship", e.target.value)}
                 />
               </div>

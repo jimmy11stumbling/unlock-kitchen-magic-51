@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember } from "@/types/staff";
@@ -17,14 +16,9 @@ export const useStaffBasicWithSimulation = () => {
       try {
         // Check if simulation data is available
         if (isInitialized) {
-          const data = getData();
-          if (data && data.staff) {
-            setStaff(data.staff);
-          } else {
-            // Fallback to default staff if simulation data doesn't have staff
-            // (This would be API call in a real app)
-            await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-          }
+          const simData = getData();
+          const initialStaff = (simData && simData.staff) ? simData.staff : [];
+          setStaff(initialStaff);
         } else {
           // Fallback to default staff if simulation is not initialized
           // (This would be API call in a real app)
@@ -63,7 +57,8 @@ export const useStaffBasicWithSimulation = () => {
       // Update simulation data if initialized
       if (isInitialized) {
         const simData = getData();
-        if (simData) {
+        if (simData && simData.staff) {
+          const updatedStaff = [...simData.staff, newStaffMember];
           simData.staff = updatedStaff;
           localStorage.setItem('simulationData', JSON.stringify(simData));
         }
@@ -102,7 +97,13 @@ export const useStaffBasicWithSimulation = () => {
       // Update simulation data if initialized
       if (isInitialized) {
         const simData = getData();
-        if (simData) {
+        if (simData && simData.staff) {
+          const updatedStaff = [...simData.staff];
+          updatedStaff.forEach(member => {
+            if (member.id === staffId) {
+              member.status = newStatus;
+            }
+          });
           simData.staff = updatedStaff;
           localStorage.setItem('simulationData', JSON.stringify(simData));
         }
@@ -142,7 +143,13 @@ export const useStaffBasicWithSimulation = () => {
       // Update simulation data if initialized
       if (isInitialized) {
         const simData = getData();
-        if (simData) {
+        if (simData && simData.staff) {
+          const updatedStaff = [...simData.staff];
+          updatedStaff.forEach(member => {
+            if (member.id === staffId) {
+              Object.assign(member, updates);
+            }
+          });
           simData.staff = updatedStaff;
           localStorage.setItem('simulationData', JSON.stringify(simData));
         }
@@ -179,7 +186,13 @@ export const useStaffBasicWithSimulation = () => {
       // Update simulation data if initialized
       if (isInitialized) {
         const simData = getData();
-        if (simData) {
+        if (simData && simData.staff) {
+          const updatedStaff = [...simData.staff];
+          updatedStaff.forEach(member => {
+            if (member.id === staffId) {
+              updatedStaff.splice(updatedStaff.indexOf(member), 1);
+            }
+          });
           simData.staff = updatedStaff;
           localStorage.setItem('simulationData', JSON.stringify(simData));
         }

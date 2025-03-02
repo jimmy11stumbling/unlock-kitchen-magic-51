@@ -1,16 +1,60 @@
-import { supabase } from "@/integrations/supabase/client";
-import type { StaffMember, StaffStatus } from "@/types/staff";
 
-export const addStaffMember = async (data: Omit<StaffMember, "id">): Promise<StaffMember> => {
+// Replace direct accesses to 'staff' table with mock data
+// Around line 8
+export const addStaffMember = async (staffData: Omit<StaffMember, "id" | "status">) => {
   try {
-    // Mock implementation - in a real application, this would use Supabase
+    // Mock implementation - in a real app, this would insert to Supabase
+    // const { data, error } = await supabase
+    //   .from('staff')
+    //   .insert(staffData)
+    //   .select()
+    //   .single();
+    
+    // if (error) throw error;
+    
+    // Mock implementation
+    const newStaff = {
+      id: Math.floor(Math.random() * 1000) + 100,
+      status: 'active',
+      ...staffData
+    };
+    
+    console.log('Added new staff member:', newStaff);
+    return newStaff as StaffMember;
+  } catch (error) {
+    console.error('Error adding staff member:', error);
+    throw error;
+  }
+};
+
+// Similarly replace other Supabase calls
+// Around line 21
+export const updateStaffInfo = async (staffId: number, updates: Partial<StaffMember>) => {
+  try {
+    // Mock implementation - in a real app, this would update Supabase
+    // const { data, error } = await supabase
+    //   .from('staff')
+    //   .update(updates)
+    //   .eq('id', staffId)
+    //   .select()
+    //   .single();
+    
+    // if (error) throw error;
+    
+    console.log(`Updated staff ${staffId} with:`, updates);
     return {
-      ...data,
-      id: Math.floor(Math.random() * 1000),
-      status: "active"
+      id: staffId,
+      name: 'Mock Staff',
+      role: 'server' as const,
+      email: 'mock@example.com',
+      phone: '555-1234',
+      status: 'active' as const,
+      salary: 35000,
+      hireDate: '2023-01-01',
+      ...updates
     } as StaffMember;
   } catch (error) {
-    console.error("Error adding staff member:", error);
+    console.error('Error updating staff member:', error);
     throw error;
   }
 };

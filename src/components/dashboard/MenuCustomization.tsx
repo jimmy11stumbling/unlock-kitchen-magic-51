@@ -1,225 +1,268 @@
-
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit2, CircleDot } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Plus, X } from "lucide-react";
 import type { MenuItem } from "@/types/staff";
 
 interface MenuCustomizationProps {
-  menuItems: MenuItem[];
   onAddMenuItem: (item: Omit<MenuItem, "id">) => void;
-  onUpdateMenuItemAvailability: (itemId: number, available: boolean) => void;
-  onUpdateMenuItemPrice: (itemId: number, price: number) => void;
 }
 
-export const MenuCustomization = ({
-  menuItems,
-  onAddMenuItem,
-  onUpdateMenuItemAvailability,
-  onUpdateMenuItemPrice,
-}: MenuCustomizationProps) => {
-  const [newItem, setNewItem] = useState<Omit<MenuItem, "id">>({
-    name: "",
-    price: 0,
-    category: "main",
-    description: "",
-    available: true,
-    allergens: [],
-    preparationTime: 15,
-  });
+export const MenuCustomization = ({ onAddMenuItem }: MenuCustomizationProps) => {
+  const [showCustomItemForm, setShowCustomItemForm] = useState(false);
+  const [customItemName, setCustomItemName] = useState("");
+  const [customItemPrice, setCustomItemPrice] = useState("");
+  const [customItemCategory, setCustomItemCategory] = useState<MenuItem["category"]>("main");
+  const [customItemDescription, setCustomItemDescription] = useState("");
+  const [customItemAllergens, setCustomItemAllergens] = useState<string[]>([]);
+  const [customItemPrepTime, setCustomItemPrepTime] = useState("");
 
-  const [editingPrice, setEditingPrice] = useState<{id: number, price: number} | null>(null);
+  const [showSpecialForm, setShowSpecialForm] = useState(false);
+  const [specialName, setSpecialName] = useState("");
+  const [specialPrice, setSpecialPrice] = useState("");
+  const [specialCategory, setSpecialCategory] = useState<MenuItem["category"]>("main");
+  const [specialDescription, setSpecialDescription] = useState("");
+  const [specialAllergens, setSpecialAllergens] = useState<string[]>([]);
+  const [specialPrepTime, setSpecialPrepTime] = useState("");
+  const [currentSpecial, setCurrentSpecial] = useState<Omit<MenuItem, "id"> | null>(null);
+
+  const addCustomMenuItem = () => {
+    onAddMenuItem({
+      name: customItemName,
+      price: parseFloat(customItemPrice),
+      category: customItemCategory,
+      description: customItemDescription,
+      available: true,
+      allergens: customItemAllergens,
+      preparationTime: parseInt(customItemPrepTime),
+      orderCount: 0  // Add this line
+    });
+    setCustomItemName("");
+    setCustomItemPrice("");
+    setCustomItemCategory("main");
+    setCustomItemDescription("");
+    setCustomItemAllergens([]);
+    setCustomItemPrepTime("");
+    setShowCustomItemForm(false);
+  };
+
+  const handleAddSpecial = () => {
+    setCurrentSpecial({
+      name: specialName,
+      price: parseFloat(specialPrice),
+      category: specialCategory,
+      description: specialDescription,
+      available: true,
+      allergens: specialAllergens,
+      preparationTime: parseInt(specialPrepTime),
+      orderCount: 0  // Add this line
+    });
+    setSpecialName("");
+    setSpecialPrice("");
+    setSpecialCategory("main");
+    setSpecialDescription("");
+    setSpecialAllergens([]);
+    setSpecialPrepTime("");
+  };
 
   return (
-    <Card className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold">Menu Management</h2>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Menu Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Menu Item</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <Input
-                  value={newItem.name}
-                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Price</label>
-                <Input
-                  type="number"
-                  value={newItem.price}
-                  onChange={(e) => setNewItem({ ...newItem, price: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Category</label>
-                <Select
-                  value={newItem.category}
-                  onValueChange={(value: MenuItem["category"]) =>
-                    setNewItem({ ...newItem, category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="appetizer">Appetizer</SelectItem>
-                    <SelectItem value="main">Main Course</SelectItem>
-                    <SelectItem value="dessert">Dessert</SelectItem>
-                    <SelectItem value="beverage">Beverage</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Description</label>
-                <Input
-                  value={newItem.description}
-                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Preparation Time (minutes)</label>
-                <Input
-                  type="number"
-                  value={newItem.preparationTime}
-                  onChange={(e) => setNewItem({ ...newItem, preparationTime: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Allergens (comma-separated)</label>
-                <Input
-                  value={newItem.allergens.join(", ")}
-                  onChange={(e) => setNewItem({ ...newItem, allergens: e.target.value.split(", ").filter(Boolean) })}
-                />
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => {
-                  onAddMenuItem(newItem);
-                  setNewItem({
-                    name: "",
-                    price: 0,
-                    category: "main",
-                    description: "",
-                    available: true,
-                    allergens: [],
-                    preparationTime: 15,
-                  });
-                }}
-              >
-                Add Item
-              </Button>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Menu Customization</h2>
+        <Button onClick={() => setShowCustomItemForm(!showCustomItemForm)}>
+          {showCustomItemForm ? "Hide Form" : "Add Custom Item"}
+        </Button>
+      </div>
+
+      {showCustomItemForm && (
+        <div className="border rounded-lg p-4">
+          <h3 className="text-lg font-medium mb-4">Add New Menu Item</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="item-name">Name</Label>
+              <Input
+                id="item-name"
+                value={customItemName}
+                onChange={(e) => setCustomItemName(e.target.value)}
+              />
             </div>
-          </DialogContent>
-        </Dialog>
+            <div className="space-y-2">
+              <Label htmlFor="item-price">Price</Label>
+              <Input
+                id="item-price"
+                type="number"
+                value={customItemPrice}
+                onChange={(e) => setCustomItemPrice(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="item-category">Category</Label>
+              <Select value={customItemCategory} onValueChange={(value: MenuItem["category"]) => setCustomItemCategory(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="appetizer">Appetizer</SelectItem>
+                  <SelectItem value="main">Main Course</SelectItem>
+                  <SelectItem value="dessert">Dessert</SelectItem>
+                  <SelectItem value="beverage">Beverage</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="item-prep-time">Preparation Time (minutes)</Label>
+              <Input
+                id="item-prep-time"
+                type="number"
+                value={customItemPrepTime}
+                onChange={(e) => setCustomItemPrepTime(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="item-description">Description</Label>
+              <Textarea
+                id="item-description"
+                value={customItemDescription}
+                onChange={(e) => setCustomItemDescription(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label>Allergens</Label>
+              <div className="flex flex-wrap gap-2">
+                {["nuts", "dairy", "gluten", "soy", "shellfish"].map((allergen) => (
+                  <Badge
+                    key={allergen}
+                    variant={customItemAllergens.includes(allergen) ? "default" : "outline"}
+                    onClick={() => {
+                      if (customItemAllergens.includes(allergen)) {
+                        setCustomItemAllergens(customItemAllergens.filter((a) => a !== allergen));
+                      } else {
+                        setCustomItemAllergens([...customItemAllergens, allergen]);
+                      }
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {allergen}
+                    {customItemAllergens.includes(allergen) && (
+                      <X className="ml-1 h-3 w-3" />
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+          <Button className="mt-4" onClick={addCustomMenuItem}>
+            Add Menu Item
+          </Button>
+        </div>
+      )}
+
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Create Special</h2>
+        <Button onClick={() => setShowSpecialForm(!showSpecialForm)}>
+          {showSpecialForm ? "Hide Form" : "Create Special"}
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {["appetizer", "main", "dessert", "beverage"].map((category) => (
-          <Card key={category} className="p-4">
-            <h3 className="text-sm font-medium capitalize mb-2">{category}</h3>
-            <p className="text-2xl font-bold">
-              {menuItems.filter((item) => item.category === category).length}
-            </p>
-          </Card>
-        ))}
-      </div>
+      {showSpecialForm && (
+        <div className="border rounded-lg p-4">
+          <h3 className="text-lg font-medium mb-4">Create Special Menu Item</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="special-name">Name</Label>
+              <Input
+                id="special-name"
+                value={specialName}
+                onChange={(e) => setSpecialName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="special-price">Price</Label>
+              <Input
+                id="special-price"
+                type="number"
+                value={specialPrice}
+                onChange={(e) => setSpecialPrice(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="special-category">Category</Label>
+              <Select value={specialCategory} onValueChange={(value: MenuItem["category"]) => setSpecialCategory(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="appetizer">Appetizer</SelectItem>
+                  <SelectItem value="main">Main Course</SelectItem>
+                  <SelectItem value="dessert">Dessert</SelectItem>
+                  <SelectItem value="beverage">Beverage</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="special-prep-time">Preparation Time (minutes)</Label>
+              <Input
+                id="special-prep-time"
+                type="number"
+                value={specialPrepTime}
+                onChange={(e) => setSpecialPrepTime(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="special-description">Description</Label>
+              <Textarea
+                id="special-description"
+                value={specialDescription}
+                onChange={(e) => setSpecialDescription(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label>Allergens</Label>
+              <div className="flex flex-wrap gap-2">
+                {["nuts", "dairy", "gluten", "soy", "shellfish"].map((allergen) => (
+                  <Badge
+                    key={allergen}
+                    variant={specialAllergens.includes(allergen) ? "default" : "outline"}
+                    onClick={() => {
+                      if (specialAllergens.includes(allergen)) {
+                        setSpecialAllergens(specialAllergens.filter((a) => a !== allergen));
+                      } else {
+                        setSpecialAllergens([...specialAllergens, allergen]);
+                      }
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {allergen}
+                    {specialAllergens.includes(allergen) && (
+                      <X className="ml-1 h-3 w-3" />
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+          <Button className="mt-4" onClick={handleAddSpecial}>
+            Create Special
+          </Button>
+        </div>
+      )}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead>Preparation Time</TableHead>
-            <TableHead>Allergens</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {menuItems.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>{item.name}</TableCell>
-              <TableCell className="capitalize">{item.category}</TableCell>
-              <TableCell>
-                {editingPrice?.id === item.id ? (
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="number"
-                      value={editingPrice.price}
-                      onChange={(e) => setEditingPrice({ ...editingPrice, price: Number(e.target.value) })}
-                      className="w-20"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        onUpdateMenuItemPrice(item.id, editingPrice.price);
-                        setEditingPrice(null);
-                      }}
-                    >
-                      Save
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    ${item.price.toFixed(2)}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setEditingPrice({ id: item.id, price: item.price })}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-              </TableCell>
-              <TableCell>{item.preparationTime} mins</TableCell>
-              <TableCell>{item.allergens.join(", ")}</TableCell>
-              <TableCell>
-                <Button
-                  size="sm"
-                  variant={item.available ? "default" : "secondary"}
-                  onClick={() => onUpdateMenuItemAvailability(item.id, !item.available)}
-                >
-                  <CircleDot className="w-4 h-4 mr-2" />
-                  {item.available ? "Available" : "Unavailable"}
-                </Button>
-              </TableCell>
-              <TableCell>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm" variant="outline">
-                      <Edit2 className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Edit Menu Item</DialogTitle>
-                    </DialogHeader>
-                    {/* Add edit form here */}
-                  </DialogContent>
-                </Dialog>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Card>
+      {currentSpecial && (
+        <div className="border rounded-lg p-4">
+          <h3 className="text-lg font-medium mb-4">Current Special</h3>
+          <p>Name: {currentSpecial.name}</p>
+          <p>Price: {currentSpecial.price}</p>
+          <p>Category: {currentSpecial.category}</p>
+          <p>Description: {currentSpecial.description}</p>
+          <p>Preparation Time: {currentSpecial.preparationTime}</p>
+          <p>Allergens: {currentSpecial.allergens?.join(", ") || "None"}</p>
+        </div>
+      )}
+    </div>
   );
 };

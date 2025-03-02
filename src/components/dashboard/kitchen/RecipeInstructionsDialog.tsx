@@ -15,7 +15,6 @@ interface RecipeInstructionsDialogProps {
 export function RecipeInstructionsDialog({ open, onOpenChange, menuItem }: RecipeInstructionsDialogProps) {
   const [activeTab, setActiveTab] = useState("recipe");
   
-  // Create a safe recipe object with default values for missing properties
   const recipeDetails = useMemo(() => {
     const defaultRecipe = {
       temperature_requirements: {},
@@ -27,7 +26,6 @@ export function RecipeInstructionsDialog({ open, onOpenChange, menuItem }: Recip
       notes: ""
     };
     
-    // Merge with actual prep_details if available
     return menuItem?.prep_details 
       ? { ...defaultRecipe, ...(typeof menuItem.prep_details === 'string' 
           ? JSON.parse(menuItem.prep_details) 
@@ -73,11 +71,11 @@ export function RecipeInstructionsDialog({ open, onOpenChange, menuItem }: Recip
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex justify-between p-3 border rounded-md">
                     <span className="font-medium">Prep Time</span>
-                    <span>{recipeDetails.prepTime} mins</span>
+                    <span>{typeof recipeDetails.prepTime === 'number' ? `${recipeDetails.prepTime} minutes` : "15 minutes"}</span>
                   </div>
                   <div className="flex justify-between p-3 border rounded-md">
                     <span className="font-medium">Cook Time</span>
-                    <span>{recipeDetails.cookTime} mins</span>
+                    <span>{typeof recipeDetails.cookTime === 'number' ? `${recipeDetails.cookTime} minutes` : "20 minutes"}</span>
                   </div>
                 </div>
               </div>
@@ -86,13 +84,13 @@ export function RecipeInstructionsDialog({ open, onOpenChange, menuItem }: Recip
                 <h3 className="text-lg font-semibold mb-2">Equipment</h3>
                 <div className="grid grid-cols-1 gap-2">
                   {Array.isArray(recipeDetails.equipment_needed) && recipeDetails.equipment_needed.length > 0 ? (
-                    recipeDetails.equipment_needed.map((equipment, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 border rounded-md">
-                        <span>{typeof equipment === 'string' ? equipment : JSON.stringify(equipment)}</span>
-                      </div>
-                    ))
+                    <ul className="space-y-1 text-sm">
+                      {recipeDetails.equipment_needed.map((item, idx) => (
+                        <li key={idx}>• {item}</li>
+                      ))}
+                    </ul>
                   ) : (
-                    <p className="text-muted-foreground">No special equipment needed</p>
+                    <p className="text-sm text-muted-foreground">Standard kitchen equipment</p>
                   )}
                 </div>
               </div>
@@ -101,14 +99,13 @@ export function RecipeInstructionsDialog({ open, onOpenChange, menuItem }: Recip
                 <h3 className="text-lg font-semibold mb-2">Quality Checks</h3>
                 <div className="grid grid-cols-1 gap-2">
                   {Array.isArray(recipeDetails.quality_checks) && recipeDetails.quality_checks.length > 0 ? (
-                    recipeDetails.quality_checks.map((check, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 border rounded-md">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        <span>{check}</span>
-                      </div>
-                    ))
+                    <ul className="space-y-1 text-sm">
+                      {recipeDetails.quality_checks.map((check, idx) => (
+                        <li key={idx}>• {check}</li>
+                      ))}
+                    </ul>
                   ) : (
-                    <p className="text-muted-foreground">No quality checks specified</p>
+                    <p className="text-sm text-muted-foreground">Verify appearance, temperature, and taste.</p>
                   )}
                 </div>
               </div>
@@ -117,17 +114,13 @@ export function RecipeInstructionsDialog({ open, onOpenChange, menuItem }: Recip
                 <h3 className="text-lg font-semibold mb-2">Preparation Steps</h3>
                 <div className="grid grid-cols-1 gap-3">
                   {Array.isArray(recipeDetails.steps) && recipeDetails.steps.length > 0 ? (
-                    recipeDetails.steps.map((step, index) => (
-                      <div key={index} className="p-3 border rounded-md">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline">{index + 1}</Badge>
-                          <h4 className="font-medium">{step.title}</h4>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{step.description}</p>
-                      </div>
-                    ))
+                    <ol className="space-y-3 list-decimal list-inside">
+                      {recipeDetails.steps.map((step, idx) => (
+                        <li key={idx} className="text-sm">{step}</li>
+                      ))}
+                    </ol>
                   ) : (
-                    <p className="text-muted-foreground">No preparation steps specified</p>
+                    <p className="text-sm text-muted-foreground">Follow standard kitchen procedures</p>
                   )}
                 </div>
               </div>
@@ -135,10 +128,12 @@ export function RecipeInstructionsDialog({ open, onOpenChange, menuItem }: Recip
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Additional Notes</h3>
                 <div className="p-3 border rounded-md">
-                  {recipeDetails.notes ? (
-                    <p className="text-sm">{recipeDetails.notes}</p>
+                  {typeof recipeDetails.notes === 'string' && recipeDetails.notes ? (
+                    <div className="text-sm">
+                      {recipeDetails.notes}
+                    </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No additional notes</p>
+                    <p className="text-sm text-muted-foreground">No special notes</p>
                   )}
                 </div>
               </div>

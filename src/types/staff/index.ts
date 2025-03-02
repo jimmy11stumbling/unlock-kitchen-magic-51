@@ -1,4 +1,3 @@
-
 // If the file already exists, add the following type definition:
 
 export interface StaffDTO {
@@ -68,6 +67,10 @@ export interface MenuItem {
   image?: string;
   ingredients?: any[];
   prep_details?: string;
+  temperature_requirements?: any;
+  equipment_needed?: string[];
+  quality_checks?: string[];
+  steps?: string[];
 }
 
 // Reservation related interfaces
@@ -126,8 +129,12 @@ export interface KitchenOrder {
   estimated_delivery_time: string;
   notes?: string;
   coursing?: string;
-  tableNumber: number; // Using camelCase property name
-  serverName: string; // Using camelCase property name
+  // Add both table_number for database compatibility and tableNumber for app usage
+  table_number?: number;
+  tableNumber: number;
+  // Add both server_name for database compatibility and serverName for app usage
+  server_name?: string;
+  serverName: string;
 }
 
 export interface KitchenOrderItem {
@@ -195,10 +202,11 @@ export interface SalesData {
   averageTicketSize?: number;
   topSellingItems?: string[];
   costs?: number;
-  totalSales?: number; // Add totalSales property
+  totalSales?: number;
 }
 
 export interface DailyReport {
+  id?: number;
   date: string;
   totalOrders: number;
   totalRevenue: number;
@@ -213,7 +221,7 @@ export interface DailyReport {
     price: number;
     orderCount?: number;
     description?: string;
-    available?: boolean; // Add available property
+    available?: boolean;
   }[];
   hourlyData?: {
     hour: number;

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,9 +28,9 @@ export const KitchenDisplay = ({ orders, onUpdateStatus }: KitchenDisplayProps) 
           <div className="flex justify-between items-start mb-4">
             <div>
               <h3 className="font-semibold">Order #{order.order_id}</h3>
-              <p className="text-sm text-muted-foreground">
-                Table {order.table_number}
-              </p>
+              <div className="text-sm text-muted-foreground mt-1">
+                Table {order.tableNumber}
+              </div>
             </div>
             <Badge className="bg-yellow-100 text-yellow-800">
               {order.status}
