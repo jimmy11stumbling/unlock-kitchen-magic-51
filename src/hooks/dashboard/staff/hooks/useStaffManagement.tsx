@@ -1,156 +1,125 @@
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import type { StaffMember } from "@/types/staff";
-import type { DatabaseStaffMember } from "../types/databaseTypes";
-import { mapDatabaseToStaffMember } from "../utils/staffMapper";
-import { 
-  fetchStaffMembers, 
-  createStaffMember, 
-  updateStaffMemberStatus, 
-  updateStaffMemberInfo,
-  searchStaffMembers,
-  getStaffByDepartment 
-} from "../services/queries";
+
+import { useState, useCallback } from 'react';
+import { useCreateStaffMember, useUpdateStaffInfo, useUpdateStaffStatus } from '../services/mutations/staffMutations';
+import { useReadStaffMembers } from '../services/queries/readQueries';
+import type { StaffMember } from '@/types/staff/employee';
+import { mapDatabaseToStaffMember } from '../utils/staffMapper';
 
 export const useStaffManagement = () => {
-  const { toast } = useToast();
-  const [staff, setStaff] = useState<StaffMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchStaff = async () => {
+  
+  const { data: staffData, isLoading: isLoadingStaff } = useReadStaffMembers();
+  const createStaffMutation = useCreateStaffMember();
+  const updateStatusMutation = useUpdateStaffStatus();
+  const updateInfoMutation = useUpdateStaffInfo();
+  
+  const staff = staffData || [];
+  
+  const addStaffMember = useCallback(async (data: Omit<StaffMember, 'id'>) => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchStaffMembers();
-      setStaff(data.map((item: DatabaseStaffMember) => mapDatabaseToStaffMember(item)));
-    } catch (error) {
-      console.error('Error fetching staff:', error);
-      setError('Failed to fetch staff members');
-      toast({
-        title: "Error fetching staff",
-        description: "There was a problem loading the staff list.",
-        variant: "destructive",
-      });
+      const result = await createStaffMutation.mutateAsync(data);
+      
+      if (!result) {
+        throw new Error('Failed to create staff member');
+      }
+      
+      return result;
+    } catch (err: any) {
+      setError(err.message || 'Failed to add staff member');
+      throw err;
     } finally {
       setLoading(false);
     }
-  };
-
-  const addStaffMember = async (data: Omit<StaffMember, "id" | "status">) => {
+  }, [createStaffMutation]);
+  
+  const updateStaffStatus = useCallback(async (staffId: number, newStatus: string) => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      const newStaff = await createStaffMember(data);
-      const mappedStaffMember = mapDatabaseToStaffMember(newStaff);
-      setStaff(prev => [...prev, mappedStaffMember]);
-      toast({
-        title: "Staff member added",
-        description: `${data.name} has been added to the staff list.`,
+      const result = await updateStatusMutation.mutateAsync({ 
+        staffId, 
+        status: newStatus 
       });
-      return mappedStaffMember;
-    } catch (error) {
-      console.error('Error adding staff member:', error);
-      toast({
-        title: "Error adding staff member",
-        description: "There was a problem adding the staff member.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const updateStaffStatus = async (staffId: number, newStatus: StaffMember["status"]) => {
-    try {
-      await updateStaffMemberStatus(staffId, newStatus);
-      setStaff(prev => prev.map(member => 
-        member.id === staffId 
-          ? { ...member, status: newStatus }
-          : member
-      ));
-      const member = staff.find(m => m.id === staffId);
-      toast({
-        title: "Status updated",
-        description: `${member?.name}'s status has been updated to ${newStatus}.`,
-      });
-    } catch (error) {
-      console.error('Error updating staff status:', error);
-      toast({
-        title: "Error updating status",
-        description: "There was a problem updating the staff member's status.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const updateStaffInfo = async (staffId: number, updates: Partial<DatabaseStaffMember>) => {
-    try {
-      await updateStaffMemberInfo(staffId, updates);
-      const updatedMember = staff.find(m => m.id === staffId);
-      if (!updatedMember) throw new Error('Staff member not found');
       
-      const updatedData = { ...updatedMember, ...updates };
-      const mappedMember = mapDatabaseToStaffMember(updatedData as DatabaseStaffMember);
+      if (!result) {
+        throw new Error('Failed to update staff status');
+      }
       
-      setStaff(prev => prev.map(member => 
-        member.id === staffId ? mappedMember : member
-      ));
+      return true;
+    } catch (err: any) {
+      setError(err.message || 'Failed to update staff status');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [updateStatusMutation]);
+  
+  const updateStaffInfo = useCallback(async (staffId: number, updates: Partial<StaffMember>) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await updateInfoMutation.mutateAsync({
+        staffId,
+        updates
+      });
       
-      toast({
-        title: "Staff info updated",
-        description: "Staff member information has been updated successfully.",
-      });
-    } catch (error) {
-      console.error('Error updating staff info:', error);
-      toast({
-        title: "Error updating info",
-        description: "There was a problem updating the staff member's information.",
-        variant: "destructive",
-      });
-      throw error;
+      if (!result) {
+        throw new Error('Failed to update staff information');
+      }
+      
+      return result;
+    } catch (err: any) {
+      setError(err.message || 'Failed to update staff information');
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const searchStaff = async (query: string) => {
-    try {
-      const results = await searchStaffMembers(query);
-      return results.map(item => mapDatabaseToStaffMember(item));
-    } catch (error) {
-      console.error('Error searching staff:', error);
-      toast({
-        title: "Error searching staff",
-        description: "There was a problem searching for staff members.",
-        variant: "destructive",
-      });
-      return [];
-    }
-  };
-
-  const getStaffInDepartment = async (department: string) => {
-    try {
-      const results = await getStaffByDepartment(department);
-      return results.map(item => mapDatabaseToStaffMember(item));
-    } catch (error) {
-      console.error('Error fetching department staff:', error);
-      toast({
-        title: "Error fetching department staff",
-        description: "There was a problem loading the department staff list.",
-        variant: "destructive",
-      });
-      return [];
-    }
-  };
-
+  }, [updateInfoMutation]);
+  
+  const getStaffMember = useCallback((id: number) => {
+    return staff.find(member => member.id === id) || null;
+  }, [staff]);
+  
+  const calculateAttendance = useCallback((staffId: number): number => {
+    const member = getStaffMember(staffId);
+    if (!member?.schedule) return 0;
+    
+    const scheduledDays = Object.values(member.schedule).filter(day => day !== "OFF").length;
+    return Math.round((scheduledDays / 7) * 100);
+  }, [getStaffMember]);
+  
+  const calculateWeeklyHours = useCallback((staffId: number): number => {
+    const member = getStaffMember(staffId);
+    if (!member?.schedule) return 0;
+    
+    return Object.values(member.schedule)
+      .filter(time => time !== "OFF")
+      .reduce((total, time) => {
+        if (!time.includes('-')) return total;
+        
+        const [start, end] = time.split('-');
+        const startHour = parseInt(start.split(':')[0]);
+        const endHour = parseInt(end.split(':')[0]);
+        
+        return total + (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);
+      }, 0);
+  }, [getStaffMember]);
+  
   return {
     staff,
-    loading,
+    loading: loading || isLoadingStaff,
     error,
-    setStaff,
-    fetchStaff,
     addStaffMember,
     updateStaffStatus,
     updateStaffInfo,
-    searchStaff,
-    getStaffInDepartment,
+    getStaffMember,
+    calculateAttendance,
+    calculateWeeklyHours
   };
 };

@@ -1,203 +1,148 @@
 
-import { useState, useEffect } from "react";
-import { Calendar } from "@/components/ui/calendar";
+import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
-import { useDashboardState } from "@/hooks/useDashboardState";
-import { addDays } from "date-fns";
-import type { Reservation } from "@/types/staff";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import type { Reservation, ReservationStatus } from "@/types/reservations";
 
-export const ReservationsPanel = () => {
-  const { reservations, addReservation, updateReservationStatus } = useDashboardState();
-  const { toast } = useToast();
-  const tomorrow = addDays(new Date(), 1);
+export interface ReservationsPanelProps {
+  reservations: Reservation[];
+  onAddReservation: (reservation: Omit<Reservation, "id">) => void;
+  onUpdateStatus: (reservationId: number, status: ReservationStatus) => void;
+}
 
-  // Remove createdAt property
-  const [newReservation, setNewReservation] = useState<Omit<Reservation, "id">>({
-    customerName: "",
-    phoneNumber: "", // Added phoneNumber
-    date: tomorrow.toISOString().split('T')[0],
-    time: "18:00",
-    partySize: 2,
-    tableNumber: 1,
-    status: "pending",
-    notes: ""
-  });
+export const ReservationsPanel: React.FC<ReservationsPanelProps> = ({
+  reservations,
+  onAddReservation,
+  onUpdateStatus
+}) => {
+  const [activeTab, setActiveTab] = useState("upcoming");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewReservation(prev => ({ ...prev, [name]: value }));
-  };
+  // Filter reservations for each tab
+  const upcomingReservations = reservations.filter(
+    (res) => res.status === "confirmed" || res.status === "pending"
+  );
+  
+  const completedReservations = reservations.filter(
+    (res) => res.status === "completed"
+  );
+  
+  const cancelledReservations = reservations.filter(
+    (res) => res.status === "cancelled" || res.status === "no-show"
+  );
 
-  const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const parsedValue = parseInt(value);
-    setNewReservation(prev => ({ ...prev, [name]: isNaN(parsedValue) ? 0 : parsedValue }));
-  };
-
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      setNewReservation(prev => ({ ...prev, date: date.toISOString().split('T')[0] }));
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addReservation(newReservation);
-    resetForm();
-  };
-
-  // Fix resetForm by removing createdAt
-  const resetForm = () => {
-    setNewReservation({
-      customerName: "",
-      phoneNumber: "", // Added phoneNumber
-      date: tomorrow.toISOString().split('T')[0],
-      time: "18:00",
-      partySize: 2,
-      tableNumber: 1,
-      status: "pending",
-      notes: ""
-    });
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-3xl font-bold">Reservations</h2>
+    <Card className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Reservations</h2>
+        <Button>New Reservation</Button>
+      </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <h3 className="text-lg font-medium">Add Reservation</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="customerName">Customer Name</Label>
-                <Input
-                  type="text"
-                  id="customerName"
-                  name="customerName"
-                  value={newReservation.customerName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input
-                  type="text"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={newReservation.phoneNumber}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="date">Date</Label>
-                <Calendar
-                  mode="single"
-                  selected={new Date(newReservation.date)}
-                  onSelect={handleDateChange}
-                />
-              </div>
-              <div>
-                <Label htmlFor="time">Time</Label>
-                <Input
-                  type="time"
-                  id="time"
-                  name="time"
-                  value={newReservation.time}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="partySize">Party Size</Label>
-                <Input
-                  type="number"
-                  id="partySize"
-                  name="partySize"
-                  value={newReservation.partySize}
-                  onChange={handleNumberInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="tableNumber">Table Number</Label>
-                <Input
-                  type="number"
-                  id="tableNumber"
-                  name="tableNumber"
-                  value={newReservation.tableNumber}
-                  onChange={handleNumberInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Input
-                  type="text"
-                  id="status"
-                  name="status"
-                  value={newReservation.status}
-                  onChange={handleInputChange}
-                  disabled
-                />
-              </div>
-            </div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              name="notes"
-              value={newReservation.notes}
-              onChange={handleInputChange}
-              placeholder="Special requests or notes"
-            />
-            <Button type="submit">Add Reservation</Button>
-          </form>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="upcoming">
+            Upcoming ({upcomingReservations.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            Completed ({completedReservations.length})
+          </TabsTrigger>
+          <TabsTrigger value="cancelled">
+            Cancelled ({cancelledReservations.length})
+          </TabsTrigger>
+        </TabsList>
 
-      <Separator />
-
-      {/* Reservation List */}
-      <h3 className="text-lg font-medium">Current Reservations</h3>
-      {reservations.length === 0 ? (
-        <p className="text-muted-foreground">No reservations yet.</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {reservations.map((reservation) => (
-            <Card key={reservation.id} className="shadow-sm">
-              <CardContent className="p-4">
-                <h4 className="font-semibold">{reservation.customerName}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(reservation.date).toLocaleDateString()} at {reservation.time}
-                </p>
-                <p className="text-sm">Party Size: {reservation.partySize}</p>
-                <p className="text-sm">Table: {reservation.tableNumber}</p>
-                <p className="text-sm">Status: {reservation.status}</p>
-                {reservation.notes && (
-                  <p className="text-sm mt-2">Notes: {reservation.notes}</p>
-                )}
-                <div className="mt-2 flex justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateReservationStatus(reservation.id, "confirmed")}
-                  >
-                    Confirm
-                  </Button>
+        <TabsContent value="upcoming" className="space-y-4">
+          {upcomingReservations.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No upcoming reservations</p>
+          ) : (
+            <div>
+              {/* Render upcoming reservations here */}
+              {upcomingReservations.map((reservation) => (
+                <div key={reservation.id} className="p-4 border rounded mb-2">
+                  <div className="flex justify-between">
+                    <h3 className="font-medium">{reservation.customerName}</h3>
+                    <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">
+                      {reservation.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {reservation.date} at {reservation.time} • Party of {reservation.partySize}
+                  </p>
+                  {reservation.tableNumber && (
+                    <p className="text-sm">Table: {reservation.tableNumber}</p>
+                  )}
+                  <div className="mt-2 flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onUpdateStatus(reservation.id, "completed")}
+                    >
+                      Mark as Completed
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onUpdateStatus(reservation.id, "cancelled")}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4">
+          {completedReservations.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No completed reservations</p>
+          ) : (
+            <div>
+              {/* Render completed reservations here */}
+              {completedReservations.map((reservation) => (
+                <div key={reservation.id} className="p-4 border rounded mb-2">
+                  <div className="flex justify-between">
+                    <h3 className="font-medium">{reservation.customerName}</h3>
+                    <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                      {reservation.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {reservation.date} at {reservation.time} • Party of {reservation.partySize}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="cancelled" className="space-y-4">
+          {cancelledReservations.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No cancelled reservations</p>
+          ) : (
+            <div>
+              {/* Render cancelled reservations here */}
+              {cancelledReservations.map((reservation) => (
+                <div key={reservation.id} className="p-4 border rounded mb-2">
+                  <div className="flex justify-between">
+                    <h3 className="font-medium">{reservation.customerName}</h3>
+                    <span className="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                      {reservation.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {reservation.date} at {reservation.time} • Party of {reservation.partySize}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </Card>
   );
 };

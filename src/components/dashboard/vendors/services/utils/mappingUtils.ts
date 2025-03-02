@@ -1,54 +1,56 @@
-import type { Vendor, Expense } from '@/types/vendor';
 
-export const mapApiToVendor = (apiData: any): Vendor => {
+import type { Vendor, VendorContact, Expense, AccountingSummary } from '@/types/vendor';
+
+// Map database records to Vendor objects
+export const mapDatabaseToVendor = (record: any): Vendor => {
   return {
-    id: apiData.id,
-    name: apiData.name,
-    email: apiData.email,
-    phone: apiData.phone,
-    address: apiData.address,
-    taxId: apiData.taxId,
-    status: apiData.status || 'active',
-    paymentTerms: apiData.paymentTerms || 'net_30',
-    notes: apiData.notes,
-    createdAt: apiData.createdAt,
-    updatedAt: apiData.updatedAt,
-    contactName: apiData.contactName || apiData.contact_person || '',
-    category: apiData.category || 'general',
-    website: apiData.website,
-    rating: apiData.rating
+    id: record.id ? parseInt(record.id) : 0,
+    name: record.name || '',
+    contactName: record.contact_name || '',
+    email: record.email || '',
+    phone: record.phone || '',
+    address: record.address || '',
+    website: record.website || '',
+    category: record.category || 'general',
+    status: record.status || 'active',
+    paymentTerms: record.payment_terms || '',
+    notes: record.notes || '',
+    rating: record.rating || 0,
+    taxId: record.tax_id || '',
+    createdAt: record.created_at || '',
+    updatedAt: record.updated_at || ''
   };
 };
 
-export const mapApiToExpense = (apiData: any): Expense => {
+// Map API vendor data to database format
+export const mapVendorToDatabase = (vendor: Partial<Vendor>): any => {
   return {
-    id: apiData.id,
-    vendorId: apiData.vendorId,
-    vendorName: apiData.vendorName || '',
-    amount: apiData.amount,
-    date: apiData.date,
-    category: apiData.category,
-    description: apiData.description,
-    paymentMethod: apiData.paymentMethod,
-    status: apiData.status || 'pending',
-    receiptUrl: apiData.receiptUrl,
-    taxDeductible: apiData.taxDeductible || false,
-    notes: apiData.notes,
-    createdAt: apiData.createdAt || new Date().toISOString(),
-    updatedAt: apiData.updatedAt || new Date().toISOString()
+    name: vendor.name,
+    contact_name: vendor.contactName,
+    email: vendor.email,
+    phone: vendor.phone,
+    address: vendor.address,
+    website: vendor.website,
+    category: vendor.category,
+    status: vendor.status,
+    payment_terms: vendor.paymentTerms,
+    notes: vendor.notes,
+    rating: vendor.rating,
+    tax_id: vendor.taxId
   };
 };
 
+// Map transaction to expense
 export const mapTransactionToExpense = (transaction: any): Expense => {
   return {
-    id: transaction.id || 0,
-    vendorId: transaction.vendor_id || 0,
-    vendorName: transaction.vendor_name || 'Unknown Vendor',
+    id: parseInt(transaction.id) || 0,
+    vendorId: parseInt(transaction.vendor_id) || 0,
+    vendorName: transaction.vendor_name || '',
     amount: transaction.amount || 0,
-    date: transaction.date || new Date().toISOString(),
+    date: transaction.date || new Date().toISOString().split('T')[0],
     description: transaction.description || '',
-    category: transaction.category || 'Other',
-    paymentMethod: transaction.payment_method || 'card',
+    category: transaction.category || transaction.category_id || '',
+    paymentMethod: transaction.payment_method || 'cash',
     status: transaction.status || 'pending',
     receiptUrl: transaction.receipt_url || '',
     notes: transaction.notes || '',
@@ -58,21 +60,19 @@ export const mapTransactionToExpense = (transaction: any): Expense => {
   };
 };
 
-export const mapTransactionToVendor = (data: any): Vendor => {
+// Map vendor to transaction (for API)
+export const mapVendorToTransaction = (vendor: any): any => {
   return {
-    id: data.id || 0,
-    name: data.name || '',
-    contactName: data.contact_name || '',
-    email: data.email || '',
-    phone: data.phone || '',
-    address: data.address || '',
-    category: data.category || 'General',
-    website: data.website,
-    status: data.status || 'active',
-    paymentTerms: data.payment_terms || 'net_30',
-    notes: data.notes,
-    taxId: data.tax_id,
-    createdAt: data.created_at || new Date().toISOString(),
-    updatedAt: data.updated_at || new Date().toISOString()
+    name: vendor.name,
+    contact_person: vendor.contactName,
+    email: vendor.email,
+    phone: vendor.phone,
+    address: vendor.address,
+    website: vendor.website,
+    status: vendor.status,
+    payment_terms: vendor.paymentTerms,
+    notes: vendor.notes,
+    rating: vendor.rating,
+    tax_id: vendor.taxId
   };
 };

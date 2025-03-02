@@ -25,6 +25,7 @@ const Reservations = () => {
     });
   };
 
+  // Make sure the ReservationsPanel accepts these props
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">Reservations</h1>

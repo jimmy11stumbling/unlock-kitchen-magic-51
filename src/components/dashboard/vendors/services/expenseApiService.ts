@@ -1,114 +1,110 @@
 
-import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import type { Expense } from '@/types/vendor';
-import { mapTransactionToExpense } from './utils/mappingUtils';
+import { v4 as uuidv4 } from 'uuid';
 
-// Type for valid payment methods
-type ValidPaymentMethod = 'cash' | 'card' | 'bank_transfer' | 'check';
+export const mapTransactionToExpense = (transaction: any): Expense => {
+  return {
+    id: parseInt(transaction.id) || 0,
+    vendorId: parseInt(transaction.vendor_id) || 0,
+    vendorName: transaction.vendor_name || '',
+    amount: transaction.amount || 0,
+    date: transaction.date || new Date().toISOString().split('T')[0],
+    description: transaction.description || '',
+    category: transaction.category || transaction.category_id || '',
+    paymentMethod: transaction.payment_method || 'cash',
+    status: transaction.status || 'pending',
+    receiptUrl: transaction.receipt_url || '',
+    notes: transaction.notes || '',
+    taxDeductible: transaction.tax_deductible || false,
+    createdAt: transaction.created_at || new Date().toISOString(),
+    updatedAt: transaction.updated_at || new Date().toISOString(),
+  };
+};
 
 export const expenseApiService = {
-  async getExpenses(): Promise<Expense[]> {
+  async getAllExpenses(): Promise<Expense[]> {
     try {
       const { data, error } = await supabase
         .from('financial_transactions')
         .select('*')
         .eq('type', 'expense');
-      
+
       if (error) throw error;
       
-      return data.map(transaction => mapTransactionToExpense(transaction));
+      return (data || []).map(mapTransactionToExpense);
     } catch (error) {
       console.error('Error fetching expenses:', error);
       return [];
     }
   },
-  
-  async createExpense(expenseData: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> {
+
+  async createExpense(expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> {
     try {
-      // Map the payment method to a valid database enum value
-      const paymentMethod = mapToValidPaymentMethod(expenseData.paymentMethod);
-      
+      // Convert payment method to a valid enum value if needed
+      let paymentMethod = expense.paymentMethod;
+      if (!['cash', 'card', 'bank_transfer', 'check'].includes(paymentMethod)) {
+        paymentMethod = 'cash'; // Default to cash if invalid
+      }
+
       const { data, error } = await supabase
         .from('financial_transactions')
         .insert({
           id: uuidv4(),
+          amount: expense.amount,
+          date: expense.date,
+          description: expense.description,
+          payment_method: paymentMethod as "cash" | "card" | "bank_transfer" | "check",
           type: 'expense',
-          amount: expenseData.amount,
-          date: expenseData.date,
-          description: expenseData.description,
-          payment_method: paymentMethod,
-          reference_number: `EXP-${Date.now()}`,
-          category_id: expenseData.category // This might need adjustment based on your schema
+          // Store vendor and category in metadata or reference_number
+          reference_number: `vendor:${expense.vendorId},category:${expense.category}`
         })
         .select()
         .single();
-      
+
       if (error) throw error;
-      
-      return mapTransactionToExpense({
-        ...data,
-        vendor_id: expenseData.vendorId,
-        vendor_name: expenseData.vendorName,
-        category: expenseData.category,
-        receipt_url: expenseData.receiptUrl,
-        tax_deductible: expenseData.taxDeductible,
-        status: expenseData.status
-      });
+
+      // Create the response with all the fields from the Expense type
+      const newExpense: Expense = {
+        id: parseInt(data.id) || 0,
+        vendorId: expense.vendorId,
+        vendorName: expense.vendorName,
+        amount: data.amount,
+        date: data.date,
+        description: data.description,
+        category: expense.category, // Using the provided category
+        paymentMethod: data.payment_method,
+        receiptUrl: expense.receiptUrl || '',
+        taxDeductible: expense.taxDeductible || false,
+        status: expense.status || 'pending',
+        notes: expense.notes || '',
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+
+      return newExpense;
     } catch (error) {
       console.error('Error creating expense:', error);
       throw error;
     }
   },
-  
-  async updateExpense(id: number, updates: Partial<Expense>): Promise<Expense> {
+
+  async getExpenseById(id: number): Promise<Expense | null> {
     try {
-      // Prepare updates in the format the database expects
-      const dbUpdates: any = {};
-      
-      if (updates.amount) dbUpdates.amount = updates.amount;
-      if (updates.date) dbUpdates.date = updates.date;
-      if (updates.description) dbUpdates.description = updates.description;
-      if (updates.paymentMethod) {
-        // Map the payment method to a valid database enum value
-        dbUpdates.payment_method = mapToValidPaymentMethod(updates.paymentMethod);
-      }
-      
       const { data, error } = await supabase
         .from('financial_transactions')
-        .update(dbUpdates)
-        .eq('id', id)
-        .select()
+        .select('*')
+        .eq('id', id.toString())
+        .eq('type', 'expense')
         .single();
-      
+
       if (error) throw error;
-      
-      return mapTransactionToExpense({
-        ...data,
-        vendor_id: updates.vendorId || data.vendor_id,
-        vendor_name: updates.vendorName || data.vendor_name,
-        category: updates.category || data.category,
-        receipt_url: updates.receiptUrl || data.receipt_url,
-        tax_deductible: updates.taxDeductible ?? data.tax_deductible,
-        status: updates.status || data.status
-      });
+      if (!data) return null;
+
+      return mapTransactionToExpense(data);
     } catch (error) {
-      console.error('Error updating expense:', error);
-      throw error;
+      console.error(`Error fetching expense with ID ${id}:`, error);
+      return null;
     }
   }
 };
-
-// Helper function to map any payment method string to valid enum values
-function mapToValidPaymentMethod(method: string): ValidPaymentMethod {
-  const validMethods: Record<string, ValidPaymentMethod> = {
-    'cash': 'cash',
-    'card': 'card',
-    'bank_transfer': 'bank_transfer',
-    'bank transfer': 'bank_transfer',
-    'check': 'check',
-    'cheque': 'check'
-  };
-  
-  return validMethods[method.toLowerCase()] || 'card'; // Default to card if invalid
-}
