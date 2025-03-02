@@ -1,5 +1,5 @@
 
-export type ReservationStatus = 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no-show';
+export type ReservationStatus = 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no-show' | 'seated';
 
 export interface Reservation {
   id: number;

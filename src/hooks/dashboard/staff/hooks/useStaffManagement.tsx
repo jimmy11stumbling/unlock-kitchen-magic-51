@@ -3,9 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { staffMappers } from "../utils/staffMapper";
 import { readQueries } from "../services/queries/readQueries";
-import { writeQueries } from "../services/queries/writeQueries";
 import type { StaffMember, StaffStatus } from "@/types/staff";
-import type { Json } from "@/integrations/supabase/types";
 
 export const useStaffManagement = () => {
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -15,18 +13,9 @@ export const useStaffManagement = () => {
   const fetchStaffMembers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("staff_members")
-        .select("*");
-
-      if (error) throw error;
-
-      if (data) {
-        const mappedStaff = data.map(staffMappers.mapDatabaseToStaffMember);
-        setStaff(mappedStaff);
-        return mappedStaff;
-      }
-      return [];
+      const staffData = await readQueries.getAllStaffMembers();
+      setStaff(staffData);
+      return staffData;
     } catch (err) {
       console.error("Error fetching staff:", err);
       setError("Failed to fetch staff");
@@ -36,58 +25,18 @@ export const useStaffManagement = () => {
     }
   };
 
-  const seedInitialStaffData = async () => {
-    try {
-      // Insert each staff member individually to avoid array issues
-      const initialData = [
-        {
-          name: "John Manager",
-          email: "john@restaurant.com",
-          phone: "555-123-4567",
-          role: "manager" as const,
-          department: "Management",
-          status: "active" as "active" | "on_break" | "off_duty" // Convert to compatible type
-        },
-        {
-          name: "Maria Chef",
-          email: "maria@restaurant.com",
-          phone: "555-234-5678",
-          role: "chef" as const,
-          department: "Kitchen",
-          status: "active" as "active" | "on_break" | "off_duty"
-        }
-      ];
-      
-      for (const staff of initialData) {
-        await supabase.from("staff_members").insert(staff);
-      }
-
-      await fetchStaffMembers();
-    } catch (err) {
-      console.error("Error seeding staff data:", err);
-      setError("Failed to seed initial staff data");
-    }
-  };
-
   const addStaffMember = async (data: Omit<StaffMember, "id">) => {
     try {
-      const formattedData = staffMappers.mapStaffMemberToDatabase(data);
-      // Ensure status is one of the valid values for the database
-      const safeStatus = formattedData.status as string;
-      const safeData = {
-        ...formattedData,
-        status: (["active", "on_break", "off_duty"].includes(safeStatus) 
-          ? safeStatus 
-          : "active") as "active" | "on_break" | "off_duty"
-      };
-
-      const { data: newStaff, error } = await supabase
+      setLoading(true);
+      const dbStaff = staffMappers.mapStaffMemberToDatabase(data);
+      
+      const { data: newStaff, error: insertError } = await supabase
         .from("staff_members")
-        .insert(safeData)
+        .insert(dbStaff)
         .select()
         .single();
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       if (newStaff) {
         const mappedStaff = staffMappers.mapDatabaseToStaffMember(newStaff);
@@ -100,31 +49,57 @@ export const useStaffManagement = () => {
       console.error("Error adding staff member:", err);
       setError("Failed to add staff member");
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const updateStaffMember = async (updatedMember: Partial<StaffMember>) => {
+  const updateStaffStatus = async (staffId: number, newStatus: StaffStatus) => {
     try {
-      if (!updatedMember.id) throw new Error("Staff member ID is required for updates");
+      setLoading(true);
+      const dbStatus = staffMappers.mapStaffMemberToDatabase({ status: newStatus }).status;
 
-      // Convert StaffMember to database format and ensure status is compatible
-      let dbData = staffMappers.mapStaffMemberToDatabase(updatedMember as StaffMember);
-      
-      // Safety check for status field
-      if (dbData.status && typeof dbData.status === 'string') {
-        dbData.status = (["active", "on_break", "off_duty"].includes(dbData.status) 
-          ? dbData.status 
-          : "active") as "active" | "on_break" | "off_duty";
+      const { data, error: updateError } = await supabase
+        .from("staff_members")
+        .update({ status: dbStatus })
+        .eq("id", staffId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      if (data) {
+        const mappedStaff = staffMappers.mapDatabaseToStaffMember(data);
+        setStaff(prev => 
+          prev.map(member => 
+            member.id === mappedStaff.id ? mappedStaff : member
+          )
+        );
+        return mappedStaff;
       }
 
-      const { data, error } = await supabase
+      throw new Error("Failed to update staff status");
+    } catch (err) {
+      console.error("Error updating staff status:", err);
+      setError("Failed to update staff status");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateStaffMember = async (updatedMember: Partial<StaffMember> & { id: number }) => {
+    try {
+      const dbData = staffMappers.mapStaffMemberToDatabase(updatedMember);
+      
+      const { data, error: updateError } = await supabase
         .from("staff_members")
         .update(dbData)
         .eq("id", updatedMember.id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       if (data) {
         const mappedStaff = staffMappers.mapDatabaseToStaffMember(data);
@@ -192,6 +167,7 @@ export const useStaffManagement = () => {
     fetchStaffMembers,
     addStaffMember,
     updateStaffMember,
+    updateStaffStatus,
     deleteStaffMember,
     calculateWeeklyHours,
   };

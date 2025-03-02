@@ -7,7 +7,7 @@ export interface Reservation {
   time: string;
   partySize: number;
   customerName: string;
-  customerPhone: string; // Making this required to match the other definition
+  customerPhone: string;
   email?: string;
   status: ReservationStatus;
   tableAssigned?: number;
@@ -15,5 +15,5 @@ export interface Reservation {
   specialRequests?: string;
   notes?: string;
   createdAt: string;
-  updatedAt?: string; // Adding this field to match the other definition
+  updatedAt?: string;
 }

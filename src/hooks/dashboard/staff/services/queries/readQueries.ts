@@ -1,56 +1,44 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { checkTableExists } from "../utils/supabaseUtils";
-import { mockStaffData } from "../mockData/mockStaffData";
-import type { DatabaseStaffMember } from "../../types/databaseTypes";
+import { staffMappers } from "../../utils/staffMapper";
+import type { StaffMember } from "@/types/staff";
 
-export const fetchStaffMembers = async (): Promise<DatabaseStaffMember[]> => {
-  try {
-    const tableExists = await checkTableExists();
+export const readQueries = {
+  getAllStaffMembers: async (): Promise<StaffMember[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('staff_members')
+        .select('*');
 
-    if (!tableExists) {
-      console.warn('Staff members table does not exist, using mock data');
-      return mockStaffData;
+      if (error) throw error;
+
+      if (data) {
+        return data.map(staffMappers.mapDatabaseToStaffMember);
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching staff members:', error);
+      throw error;
     }
+  },
 
-    const { data: staffData, error: fetchError } = await supabase
-      .from('staff_members')
-      .select('*')
-      .order('id', { ascending: true });
+  getStaffMemberById: async (id: number): Promise<StaffMember | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('staff_members')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
 
-    if (fetchError) {
-      console.error('Error fetching staff:', fetchError);
-      throw fetchError;
+      if (error) throw error;
+      
+      if (data) {
+        return staffMappers.mapDatabaseToStaffMember(data);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching staff member:', error);
+      throw error;
     }
-
-    return staffData || [];
-  } catch (error) {
-    console.error('Error in fetchStaffMembers:', error);
-    return mockStaffData;
-  }
-};
-
-export const getStaffPermissions = async (staffId: number): Promise<string[]> => {
-  try {
-    const tableExists = await checkTableExists();
-
-    if (!tableExists) {
-      const staff = mockStaffData.find(s => s.id === staffId);
-      return staff?.role === 'manager' ? ['all'] : ['basic'];
-    }
-
-    const { data: staff, error } = await supabase
-      .from('staff_members')
-      .select('role')
-      .eq('id', staffId)
-      .single();
-
-    if (error) throw error;
-    if (!staff) return ['basic'];
-
-    return staff.role === 'manager' ? ['all'] : ['basic'];
-  } catch (error) {
-    console.error('Error fetching staff permissions:', error);
-    return ['basic'];
   }
 };

@@ -2,21 +2,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createStaffMember, updateStaffInfo, updateStaffStatus } from '../queries/writeQueries';
 import type { StaffMember } from '@/types/staff/employee';
-import { mapStaffMemberToDatabase } from '../../utils/staffMapper';
-import { mapStaffStatusToDatabase } from '../../types/databaseTypes';
+import { staffMappers } from '../../utils/staffMapper';
 
 export const useCreateStaffMember = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async (staffData: Omit<StaffMember, 'id'>) => {
-      // Fix status before sending to database
-      const updatedData = { ...staffData };
-      if (updatedData.status) {
-        // @ts-ignore - we'll handle the type conversion in the function
-        updatedData.status = mapStaffStatusToDatabase(updatedData.status);
-      }
-      return await createStaffMember(updatedData);
+      return await createStaffMember(staffData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] });
@@ -35,9 +28,7 @@ export const useUpdateStaffStatus = () => {
       staffId: number; 
       status: string; 
     }) => {
-      // Map status to database compatible value
-      const dbStatus = mapStaffStatusToDatabase(status as any);
-      return await updateStaffStatus(staffId, dbStatus);
+      return await updateStaffStatus(staffId, status as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] });
@@ -56,14 +47,7 @@ export const useUpdateStaffInfo = () => {
       staffId: number; 
       updates: Partial<StaffMember>; 
     }) => {
-      // Fix status if it exists
-      const updatedInfo = { ...updates };
-      if (updatedInfo.status) {
-        // @ts-ignore - we'll handle the type conversion
-        updatedInfo.status = mapStaffStatusToDatabase(updatedInfo.status);
-      }
-      
-      return await updateStaffInfo(staffId, updatedInfo);
+      return await updateStaffInfo(staffId, updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] });

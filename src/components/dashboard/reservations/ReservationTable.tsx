@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { Reservation, ReservationStatus } from "@/types/reservations";
+import type { Reservation } from "@/types/reservations";
+import type { ReservationStatus } from "@/types/reservations";
 import { getNextAllowedStatuses } from "./utils";
 
 interface ReservationTableProps {
@@ -32,7 +33,7 @@ export const ReservationTable = ({
         key={status}
         size="sm"
         variant={status === "cancelled" || status === "no-show" ? "destructive" : "default"}
-        onClick={() => onUpdateStatus(reservation.id, status)}
+        onClick={() => onUpdateStatus(reservation.id, status as ReservationStatus)}
       >
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Button>

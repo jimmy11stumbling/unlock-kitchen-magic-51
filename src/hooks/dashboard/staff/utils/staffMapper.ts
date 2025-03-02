@@ -1,57 +1,87 @@
 
-import type { StaffMember } from '@/types/staff/employee';
-import type { DatabaseStaffMember, DatabaseStaffMemberInsert } from '../types/databaseTypes';
-import { mapDatabaseToStaffStatus, mapStaffStatusToDatabase } from '../types/databaseTypes';
+import type { StaffMember, StaffStatus } from "@/types/staff";
+import type { Json } from "@/integrations/supabase/types";
 
-export const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMember => {
-  return {
-    id: dbStaff.id,
-    name: dbStaff.name,
-    email: dbStaff.email,
-    phone: dbStaff.phone,
-    role: dbStaff.role,
-    department: dbStaff.department,
-    status: mapDatabaseToStaffStatus(dbStaff.status as any) || 'active',
-    salary: dbStaff.salary,
-    hourlyRate: dbStaff.hourly_rate,
-    overtimeRate: dbStaff.overtime_rate,
-    performanceRating: dbStaff.performance_rating,
-    schedule: dbStaff.schedule as Record<string, string>,
-    certifications: dbStaff.certifications,
-    notes: dbStaff.notes,
-    address: dbStaff.address,
-    emergencyContact: dbStaff.emergency_contact as any,
-    bankInfo: dbStaff.bank_info,
-    // Handle hire_date - it's not in the database type
-    hireDate: (dbStaff as any).hire_date || new Date().toISOString().split('T')[0],
-    startDate: (dbStaff as any).hire_date || new Date().toISOString().split('T')[0],
-    shift: dbStaff.shift,
-  };
+// Helper to convert Json to strongly typed object safely
+const safeJsonParse = <T>(json: Json | null, defaultValue: T): T => {
+  if (!json) return defaultValue;
+  if (typeof json === 'object') return json as unknown as T;
+  try {
+    return JSON.parse(json as string) as T;
+  } catch (e) {
+    return defaultValue;
+  }
 };
 
-export const mapStaffMemberToDatabase = (staff: Partial<StaffMember>): DatabaseStaffMemberInsert => {
-  const result: any = {
-    name: staff.name || '',
-    email: staff.email,
-    phone: staff.phone,
-    role: staff.role || 'server',
-    department: staff.department,
-    status: staff.status ? mapStaffStatusToDatabase(staff.status) : 'active',
-    salary: staff.salary,
-    hourly_rate: staff.hourlyRate,
-    overtime_rate: staff.overtimeRate,
-    performance_rating: staff.performanceRating,
-    schedule: staff.schedule,
-    certifications: staff.certifications,
-    notes: staff.notes,
-    address: staff.address,
-    emergency_contact: staff.emergencyContact,
-    bank_info: staff.bankInfo,
-    shift: staff.shift,
-    // Handle hire_date specially
-    hire_date: staff.hireDate,
-    updated_at: new Date().toISOString(),
-  };
+// Map between application status and database status
+const mapStatusToDatabase = (status: StaffStatus): "active" | "on_break" | "off_duty" => {
+  switch (status) {
+    case "active":
+    case "on_duty":
+      return "active";
+    case "on_break":
+      return "on_break";
+    case "off_duty":
+    case "on_leave":
+    case "terminated":
+      return "off_duty";
+    default:
+      return "active";
+  }
+};
 
-  return result;
+const mapDatabaseToStatus = (dbStatus: string): StaffStatus => {
+  switch (dbStatus) {
+    case "active":
+      return "active";
+    case "on_break":
+      return "on_break";
+    case "off_duty":
+      return "off_duty";
+    default:
+      return "active";
+  }
+};
+
+export const staffMappers = {
+  mapDatabaseToStaffMember: (dbStaff: any): StaffMember => {
+    return {
+      id: dbStaff.id,
+      name: dbStaff.name,
+      email: dbStaff.email,
+      phone: dbStaff.phone,
+      role: dbStaff.role,
+      status: mapDatabaseToStatus(dbStaff.status),
+      department: dbStaff.department,
+      hireDate: dbStaff.hire_date,
+      schedule: safeJsonParse(dbStaff.schedule, {}),
+      salary: dbStaff.salary,
+      performanceRating: dbStaff.performance_rating || 0,
+      certifications: dbStaff.certifications || [],
+      notes: dbStaff.notes,
+      emergencyContact: safeJsonParse(dbStaff.emergency_contact, { name: "", phone: "", relationship: "" }),
+      shift: dbStaff.shift,
+    };
+  },
+
+  mapStaffMemberToDatabase: (staff: Partial<StaffMember>): any => {
+    const dbStaff: any = {};
+    
+    if (staff.name !== undefined) dbStaff.name = staff.name;
+    if (staff.email !== undefined) dbStaff.email = staff.email;
+    if (staff.phone !== undefined) dbStaff.phone = staff.phone;
+    if (staff.role !== undefined) dbStaff.role = staff.role;
+    if (staff.status !== undefined) dbStaff.status = mapStatusToDatabase(staff.status);
+    if (staff.department !== undefined) dbStaff.department = staff.department;
+    if (staff.hireDate !== undefined) dbStaff.hire_date = staff.hireDate;
+    if (staff.schedule !== undefined) dbStaff.schedule = staff.schedule;
+    if (staff.salary !== undefined) dbStaff.salary = staff.salary;
+    if (staff.performanceRating !== undefined) dbStaff.performance_rating = staff.performanceRating;
+    if (staff.certifications !== undefined) dbStaff.certifications = staff.certifications;
+    if (staff.notes !== undefined) dbStaff.notes = staff.notes;
+    if (staff.emergencyContact !== undefined) dbStaff.emergency_contact = staff.emergencyContact;
+    if (staff.shift !== undefined) dbStaff.shift = staff.shift;
+    
+    return dbStaff;
+  }
 };
