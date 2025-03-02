@@ -29,7 +29,7 @@ export function CoursePlannerDialog({
 }: CoursePlannerDialogProps) {
   const courseOptions = ["appetizer", "main", "dessert"];
   
-  const itemsByCourse = order.items.reduce((acc, item) => {
+  const itemsByCourse = order.items.reduce<Record<string, KitchenOrderItem[]>>((acc, item) => {
     const course = item.course || "uncategorized";
     if (!acc[course]) acc[course] = [];
     acc[course].push(item);

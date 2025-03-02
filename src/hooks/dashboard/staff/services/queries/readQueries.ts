@@ -1,44 +1,79 @@
-
-import { supabase } from "@/integrations/supabase/client";
 import { staffMappers } from "../../utils/staffMapper";
 import type { StaffMember } from "@/types/staff";
 
-export const readQueries = {
-  getAllStaffMembers: async (): Promise<StaffMember[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('staff_members')
-        .select('*');
+export const getAllStaffMembers = async (): Promise<StaffMember[]> => {
+  // Mock implementation - replace with actual data fetching
+  return [
+    {
+      id: 1,
+      name: "John Doe",
+      role: "manager",
+      email: "john.doe@example.com",
+      phone: "123-456-7890",
+      status: "active",
+      salary: 60000,
+      hireDate: "2022-01-01",
+      schedule: {
+        monday: "09:00-17:00",
+        tuesday: "09:00-17:00",
+        wednesday: "09:00-17:00",
+        thursday: "09:00-17:00",
+        friday: "09:00-17:00",
+        saturday: "OFF",
+        sunday: "OFF",
+      },
+      certifications: ["Management", "Food Safety"],
+      performanceRating: 9,
+      notes: "Excellent manager",
+      department: "management",
+      shift: "Morning",
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      role: "chef",
+      email: "jane.smith@example.com",
+      phone: "987-654-3210",
+      status: "active",
+      salary: 55000,
+      hireDate: "2022-02-15",
+      schedule: {
+        monday: "OFF",
+        tuesday: "14:00-22:00",
+        wednesday: "14:00-22:00",
+        thursday: "14:00-22:00",
+        friday: "14:00-22:00",
+        saturday: "14:00-22:00",
+        sunday: "OFF",
+      },
+      certifications: ["Culinary Arts", "Food Safety"],
+      performanceRating: 8,
+      notes: "Creative chef",
+      department: "kitchen",
+      shift: "Evening",
+    },
+  ];
+};
 
-      if (error) throw error;
+export const getStaffMemberById = async (id: number): Promise<any> => {
+  // Mock implementation - replace with actual data fetching
+  const allStaff = await getAllStaffMembers();
+  const staff = allStaff.find((staff) => staff.id === id);
 
-      if (data) {
-        return data.map(staffMappers.mapDatabaseToStaffMember);
-      }
-      return [];
-    } catch (error) {
-      console.error('Error fetching staff members:', error);
-      throw error;
-    }
-  },
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
-  getStaffMemberById: async (id: number): Promise<StaffMember | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('staff_members')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (error) throw error;
-      
-      if (data) {
-        return staffMappers.mapDatabaseToStaffMember(data);
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching staff member:', error);
-      throw error;
-    }
+  if (!staff) {
+    console.log(`Staff member with id ${id} not found`);
+    return null;
   }
+
+  const schedule = staffMappers.parseSchedule(staff.schedule);
+  const certifications = staffMappers.parseCertifications(staff.certifications);
+
+  return {
+    ...staff,
+    schedule,
+    certifications,
+  };
 };

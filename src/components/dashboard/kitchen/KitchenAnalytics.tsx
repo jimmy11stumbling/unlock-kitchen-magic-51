@@ -55,8 +55,12 @@ export function KitchenAnalytics({ orders }: KitchenAnalyticsProps) {
       }))
     );
     
-    const stationStats = Object.entries(
-      stationItems.reduce((acc, { station, status, prepTime }) => {
+    const stationStats: Array<{
+      station: string;
+      efficiency: number;
+      avgPrepTime: number;
+    }> = Object.entries(
+      stationItems.reduce((acc: Record<string, { total: number; completed: number; totalPrepTime: number; prepTimeCount: number }>, { station, status, prepTime }) => {
         if (!acc[station]) {
           acc[station] = { total: 0, completed: 0, totalPrepTime: 0, prepTimeCount: 0 };
         }

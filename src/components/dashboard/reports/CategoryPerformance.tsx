@@ -84,7 +84,7 @@ export function CategoryPerformance({ reports }: CategoryPerformanceProps) {
         <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
           {categoryData.map((category, index) => (
             <div key={index} className="flex justify-between">
-              <span className="font-medium capitalize">{category.name}:</span>
+              <span className="font-medium capitalize">{category.name}</span>
               <span>${category.value.toFixed(2)} ({category.count} orders)</span>
             </div>
           ))}

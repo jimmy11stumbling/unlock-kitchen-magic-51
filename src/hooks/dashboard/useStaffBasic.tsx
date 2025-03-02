@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember } from "@/types/staff";
 import { staffMappers } from "./staff/utils/staffMapper";
-import { supabase } from "@/integrations/supabase/client";
 
 const initialStaff: StaffMember[] = [
   {

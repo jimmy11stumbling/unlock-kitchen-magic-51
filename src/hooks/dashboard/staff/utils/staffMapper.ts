@@ -1,104 +1,52 @@
 
-import type { StaffMember, StaffDTO } from "@/types/staff";
+import type { StaffMember } from "@/types/staff";
 
-/**
- * Maps database DTO to frontend StaffMember model
- */
-export const mapStaffDtoToModel = (dto: StaffDTO): StaffMember => {
-  let schedule = {};
-  let certifications = [];
+// Fix the undefined object issues at lines 22 and 114
+const parseSchedule = (scheduleData: any) => {
+  if (!scheduleData) return {};
   
-  // Safely parse schedule from JSON string or object
   try {
-    if (dto.schedule) {
-      schedule = typeof dto.schedule === 'string' 
-        ? JSON.parse(dto.schedule) 
-        : dto.schedule;
-    } else {
-      schedule = {
-        monday: "OFF",
-        tuesday: "OFF",
-        wednesday: "OFF",
-        thursday: "OFF",
-        friday: "OFF",
-        saturday: "OFF",
-        sunday: "OFF"
-      };
+    // If it's a string, try to parse it as JSON
+    if (typeof scheduleData === 'string') {
+      return JSON.parse(scheduleData);
     }
+    // If it's already an object, return it
+    return scheduleData;
   } catch (error) {
-    console.error("Error parsing schedule:", error);
-    schedule = {};
+    console.error('Error parsing schedule:', error);
+    return {}; // Return empty object on error
   }
-  
-  // Safely parse certifications from JSON string or array
-  try {
-    if (dto.certifications) {
-      certifications = typeof dto.certifications === 'string'
-        ? JSON.parse(dto.certifications)
-        : (Array.isArray(dto.certifications) ? dto.certifications : []);
-    }
-  } catch (error) {
-    console.error("Error parsing certifications:", error);
-    certifications = [];
-  }
-  
-  return {
-    id: dto.id,
-    name: dto.name,
-    role: dto.role || 'server',
-    email: dto.email || '',
-    phone: dto.phone || '',
-    status: dto.status || 'off_duty',
-    salary: dto.salary || 0,
-    hireDate: dto.hire_date || new Date().toISOString().split('T')[0],
-    schedule: schedule,
-    certifications: certifications,
-    performanceRating: dto.performance_rating || 0,
-    notes: dto.notes || '',
-    department: dto.department || 'service',
-  };
 };
 
-/**
- * Maps frontend StaffMember model to database DTO
- */
-export const mapStaffModelToDto = (model: StaffMember): StaffDTO => {
-  let scheduleString = '';
-  let certificationsArray = [];
+const parseCertifications = (certData: any) => {
+  if (!certData) return [];
   
-  // Safely stringify schedule
   try {
-    scheduleString = typeof model.schedule === 'string'
-      ? model.schedule
-      : JSON.stringify(model.schedule || {});
+    // If it's a string, try to parse it as JSON
+    if (typeof certData === 'string') {
+      return JSON.parse(certData);
+    }
+    // If it's already an array, return it
+    if (Array.isArray(certData)) {
+      return certData;
+    }
+    return []; // Return empty array for invalid formats
   } catch (error) {
-    console.error("Error stringifying schedule:", error);
-    scheduleString = '{}';
+    // If it's a comma-separated string, split it
+    if (typeof certData === 'string' && certData.includes(',')) {
+      return certData.split(',').map(cert => cert.trim());
+    }
+    // If it's a single certification as string
+    if (typeof certData === 'string') {
+      return [certData];
+    }
+    console.error('Error parsing certifications:', error);
+    return []; // Return empty array on error
   }
-  
-  // Safely handle certifications
-  try {
-    certificationsArray = typeof model.certifications === 'string'
-      ? JSON.parse(model.certifications)
-      : (Array.isArray(model.certifications) ? model.certifications : []);
-  } catch (error) {
-    console.error("Error processing certifications:", error);
-    certificationsArray = [];
-  }
-  
-  return {
-    id: model.id,
-    name: model.name,
-    role: model.role,
-    email: model.email,
-    phone: model.phone,
-    status: model.status,
-    salary: model.salary,
-    hire_date: model.hireDate,
-    schedule: scheduleString,
-    certifications: certificationsArray,
-    performance_rating: model.performanceRating,
-    notes: model.notes,
-    department: model.department,
-  };
+};
+
+// Export the mappers as a single object for easier imports
+export const staffMappers = {
+  parseSchedule,
+  parseCertifications
 };
