@@ -21,7 +21,7 @@ export const accountingService = {
     };
   },
 
-  // Add these missing methods referenced in vendorService.ts
+  // Add these methods that are referenced in vendorService.ts
   async getAccountingSummary(): Promise<AccountingSummary> {
     return {
       id: uuidv4(),

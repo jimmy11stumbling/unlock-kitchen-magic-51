@@ -37,7 +37,8 @@ export const PaymentHistory = ({ payments, vendorId }: PaymentHistoryProps) => {
 
   const handleCreatePayment = async (paymentData: any) => {
     try {
-      await vendorService.createPayment(paymentData);
+      // Fix the function call to include all required parameters
+      await vendorService.createPayment(vendorId, paymentData.amount, paymentData.method, paymentData.reference);
       
       toast({
         title: "Payment created",

@@ -63,7 +63,7 @@ export const paymentService = {
     };
   },
 
-  // Add missing createPayment method
+  // Rename createPayment to be an alias for makePayment to maintain API compatibility
   async createPayment(vendorId: number, amount: number, method: string, reference: string): Promise<VendorPayment> {
     return this.makePayment(vendorId, amount, method, reference);
   }

@@ -47,6 +47,7 @@ export const ExpenseForm = ({ expense, onClose, onSuccess }: ExpenseFormProps) =
   
   const [formData, setFormData] = useState<Omit<Expense, "id" | "createdAt" | "updatedAt">>({
     vendorId: expense?.vendorId || initialExpense.vendorId,
+    vendorName: expense?.vendorName || initialExpense.vendorName,
     amount: expense?.amount || initialExpense.amount,
     date: expense?.date || initialExpense.date,
     category: expense?.category || initialExpense.category,
@@ -59,7 +60,6 @@ export const ExpenseForm = ({ expense, onClose, onSuccess }: ExpenseFormProps) =
 
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch vendors for dropdown
   useEffect(() => {
     const loadVendors = async () => {
       try {
@@ -105,13 +105,11 @@ export const ExpenseForm = ({ expense, onClose, onSuccess }: ExpenseFormProps) =
     try {
       setSubmitting(true);
       
-      // Find the selected vendor to get its name
       const selectedVendorObj = vendors.find(v => v.id === formData.vendorId);
-      const vendorName = selectedVendorObj ? selectedVendorObj.name : '';
       
       const newExpense = {
         ...formData,
-        vendorName // Add this line to include vendorName
+        vendorName: selectedVendorObj ? selectedVendorObj.name : ''
       };
       
       if (expense) {

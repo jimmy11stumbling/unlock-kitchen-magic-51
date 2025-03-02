@@ -39,8 +39,9 @@ export const OrderHistory = ({ vendorId }: OrderHistoryProps) => {
 
   const handleGeneratePdf = async (orderId: string) => {
     try {
-      const result = await vendorService.generateOrderPdf(orderId);
-      if (result.success && result.downloadUrl) {
+      // Update the result type to match what we expect
+      const result: { success: boolean; downloadUrl: string } = await vendorService.generateOrderPdf(orderId);
+      if (result && result.success && result.downloadUrl) {
         window.open(result.downloadUrl, '_blank');
       }
     } catch (error) {

@@ -21,7 +21,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
         salary: data.salary,
         department: data.department,
         certifications: data.certifications,
-        performance_rating: data.performance_rating || 0,
+        performance_rating: data.performanceRating || 0,
         shift: data.shift,
         address: data.address,
         schedule: data.schedule,
@@ -29,13 +29,14 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
         emergency_contact: data.emergencyContact,
         employment_status: 'full_time',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        hire_date: data.hireDate || new Date().toISOString().split('T')[0]
       };
       mockStaffData.push(newStaff);
       return newStaff;
     }
 
-    const staffData: DatabaseStaffMemberInsert = {
+    const staffData: any = {
       name: data.name,
       role: data.role,
       email: data.email,
@@ -44,7 +45,7 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       salary: data.salary,
       department: data.department,
       certifications: data.certifications,
-      performance_rating: data.performance_rating || 0,
+      performance_rating: data.performanceRating || 0,
       shift: data.shift,
       address: data.address,
       schedule: data.schedule,
@@ -52,12 +53,13 @@ export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">
       emergency_contact: data.emergencyContact,
       employment_status: 'full_time',
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      hire_date: data.hireDate || new Date().toISOString().split('T')[0]
     };
 
     const { data: newStaff, error } = await supabase
       .from('staff_members')
-      .insert(staffData)
+      .insert(staffData as any)
       .select()
       .single();
 
@@ -79,15 +81,22 @@ export const updateStaffMemberStatus = async (staffId: number, newStatus: StaffM
       console.warn('Staff members table does not exist, using mock data');
       const staffIndex = mockStaffData.findIndex(s => s.id === staffId);
       if (staffIndex !== -1) {
-        mockStaffData[staffIndex].status = newStatus;
+        mockStaffData[staffIndex].status = newStatus === 'terminated' || newStatus === 'on_leave' 
+          ? 'off_duty'
+          : newStatus;
       }
       return;
+    }
+
+    let dbStatus = newStatus;
+    if (newStatus === 'terminated' || newStatus === 'on_leave') {
+      dbStatus = 'off_duty';
     }
 
     const { error } = await supabase
       .from('staff_members')
       .update({ 
-        status: newStatus,
+        status: dbStatus,
         updated_at: new Date().toISOString()
       })
       .eq('id', staffId);
@@ -107,19 +116,24 @@ export const updateStaffMemberInfo = async (staffId: number, updates: Partial<Da
       console.warn('Staff members table does not exist, using mock data');
       const staffIndex = mockStaffData.findIndex(s => s.id === staffId);
       if (staffIndex !== -1) {
+        if (updates.status && (updates.status === 'terminated' || updates.status === 'on_leave')) {
+          updates.status = 'off_duty';
+        }
         mockStaffData[staffIndex] = { ...mockStaffData[staffIndex], ...updates };
       }
       return;
     }
 
-    const updateData = {
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
+    let updateData = { ...updates };
+    if (updateData.status && (updateData.status === 'terminated' || updateData.status === 'on_leave')) {
+      updateData.status = 'off_duty';
+    }
+
+    updateData.updated_at = new Date().toISOString();
 
     const { error } = await supabase
       .from('staff_members')
-      .update(updateData)
+      .update(updateData as any)
       .eq('id', staffId);
 
     if (error) throw error;
