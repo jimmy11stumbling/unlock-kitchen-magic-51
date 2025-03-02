@@ -1,8 +1,63 @@
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 
+type VendorOrder = {
+  id: string;
+  date: string;
+  status: string;
+  amount: number;
+  items: Array<{ name: string; quantity: number; unitPrice: number }>;
+};
+
+type VendorContact = {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  primary: boolean;
+};
+
+type VendorNote = {
+  id: string;
+  content: string;
+  createdAt: string;
+  createdBy: string;
+};
+
+type VendorPayment = {
+  id: string;
+  date: string;
+  amount: number;
+  method: string;
+  status: string;
+  reference: string;
+};
+
+type VendorDocument = {
+  id: string;
+  name: string;
+  type: string;
+  fileUrl: string;
+  uploadedAt: string;
+  size: number;
+};
+
+type AccountingSummary = {
+  totalExpenses: number;
+  totalPaid: number;
+  totalPending: number;
+  taxDeductibleAmount: number;
+  lastMonthExpenses: number;
+  thisMonthExpenses: number;
+  yearToDateExpenses: number;
+  expensesByCategory: Record<string, number>;
+  expensesByVendor: Record<string, number>;
+  monthlyTotals: Record<string, number>;
+};
+
 export const vendorService = {
-  async getVendorContacts(vendorId: number) {
+  async getVendorContacts(vendorId: number): Promise<VendorContact[]> {
     // For demonstration, returning simulated data
     // In a real implementation, this would fetch from a contacts table
     return [
@@ -25,7 +80,7 @@ export const vendorService = {
     ];
   },
 
-  async getVendorNotes(vendorId: number) {
+  async getVendorNotes(vendorId: number): Promise<VendorNote[]> {
     // For demonstration, returning simulated data
     // In a real implementation, this would fetch from a notes table
     return [
@@ -44,7 +99,7 @@ export const vendorService = {
     ];
   },
 
-  async addVendorNote(vendorId: number, content: string) {
+  async addVendorNote(vendorId: number, content: string): Promise<VendorNote> {
     // For demonstration, returning a simulated response
     // In a real implementation, this would insert into a notes table
     return {
@@ -65,8 +120,8 @@ export const vendorService = {
     };
   },
 
-  async getVendorOrders(vendorId: number) {
-    // Fix the excessive type instantiation by explicitly typing the return
+  async getVendorOrders(vendorId: number): Promise<VendorOrder[]> {
+    // Explicitly type the return value to avoid excessive type instantiation
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -74,7 +129,7 @@ export const vendorService = {
         .eq('vendor_id', vendorId);
       
       if (error) throw error;
-      return data || [];
+      return (data || []) as VendorOrder[];
     } catch (error) {
       console.error('Error fetching vendor orders:', error);
       // Fallback to mock data if database query fails
@@ -103,7 +158,7 @@ export const vendorService = {
     }
   },
 
-  async getVendorPayments(vendorId: number) {
+  async getVendorPayments(vendorId: number): Promise<VendorPayment[]> {
     try {
       // Try to fetch from financial_transactions table
       const { data, error } = await supabase
@@ -148,7 +203,7 @@ export const vendorService = {
     }
   },
 
-  async getVendorDocuments(vendorId: number) {
+  async getVendorDocuments(vendorId: number): Promise<VendorDocument[]> {
     // For demonstration, returning simulated data
     // In a real implementation, this would fetch from a documents table or storage
     return [
@@ -265,7 +320,7 @@ export const vendorService = {
     return { success: true };
   },
 
-  async getExpenses(vendorId?: number) {
+  async getExpenses(vendorId?: number): Promise<VendorPayment[]> {
     // Simulated expense data
     const allExpenses = [
       {
@@ -336,7 +391,7 @@ export const vendorService = {
     return { success: true };
   },
 
-  async getAccountingSummary(vendorId?: number) {
+  async getAccountingSummary(vendorId?: number): Promise<AccountingSummary> {
     // Add the missing properties to match the AccountingSummary type
     return {
       totalExpenses: 12450.75,

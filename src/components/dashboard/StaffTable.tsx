@@ -7,10 +7,10 @@ import type { StaffMember } from "@/types/staff"
 interface StaffTableProps {
   staff: StaffMember[]
   onUpdateStatus: (staffId: number, status: StaffMember["status"]) => void
-  onAddShift: (staffId: number, date: string, time: string) => void
+  onUpdateInfo?: (staffId: number, updates: Partial<StaffMember>) => Promise<void>
 }
 
-export const StaffTable = ({ staff, onUpdateStatus, onAddShift }: StaffTableProps) => {
+export const StaffTable = ({ staff, onUpdateStatus }: StaffTableProps) => {
   return (
     <Table>
       <TableHeader>

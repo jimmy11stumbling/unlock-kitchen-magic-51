@@ -71,7 +71,7 @@ const Staff = () => {
     const staffMember = staff.find(s => s.id === staffId);
     if (!staffMember) return;
 
-    // Fix: Convert the date string to a Date object, get the day name, and convert to lowercase
+    // Create a proper day name from the date
     const dateObj = new Date(date);
     const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const dayOfWeek = dayNames[dateObj.getDay()];
@@ -89,13 +89,15 @@ const Staff = () => {
     });
   };
 
-  return <StaffPanel 
-    staff={staff}
-    onAddStaff={handleAddStaff}
-    onUpdateStatus={handleUpdateStatus}
-    onAddShift={handleAddShift}
-    onUpdateInfo={handleUpdateInfo}
-  />;
+  return (
+    <StaffPanel 
+      staff={staff}
+      onAddStaff={handleAddStaff}
+      onUpdateStatus={handleUpdateStatus}
+      onAddShift={handleAddShift}
+      onUpdateInfo={handleUpdateInfo}
+    />
+  );
 };
 
 export default Staff;
