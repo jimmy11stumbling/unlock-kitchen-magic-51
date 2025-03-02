@@ -1,104 +1,106 @@
-
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { StaffMember } from "@/types/staff";
+import type { PayrollSettings } from "@/types/staff";
 
 interface PayrollSettingsProps {
-  staff: StaffMember[];
-  selectedStaffId: number | null;
-  onUpdateSettings: (staffId: number, settings: StaffMember['payrollSettings']) => Promise<void>;
+  settings: PayrollSettings;
+  onSave: (settings: PayrollSettings) => void;
 }
 
-export const PayrollSettings = ({
-  staff,
-  selectedStaffId,
-  onUpdateSettings
-}: PayrollSettingsProps) => {
-  const selectedStaff = staff.find(s => s.id === selectedStaffId);
-  const [paymentMethod, setPaymentMethod] = useState<"direct_deposit" | "check">("direct_deposit");
-  const [federalTax, setFederalTax] = useState(20);
-  const [stateTax, setStateTax] = useState(5);
-  const [localTax, setLocalTax] = useState(2);
+export function PayrollSettings({ settings, onSave }: PayrollSettingsProps) {
+  const [localSettings, setLocalSettings] = useState(settings);
 
-  const handleSaveSettings = async () => {
-    if (!selectedStaffId) return;
-
-    const settings: StaffMember['payrollSettings'] = {
-      paymentMethod,
-      taxWithholding: {
-        federal: federalTax,
-        state: stateTax,
-        local: localTax
-      },
-      benefits: {
-        insurance: "Standard",
-        retirement: "401k",
-        other: []
-      }
-    };
-
-    await onUpdateSettings(selectedStaffId, settings);
+  const handleInputChange = (key: string, value: string) => {
+    const updates = { ...localSettings };
+    
+    if (key === 'federal' || key === 'state' || key === 'local') {
+      updates.taxWithholding[key] = Number(value);
+    } else if (key === 'insurance' || key === 'retirement') {
+      updates.benefits[key] = Number(value);
+    } else {
+      (updates as any)[key] = value;
+    }
+    
+    setLocalSettings(updates);
+    onSave(updates);
   };
 
-  if (!selectedStaff) {
-    return (
-      <Card className="p-6">
-        <p className="text-muted-foreground">Please select a staff member to view settings</p>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="p-6 space-y-6">
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold">Payment Settings</h3>
-        <Select value={paymentMethod} onValueChange={(value: "direct_deposit" | "check") => setPaymentMethod(value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select payment method" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="direct_deposit">Direct Deposit</SelectItem>
-            <SelectItem value="check">Check</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Tax Withholding</h3>
-        <div className="grid gap-4">
-          <div>
-            <label className="text-sm font-medium">Federal Tax (%)</label>
-            <Input
-              type="number"
-              value={federalTax}
-              onChange={(e) => setFederalTax(Number(e.target.value))}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">State Tax (%)</label>
-            <Input
-              type="number"
-              value={stateTax}
-              onChange={(e) => setStateTax(Number(e.target.value))}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Local Tax (%)</label>
-            <Input
-              type="number"
-              value={localTax}
-              onChange={(e) => setLocalTax(Number(e.target.value))}
-            />
+    <Card>
+      <CardHeader>
+        <CardTitle>Payroll Settings</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <Label htmlFor="payPeriod">Pay Period</Label>
+          <Input
+            id="payPeriod"
+            value={localSettings.payPeriod}
+            onChange={(e) => handleInputChange("payPeriod", e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="paymentMethod">Payment Method</Label>
+          <Input
+            id="paymentMethod"
+            value={localSettings.paymentMethod}
+            onChange={(e) => handleInputChange("paymentMethod", e.target.value)}
+          />
+        </div>
+        <div>
+          <Label>Tax Withholding</Label>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <Label htmlFor="federal">Federal</Label>
+              <Input
+                id="federal"
+                value={String(localSettings.taxWithholding.federal)}
+                onChange={(e) => handleInputChange("federal", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="state">State</Label>
+              <Input
+                id="state"
+                value={String(localSettings.taxWithholding.state)}
+                onChange={(e) => handleInputChange("state", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="local">Local</Label>
+              <Input
+                id="local"
+                value={String(localSettings.taxWithholding.local)}
+                onChange={(e) => handleInputChange("local", e.target.value)}
+              />
+            </div>
           </div>
         </div>
-      </div>
-
-      <Button onClick={handleSaveSettings} className="w-full">
-        Save Settings
-      </Button>
+        <div>
+          <Label>Benefits</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="insurance">Insurance</Label>
+              <Input
+                id="insurance"
+                value={String(localSettings.benefits.insurance)}
+                onChange={(e) => handleInputChange("insurance", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="retirement">Retirement</Label>
+              <Input
+                id="retirement"
+                value={String(localSettings.benefits.retirement)}
+                onChange={(e) => handleInputChange("retirement", e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
-};
+}

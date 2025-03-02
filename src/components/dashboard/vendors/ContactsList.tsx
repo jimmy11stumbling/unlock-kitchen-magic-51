@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,14 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
-interface Contact {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-  primary: boolean;
-}
+import type { VendorContact } from "@/types/vendor";
 
 interface ContactsListProps {
   vendorId: number;
@@ -42,10 +34,10 @@ interface ContactsListProps {
 }
 
 export const ContactsList = ({ vendorId, onUpdate }: ContactsListProps) => {
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contacts, setContacts] = useState<VendorContact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
-  const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [editingContact, setEditingContact] = useState<VendorContact | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     role: "",
@@ -56,25 +48,22 @@ export const ContactsList = ({ vendorId, onUpdate }: ContactsListProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchContacts();
-  }, [vendorId]);
-
-  const fetchContacts = async () => {
-    try {
-      setIsLoading(true);
-      const data = await vendorService.getVendorContacts(vendorId);
-      setContacts(data);
-    } catch (error) {
-      console.error("Failed to fetch vendor contacts:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load vendor contacts",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const loadContacts = async () => {
+      try {
+        const vendorContacts = await vendorService.getVendorContacts(vendorId);
+        setContacts(vendorContacts);
+      } catch (error) {
+        console.error("Error loading contacts:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load vendor contacts",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    loadContacts();
+  }, [vendorId, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -96,7 +85,7 @@ export const ContactsList = ({ vendorId, onUpdate }: ContactsListProps) => {
     setEditingContact(null);
   };
 
-  const openEditDialog = (contact: Contact) => {
+  const openEditDialog = (contact: VendorContact) => {
     setEditingContact(contact);
     setFormData({
       name: contact.name,
@@ -109,7 +98,6 @@ export const ContactsList = ({ vendorId, onUpdate }: ContactsListProps) => {
   };
 
   const handleSubmit = async () => {
-    // Validate form
     if (!formData.name || !formData.email) {
       toast({
         title: "Error",
@@ -120,7 +108,6 @@ export const ContactsList = ({ vendorId, onUpdate }: ContactsListProps) => {
     }
 
     try {
-      // If primary is true, update all other contacts to non-primary
       if (formData.primary) {
         setContacts(prev => 
           prev.map(c => ({
@@ -131,7 +118,6 @@ export const ContactsList = ({ vendorId, onUpdate }: ContactsListProps) => {
       }
 
       if (editingContact) {
-        // Update existing contact
         const updatedContact = {
           ...editingContact,
           ...formData
@@ -140,8 +126,7 @@ export const ContactsList = ({ vendorId, onUpdate }: ContactsListProps) => {
           prev.map(c => c.id === editingContact.id ? updatedContact : c)
         );
       } else {
-        // Add new contact
-        const newContact: Contact = {
+        const newContact: VendorContact = {
           id: Math.random().toString(36).substring(2, 11),
           ...formData
         };

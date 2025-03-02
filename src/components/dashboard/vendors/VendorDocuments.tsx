@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,7 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface Document {
+interface VendorDocument {
   id: string;
   name: string;
   type: string;
@@ -47,7 +46,7 @@ interface VendorDocumentsProps {
 }
 
 export const VendorDocuments = ({ vendorId }: VendorDocumentsProps) => {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<VendorDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -55,25 +54,22 @@ export const VendorDocuments = ({ vendorId }: VendorDocumentsProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchDocuments();
-  }, [vendorId]);
-
-  const fetchDocuments = async () => {
-    try {
-      setIsLoading(true);
-      const data = await vendorService.getVendorDocuments(vendorId);
-      setDocuments(data);
-    } catch (error) {
-      console.error("Failed to fetch vendor documents:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load vendor documents",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const loadDocuments = async () => {
+      try {
+        const vendorDocuments = await vendorService.getVendorDocuments(vendorId);
+        setDocuments(vendorDocuments);
+      } catch (error) {
+        console.error("Error loading documents:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load vendor documents",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    loadDocuments();
+  }, [vendorId, toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -104,7 +100,6 @@ export const VendorDocuments = ({ vendorId }: VendorDocumentsProps) => {
         title: "Success",
         description: "Document uploaded successfully"
       });
-      fetchDocuments();
     } catch (error) {
       console.error("Failed to upload document:", error);
       toast({

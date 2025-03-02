@@ -47,6 +47,7 @@ export interface StaffMember {
     allowances: number;
     additionalWithholding: number;
   };
+  payrollEntries?: any[];
 }
 
 export interface Message {
@@ -59,4 +60,6 @@ export interface Shift {
   staffId: number;
   date: string;
   time: string;
+  startTime?: string;
+  endTime?: string;
 }

@@ -1,23 +1,23 @@
-
-export interface InventoryItem {
-  id: number;
-  name: string;
-  quantity: number;
-  unit: string;
-  minQuantity: number;
-  price: number;
-  category: string;
-}
-
 export interface MenuItem {
   id: number;
   name: string;
-  price: number;
-  category: "appetizer" | "main" | "dessert" | "beverage";
   description: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
   available: boolean;
-  image?: string;
+  popular: boolean;
   allergens: string[];
-  preparationTime: number;
-  orderCount?: number;
+  calories: number;
+  prepTime: number;
+  ingredients: string[];
+  station?: string;
+  prep_details?: {
+    prepTime?: number;
+    cookTime?: number;
+    ingredients?: string[];
+    steps?: string[];
+    specialEquipment?: string[];
+    notes?: string;
+  };
 }

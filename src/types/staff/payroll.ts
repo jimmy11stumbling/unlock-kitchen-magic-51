@@ -20,6 +20,7 @@ export interface PayrollEntry {
   paymentDate: string;
   paymentMethod: 'direct_deposit' | 'check';
   checkNumber?: string;
+  totalPay?: number;
 }
 
 export interface PayStub {

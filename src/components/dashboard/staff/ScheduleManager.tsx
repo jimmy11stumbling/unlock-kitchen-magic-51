@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -59,7 +58,6 @@ export const ScheduleManager = ({
   const handleAddCertification = () => {
     if (!selectedStaffId) return;
     
-    // This is just a placeholder - in a real app you would have a form to add certificates
     const newCert = prompt("Enter certification name:");
     if (newCert && onUpdateStaffInfo) {
       const currentStaff = staff.find(s => s.id === selectedStaffId);
@@ -74,26 +72,68 @@ export const ScheduleManager = ({
     }
   };
 
+  const handleAddMetric = (staffId: number, metricType: string, value: string) => {
+    if (!value.trim()) return;
+    
+    const updates: Partial<StaffMember> = {};
+    
+    switch (metricType) {
+      case "certification":
+        const staffMember = staff.find(s => s.id === staffId);
+        if (staffMember) {
+          updates.certifications = [...(staffMember.certifications || []), value];
+        }
+        break;
+      case "performance":
+        const rating = parseFloat(value);
+        if (!isNaN(rating) && rating >= 1 && rating <= 5) {
+          updates.performanceRating = rating;
+        }
+        break;
+    }
+    
+    if (selectedStaffId && onUpdateStaffInfo) {
+      onUpdateStaffInfo(selectedStaffId, updates);
+    }
+  };
+
   const handleUpdatePerformance = () => {
     if (!selectedStaffId) return;
     
-    // This is just a placeholder - in a real app you would have a form
-    const newRating = prompt("Enter new performance rating (0-10):");
-    const parsedRating = parseInt(newRating || "");
+    const newRating = prompt("Enter new performance rating (1-5):");
+    const parsedRating = parseFloat(newRating || "");
     
-    if (!isNaN(parsedRating) && parsedRating >= 0 && parsedRating <= 10 && onUpdateStaffInfo) {
-      onUpdateStaffInfo(selectedStaffId, { performance_rating: parsedRating });
+    if (!isNaN(parsedRating) && parsedRating >= 1 && parsedRating <= 5 && onUpdateStaffInfo) {
+      onUpdateStaffInfo(selectedStaffId, { performanceRating: parsedRating });
       toast({
         title: "Performance Updated",
-        description: `Updated performance rating to ${parsedRating}/10`
+        description: `Updated performance rating to ${parsedRating}/5`
       });
     } else if (!isNaN(parsedRating)) {
       toast({
         title: "Invalid Rating",
-        description: "Rating must be between 0 and 10",
+        description: "Rating must be between 1 and 5",
         variant: "destructive"
       });
     }
+  };
+
+  const RatingRow = ({ staffMember }: { staffMember: StaffMember }) => {
+    return (
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-1/3 text-sm font-medium">{staffMember.name}</div>
+        <div className="w-1/3">
+          <span className="text-sm">
+            Rating: {staffMember.performanceRating}/5
+          </span>
+        </div>
+        <div className="w-1/3">
+          <Button variant="outline" size="sm">
+            Update
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -198,13 +238,13 @@ export const ScheduleManager = ({
                   <div className="w-full bg-gray-200 rounded-full h-4">
                     <div 
                       className="bg-primary h-4 rounded-full" 
-                      style={{ width: `${(selectedStaff.performance_rating / 10) * 100}%` }}
+                      style={{ width: `${(selectedStaff.performanceRating / 5) * 100}%` }}
                     ></div>
                   </div>
                   <div className="flex justify-between mt-1 text-sm">
                     <span>0</span>
-                    <span className="font-medium">{selectedStaff.performance_rating}/10</span>
-                    <span>10</span>
+                    <span className="font-medium">{selectedStaff.performanceRating}/5</span>
+                    <span>5</span>
                   </div>
                 </div>
               </div>

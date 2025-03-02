@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Reservation } from "@/types/staff";
@@ -8,16 +7,24 @@ interface ReservationMetricsProps {
 }
 
 export const ReservationMetrics = ({ reservations }: ReservationMetricsProps) => {
-  const getReservationsByStatus = (status: Reservation["status"]) =>
-    reservations.filter((r) => r.status === status).length;
+  const getStatusCounts = (reservations: Reservation[]) => {
+    return {
+      total: reservations.length,
+      confirmed: reservations.filter(r => r.status === "confirmed").length,
+      pending: reservations.filter(r => r.status === "pending").length,
+      cancelled: reservations.filter(r => r.status === "cancelled").length,
+      seated: reservations.filter(r => r.status === "seated").length,
+      completed: reservations.filter(r => r.status === "completed").length
+    };
+  };
 
   const metrics = [
-    { label: "Total", count: reservations.length, variant: "secondary" as const },
-    { label: "Confirmed", count: getReservationsByStatus("confirmed"), variant: "success" as const },
-    { label: "Pending", count: getReservationsByStatus("pending"), variant: "secondary" as const },
-    { label: "Seated", count: getReservationsByStatus("seated"), variant: "default" as const },
-    { label: "Completed", count: getReservationsByStatus("completed"), variant: "success" as const },
-    { label: "Cancelled", count: getReservationsByStatus("cancelled"), variant: "destructive" as const }
+    { label: "Total", count: getStatusCounts(reservations).total, variant: "secondary" as const },
+    { label: "Confirmed", count: getStatusCounts(reservations).confirmed, variant: "success" as const },
+    { label: "Pending", count: getStatusCounts(reservations).pending, variant: "secondary" as const },
+    { label: "Seated", count: getStatusCounts(reservations).seated, variant: "default" as const },
+    { label: "Completed", count: getStatusCounts(reservations).completed, variant: "success" as const },
+    { label: "Cancelled", count: getStatusCounts(reservations).cancelled, variant: "destructive" as const }
   ];
 
   return (

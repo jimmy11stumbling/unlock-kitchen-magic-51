@@ -8,12 +8,14 @@ export const notesService = {
     return [
       {
         id: uuidv4(),
+        vendorId,
         content: "Negotiated new payment terms - NET 45",
         createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
         createdBy: "Admin User"
       },
       {
         id: uuidv4(),
+        vendorId,
         content: "Quality issues with last shipment - follow up required",
         createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
         createdBy: "Jane Manager"
@@ -25,6 +27,7 @@ export const notesService = {
     // For demonstration, returning a simulated response
     return {
       id: uuidv4(),
+      vendorId,
       content,
       createdAt: new Date().toISOString(),
       createdBy: "Current User"

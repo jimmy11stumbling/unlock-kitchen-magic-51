@@ -16,6 +16,10 @@ export interface Reservation {
   time: string;
   partySize: number;
   tableNumber: number;
-  status: "confirmed" | "pending" | "cancelled";
+  status: "confirmed" | "pending" | "cancelled" | "seated" | "completed";
   notes?: string;
+  phoneNumber?: string;
+  createdAt?: string;
 }
+
+export type ReservationStatus = "confirmed" | "pending" | "cancelled" | "seated" | "completed";
