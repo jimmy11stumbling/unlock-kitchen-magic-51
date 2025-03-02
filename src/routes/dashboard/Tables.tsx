@@ -19,12 +19,8 @@ const Tables = () => {
     <TablePanel
       tables={tables as unknown as TableLayout[]}
       onAddTable={(table: Omit<TableLayout, "id">) => {
-        // Add reservationId property before passing to addTable
-        const completeTable = {
-          ...table,
-          reservationId: null,
-        };
-        addTable(completeTable as any);
+        // We no longer need to add reservationId 
+        addTable(table as any);
       }}
       onUpdateStatus={updateTableStatus}
       onStartOrder={(tableId) => {

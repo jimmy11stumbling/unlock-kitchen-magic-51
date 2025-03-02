@@ -22,8 +22,7 @@ const generateTables = (): TableLayoutType[] => {
       currentOrderId: null,
       rotation: 0,
       serverAssigned: undefined,
-      notes: "",
-      reservationId: null
+      notes: ""
     },
     {
       id: 2,
@@ -43,8 +42,7 @@ const generateTables = (): TableLayoutType[] => {
       currentOrderId: null,
       rotation: 0,
       serverAssigned: undefined,
-      notes: "",
-      reservationId: null
+      notes: ""
     }
   ];
 };

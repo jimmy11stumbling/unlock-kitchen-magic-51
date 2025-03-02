@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { KitchenLayout } from "./KitchenLayout";
 import { EquipmentMonitor } from "./EquipmentMonitor";
@@ -173,7 +174,8 @@ export function KitchenDashboard() {
         {/* Kitchen Layout & Equipment - 4 columns on xl screens */}
         <div className="xl:col-span-4 space-y-6">
           <KitchenAnalytics orders={kitchenOrders || []} />
-          <KitchenLayout activeOrders={activeOrders} />
+          {/* Pass the activeOrders as orders to avoid the type error */}
+          <KitchenLayout orders={activeOrders} />
           <EquipmentMonitor />
           <QualityControl />
           <TemperatureMonitor stationId="main-kitchen" />
