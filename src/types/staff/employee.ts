@@ -16,6 +16,7 @@ export interface StaffMember {
   status?: StaffStatus;
   department?: string;
   performanceRating?: number;
+  performance_rating?: number; // For backward compatibility
   address?: string;
   certifications?: string[];
   emergencyContact?: {
@@ -25,9 +26,11 @@ export interface StaffMember {
   };
   shift?: string;
   notes?: string;
-  salary?: number;
+  salary?: number; // Add missing property
   payrollSettings?: PayrollSettings;
   payrollEntries?: PayrollEntry[];
+  startDate?: string; // Add missing property
+  bankInfo?: any; // Add missing property
 }
 
 export interface Shift {

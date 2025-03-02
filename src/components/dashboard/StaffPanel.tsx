@@ -5,13 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { StaffTable } from "./StaffTable";
 import { ScheduleManager } from "./staff/ScheduleManager";
-import { PayrollPanel } from "./staff/payroll/PayrollPanel";
-import type { StaffMember, StaffStatus } from "@/types/staff";
+import { PayrollPanelWrapper } from "./staff/payroll/PayrollPanelWrapper";
+import type { StaffMember } from "@/types/staff";
 
 export interface StaffPanelProps {
   staff: StaffMember[];
   onAddStaff: (data: Omit<StaffMember, "id" | "status">) => Promise<StaffMember>;
-  onUpdateStatus: (staffId: number, newStatus: StaffStatus) => Promise<void>;
+  onUpdateStatus: (staffId: number, newStatus: StaffMember["status"]) => Promise<void>;
   onAddShift: (staffId: number, date: string, time: string) => void;
   onUpdateInfo: (staffId: number, updates: Partial<StaffMember>) => Promise<void>;
 }
@@ -42,22 +42,6 @@ export const StaffPanel = ({
         const endHour = parseInt(end.split(":")[0]);
         return total + (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);
       }, 0);
-  };
-
-  // Mock payroll functions
-  const handleGeneratePayroll = async (staffId: number, startDate: string, endDate: string) => {
-    console.log(`Generating payroll for staff ${staffId} from ${startDate} to ${endDate}`);
-    return Promise.resolve();
-  };
-
-  const handleGeneratePayStub = async (payrollEntryId: number) => {
-    console.log(`Generating pay stub for payroll entry ${payrollEntryId}`);
-    return Promise.resolve("https://example.com/paystub.pdf");
-  };
-
-  const handleUpdatePayrollSettings = async (staffId: number, settings: any) => {
-    console.log(`Updating payroll settings for staff ${staffId}`, settings);
-    return Promise.resolve();
   };
 
   return (
@@ -94,12 +78,7 @@ export const StaffPanel = ({
           </TabsContent>
 
           <TabsContent value="payroll" className="p-4">
-            <PayrollPanel 
-              staff={staff}
-              onGeneratePayroll={handleGeneratePayroll}
-              onGeneratePayStub={handleGeneratePayStub}
-              onUpdatePayrollSettings={handleUpdatePayrollSettings}
-            />
+            <PayrollPanelWrapper staff={staff} />
           </TabsContent>
         </Card>
       </Tabs>

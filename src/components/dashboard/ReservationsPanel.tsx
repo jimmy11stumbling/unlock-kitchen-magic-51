@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export const ReservationsPanel = () => {
   // Remove createdAt property
   const [newReservation, setNewReservation] = useState<Omit<Reservation, "id">>({
     customerName: "",
+    phoneNumber: "", // Added phoneNumber
     date: tomorrow.toISOString().split('T')[0],
     time: "18:00",
     partySize: 2,
@@ -54,6 +56,7 @@ export const ReservationsPanel = () => {
   const resetForm = () => {
     setNewReservation({
       customerName: "",
+      phoneNumber: "", // Added phoneNumber
       date: tomorrow.toISOString().split('T')[0],
       time: "18:00",
       partySize: 2,
@@ -79,6 +82,17 @@ export const ReservationsPanel = () => {
                   id="customerName"
                   name="customerName"
                   value={newReservation.customerName}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Input
+                  type="text"
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  value={newReservation.phoneNumber}
                   onChange={handleInputChange}
                   required
                 />

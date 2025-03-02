@@ -14,4 +14,8 @@ export interface TableLayout {
   notes?: string;
   serverAssigned?: number;
   currentOrderId?: number;
+  // Adding properties that are used in the code
+  number: number;
+  capacity: number;
+  activeOrder: number | null;
 }

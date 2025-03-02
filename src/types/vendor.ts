@@ -1,4 +1,3 @@
-
 export interface Vendor {
   id: number;
   name: string;
@@ -14,6 +13,9 @@ export interface Vendor {
   rating?: number;
   contacts?: VendorContact[];
   documents?: VendorDocument[];
+  taxId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Expense {
@@ -31,6 +33,8 @@ export interface Expense {
   approvedBy?: string;
   approvedDate?: string;
   taxDeductible?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface VendorContact {

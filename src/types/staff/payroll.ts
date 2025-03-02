@@ -1,4 +1,23 @@
 
+export interface PayrollSettings {
+  accountType: string;
+  accountNumber: string;
+  routingNumber: string;
+  directDeposit: boolean;
+  federalTaxWithholding: number;
+  stateTaxWithholding: number;
+  healthInsurance?: number;
+  retirementContribution?: number;
+  otherDeductions?: {
+    name: string;
+    amount: number;
+  }[];
+  payFrequency: 'weekly' | 'biweekly' | 'monthly';
+  // Add missing properties
+  paymentMethod?: string;
+  taxWithholding?: number;
+}
+
 export interface PayrollEntry {
   id: number;
   staffId: number;
@@ -9,26 +28,18 @@ export interface PayrollEntry {
   regularRate: number;
   overtimeRate: number;
   grossPay: number;
-  netPay: number;
   deductions: {
-    tax: number;
-    insurance?: number;
+    federalTax: number;
+    stateTax: number;
+    medicareTax: number;
+    socialSecurityTax: number;
+    healthInsurance?: number;
     retirement?: number;
     other?: number;
   };
-  status: 'pending' | 'processing' | 'completed' | 'error';
-  paymentDate?: string;
+  netPay: number;
+  status: 'pending' | 'processing' | 'completed' | 'error' | 'paid';
+  totalPay: number;
+  paymentDate?: string; // Add missing properties
   paymentMethod?: string;
-  totalPay?: number;
-}
-
-export interface PayrollSettings {
-  taxRate: number;
-  overtimeThreshold: number;
-  overtimeMultiplier: number;
-  deductionRates: {
-    insurance: number;
-    retirement: number;
-  };
-  paySchedule: 'weekly' | 'biweekly' | 'monthly';
 }
