@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { vendorService } from "./services/vendorService";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { FileText, Download } from "lucide-react";
 
 interface OrderHistoryProps {
@@ -14,6 +14,7 @@ interface OrderHistoryProps {
 export const OrderHistory = ({ vendorId }: OrderHistoryProps) => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -34,7 +35,7 @@ export const OrderHistory = ({ vendorId }: OrderHistoryProps) => {
     };
 
     fetchOrders();
-  }, [vendorId]);
+  }, [vendorId, toast]);
 
   const handleGeneratePdf = async (orderId: string) => {
     try {

@@ -21,9 +21,6 @@ export const VendorDetails = ({ vendor, onUpdate }: VendorDetailsProps) => {
   const [activeTab, setActiveTab] = useState("contacts");
   const [contacts, setContacts] = useState<any[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
-  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchTabData = async (tabId: string) => {
@@ -37,18 +34,6 @@ export const VendorDetails = ({ vendor, onUpdate }: VendorDetailsProps) => {
         case "notes":
           const notesData = await vendorService.getVendorNotes(vendor.id);
           setNotes(notesData);
-          break;
-        case "orders":
-          const ordersData = await vendorService.getVendorOrders(vendor.id);
-          setOrders(ordersData);
-          break;
-        case "payments":
-          const paymentsData = await vendorService.getVendorPayments(vendor.id);
-          setPayments(paymentsData);
-          break;
-        case "documents":
-          const docsData = await vendorService.getVendorDocuments(vendor.id);
-          setDocuments(docsData);
           break;
       }
     } catch (error) {
@@ -121,14 +106,13 @@ export const VendorDetails = ({ vendor, onUpdate }: VendorDetailsProps) => {
 
         <TabsContent value="orders" className="pt-4">
           <OrderHistory 
-            orders={orders} 
             vendorId={vendor.id} 
           />
         </TabsContent>
 
         <TabsContent value="payments" className="pt-4">
           <PaymentHistory 
-            payments={payments} 
+            payments={[]} 
             vendorId={vendor.id} 
           />
         </TabsContent>

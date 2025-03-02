@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { StaffPanel } from "@/components/dashboard/StaffPanel";
@@ -70,7 +71,10 @@ const Staff = () => {
     const staffMember = staff.find(s => s.id === staffId);
     if (!staffMember) return;
 
-    const dayOfWeek = new Date(date).toLocaleLowerCase().substring(0, 3);
+    // Fix: Convert the date string to a Date object, get the day name, and convert to lowercase
+    const dateObj = new Date(date);
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayOfWeek = dayNames[dateObj.getDay()];
     
     updateStaffInfo(staffId, {
       schedule: {
@@ -85,7 +89,13 @@ const Staff = () => {
     });
   };
 
-  return <StaffPanel />;
+  return <StaffPanel 
+    staff={staff}
+    onAddStaff={handleAddStaff}
+    onUpdateStatus={handleUpdateStatus}
+    onAddShift={handleAddShift}
+    onUpdateInfo={handleUpdateInfo}
+  />;
 };
 
 export default Staff;
