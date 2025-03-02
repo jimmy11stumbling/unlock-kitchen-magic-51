@@ -72,7 +72,9 @@ export function CategoryPerformance({ reports }: CategoryPerformanceProps) {
                 ))}
               </Pie>
               <Tooltip 
-                formatter={(value) => [`$${value.toFixed(2)}`, 'Revenue']}
+                formatter={(value: any) => {
+                  return [`$${typeof value === 'number' ? value.toFixed(2) : value}`, 'Revenue'];
+                }}
               />
               <Legend />
             </PieChart>

@@ -96,22 +96,23 @@ export function SalesHeatmap({ reports }: SalesHeatmapProps) {
               {hourlyData.map((day, i) => (
                 <tr key={i}>
                   <td className="font-medium p-2">{day.day}</td>
-                  {Object.entries(day).filter(([key]) => key !== 'day').map(([hour, value]) => (
-                    <td 
-                      key={hour} 
-                      className="p-1"
-                    >
-                      <div 
-                        className="w-14 h-10 flex items-center justify-center rounded-sm"
-                        style={{ 
-                          backgroundColor: getColor(value as number),
-                          color: (value as number) / maxValue > 0.6 ? 'white' : 'black'
-                        }}
-                      >
-                        {metric === 'revenue' ? '$' : ''}{value}
-                      </div>
-                    </td>
-                  ))}
+                  {Object.entries(day).filter(([key]) => key !== 'day').map(([hour, value]) => {
+                    // Convert value to number to ensure type safety
+                    const numValue = typeof value === 'number' ? value : 0;
+                    return (
+                      <td key={hour} className="p-1">
+                        <div 
+                          className="w-14 h-10 flex items-center justify-center rounded-sm"
+                          style={{ 
+                            backgroundColor: getColor(numValue),
+                            color: (numValue / maxValue) > 0.6 ? 'white' : 'black'
+                          }}
+                        >
+                          {metric === 'revenue' ? '$' : ''}{numValue}
+                        </div>
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
