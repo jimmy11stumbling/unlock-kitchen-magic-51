@@ -1,5 +1,3 @@
-
-// Only fixing the handleSubmit function
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,9 +24,9 @@ export const PromotionsPanel = ({
     endDate: "",
     discountType: "percentage" as const,
     discountValue: 0,
-    applicableItems: [] as string[],
+    applicableItems: "all" as const,
     active: true,
-    usageCount: 0 // Add usageCount with initial value 0
+    usageCount: 0
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,9 +39,9 @@ export const PromotionsPanel = ({
       endDate: "",
       discountType: "percentage",
       discountValue: 0,
-      applicableItems: [],
+      applicableItems: "all",
       active: true,
-      usageCount: 0 // Reset with 0
+      usageCount: 0
     });
   };
 

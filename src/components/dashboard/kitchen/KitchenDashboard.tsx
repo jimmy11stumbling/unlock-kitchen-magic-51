@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { KitchenLayout } from "./KitchenLayout";
 import { EquipmentMonitor } from "./EquipmentMonitor";
@@ -47,8 +46,8 @@ export function KitchenDashboard() {
       // Search by order ID, table number, or server name
       const matchesSearch = 
         order.order_id.toString().includes(searchTerm) ||
-        order.table_number.toString().includes(searchTerm) ||
-        order.server_name.toLowerCase().includes(searchTerm.toLowerCase());
+        (order.tableNumber?.toString() || '').includes(searchTerm) ||
+        (order.serverName?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       
       // Filter by status
       const matchesStatus = statusFilter === "all" || order.status === statusFilter;

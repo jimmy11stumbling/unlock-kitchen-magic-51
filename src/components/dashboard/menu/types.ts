@@ -3,6 +3,7 @@ import type { MenuItem } from "@/types/staff";
 
 export interface MenuItemFormData extends Omit<MenuItem, "id" | "orderCount"> {
   id?: number;
+  orderCount?: number;
 }
 
 export interface MenuPanelProps {

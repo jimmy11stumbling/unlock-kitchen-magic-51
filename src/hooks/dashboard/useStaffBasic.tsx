@@ -1,219 +1,258 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import type { StaffMember, StaffDTO } from "@/types/staff";
-import { staffMappers } from "./staff/utils/staffMapper";
+import type { StaffMember } from "@/types/staff";
+
+// Mock data for initial staff list
+const initialStaff: StaffMember[] = [
+  {
+    id: 1,
+    name: "John Doe",
+    role: "manager",
+    email: "john.doe@restaurant.com",
+    phone: "555-123-4567",
+    status: "active",
+    salary: 65000,
+    hireDate: "2020-01-15", // Add hireDate
+    schedule: {
+      monday: "09:00-17:00",
+      tuesday: "09:00-17:00",
+      wednesday: "09:00-17:00",
+      thursday: "09:00-17:00",
+      friday: "09:00-17:00",
+      saturday: "OFF",
+      sunday: "OFF"
+    },
+    certifications: ["Food Safety", "Management"],
+    performanceRating: 9,
+    notes: "Restaurant manager with 8 years of experience",
+    department: "management",
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    role: "chef",
+    email: "jane.smith@restaurant.com",
+    phone: "555-987-6543",
+    status: "active",
+    salary: 55000,
+    hireDate: "2021-03-10", // Add hireDate
+    schedule: {
+      monday: "14:00-22:00",
+      tuesday: "14:00-22:00",
+      wednesday: "OFF",
+      thursday: "14:00-22:00",
+      friday: "14:00-22:00",
+      saturday: "14:00-22:00",
+      sunday: "OFF"
+    },
+    certifications: ["Culinary Arts", "Food Safety"],
+    performanceRating: 8,
+    notes: "Head chef specializing in Italian cuisine",
+    department: "kitchen",
+  },
+  {
+    id: 3,
+    name: "David Johnson",
+    role: "server",
+    email: "david.j@restaurant.com",
+    phone: "555-456-7890",
+    status: "on_break",
+    salary: 35000,
+    hireDate: "2022-05-20", // Add hireDate
+    schedule: {
+      monday: "OFF",
+      tuesday: "16:00-24:00",
+      wednesday: "16:00-24:00",
+      thursday: "16:00-24:00",
+      friday: "16:00-24:00",
+      saturday: "16:00-24:00",
+      sunday: "OFF"
+    },
+    certifications: ["Customer Service"],
+    performanceRating: 7,
+    notes: "Server with 3 years of experience",
+    department: "service",
+  },
+  {
+    id: 4,
+    name: "Maria Garcia",
+    role: "bartender",
+    email: "maria.g@restaurant.com",
+    phone: "555-789-0123",
+    status: "active",
+    salary: 42000,
+    hireDate: "2021-11-15", // Add hireDate
+    schedule: {
+      monday: "16:00-24:00",
+      tuesday: "16:00-24:00",
+      wednesday: "16:00-24:00",
+      thursday: "OFF",
+      friday: "16:00-24:00",
+      saturday: "16:00-24:00",
+      sunday: "OFF"
+    },
+    certifications: ["Mixology", "Beverage Management"],
+    performanceRating: 9,
+    notes: "Experienced bartender with creative cocktail skills",
+    department: "bar",
+  },
+  {
+    id: 5,
+    name: "Sam Wilson",
+    role: "host",
+    email: "sam.w@restaurant.com",
+    phone: "555-234-5678",
+    status: "off_duty",
+    salary: 32000,
+    hireDate: "2022-10-05", // Add hireDate
+    schedule: {
+      monday: "15:00-23:00",
+      tuesday: "15:00-23:00",
+      wednesday: "15:00-23:00",
+      thursday: "15:00-23:00",
+      friday: "OFF",
+      saturday: "15:00-23:00",
+      sunday: "OFF"
+    },
+    certifications: ["Customer Service"],
+    performanceRating: 8,
+    notes: "Host with excellent customer service skills",
+    department: "service",
+  }
+];
 
 export const useStaffBasic = () => {
-  const [staff, setStaff] = useState<StaffMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [staff, setStaff] = useState<StaffMember[]>(initialStaff);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Simulate loading staff data when the hook mounts
   useEffect(() => {
-    fetchStaff();
-    subscribeToStaffChanges();
-  }, []);
-
-  const fetchStaff = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('staff_members')
-        .select('*');
-
-      if (error) {
+    const fetchStaff = async () => {
+      setLoading(true);
+      try {
+        // In a real app, this would be a fetch from API
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+        // Data is already in initialStaff so no need to set it again here
+      } catch (error) {
         console.error("Error fetching staff:", error);
         toast({
           title: "Error",
-          description: "Failed to fetch staff data",
-          variant: "destructive"
+          description: "Failed to load staff data",
+          variant: "destructive",
         });
-        return;
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const mappedStaff: StaffMember[] = (data as StaffDTO[]).map(staffDTO => ({
-        id: staffDTO.id,
-        name: staffDTO.name,
-        role: staffDTO.role || 'kitchen_staff',
-        email: staffDTO.email || '',
-        phone: staffDTO.phone || '',
-        status: staffDTO.status as StaffMember['status'] || 'active',
-        salary: staffDTO.salary || 0,
-        hireDate: staffDTO.hire_date || new Date().toISOString(),
-        schedule: staffMappers.parseSchedule(staffDTO.schedule),
-        certifications: staffMappers.parseCertifications(staffDTO.certifications),
-        performanceRating: staffDTO.performance_rating || 0,
-        notes: staffDTO.notes || '',
-        department: staffDTO.department || '',
-        shift: staffDTO.shift || '',
-      }));
+    fetchStaff();
+  }, [toast]);
 
-      setStaff(mappedStaff);
+  const addStaffMember = async (data: Omit<StaffMember, "id" | "status">) => {
+    setLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const newStaffMember: StaffMember = {
+        ...data,
+        id: Math.max(...staff.map(s => s.id)) + 1,
+        status: "active",
+      };
+      
+      setStaff([...staff, newStaffMember]);
+      
+      toast({
+        title: "Success",
+        description: `${data.name} has been added to the staff`,
+      });
+      
+      return newStaffMember;
     } catch (error) {
-      console.error("Error fetching staff:", error);
+      console.error("Error adding staff member:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch staff data",
-        variant: "destructive"
+        description: "Failed to add staff member",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const subscribeToStaffChanges = () => {
-    supabase
-      .channel('public:staff_members')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_members' }, (payload) => {
-        console.log('Change received!', payload);
-        fetchStaff();
-      })
-      .subscribe()
-  };
-
-  const addStaffMember = async (data: Omit<StaffMember, "id" | "status">): Promise<StaffMember> => {
+  const updateStaffStatus = async (staffId: number, newStatus: StaffMember["status"]) => {
+    setLoading(true);
     try {
-      const { data: newStaff, error } = await supabase
-        .from('staff_members')
-        .insert([
-          {
-            name: data.name,
-            role: data.role,
-            email: data.email,
-            phone: data.phone,
-            salary: data.salary,
-            hire_date: data.hireDate,
-            schedule: data.schedule ? JSON.stringify(data.schedule) : null,
-            certifications: data.certifications ? JSON.stringify(data.certifications) : null,
-            performance_rating: data.performanceRating,
-            notes: data.notes,
-            department: data.department,
-            status: 'active',
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Error adding staff member:", error);
-        toast({
-          title: "Error",
-          description: "Failed to add staff member",
-          variant: "destructive"
-        });
-        throw error;
-      }
-
-      const staffDTO = newStaff as StaffDTO;
-      const mappedStaffMember: StaffMember = {
-        id: staffDTO.id,
-        name: staffDTO.name,
-        role: staffDTO.role || 'kitchen_staff',
-        email: staffDTO.email || '',
-        phone: staffDTO.phone || '',
-        status: staffDTO.status as StaffMember['status'] || 'active',
-        salary: staffDTO.salary || 0,
-        hireDate: staffDTO.hire_date || new Date().toISOString(),
-        schedule: staffMappers.parseSchedule(staffDTO.schedule),
-        certifications: staffMappers.parseCertifications(staffDTO.certifications),
-        performanceRating: staffDTO.performance_rating || 0,
-        notes: staffDTO.notes || '',
-        department: staffDTO.department || '',
-        shift: staffDTO.shift || '',
-      };
-
-      setStaff(prevStaff => [...prevStaff, mappedStaffMember]);
-      return mappedStaffMember;
-    } catch (error) {
-      console.error("Error adding staff member:", error);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      setStaff(staff.map(member => 
+        member.id === staffId ? { ...member, status: newStatus } : member
+      ));
+      
       toast({
-        title: "Error",
-        description: "Failed to add staff member",
-        variant: "destructive"
+        title: "Status Updated",
+        description: `Staff member's status has been updated to ${newStatus.replace('_', ' ')}`,
       });
-      throw error;
-    }
-  };
-
-  const updateStaffStatus = async (staffId: number, newStatus: StaffMember["status"]): Promise<void> => {
-    try {
-      const { error } = await supabase
-        .from('staff_members')
-        .update({ status: newStatus })
-        .eq('id', staffId);
-
-      if (error) {
-        console.error("Error updating staff status:", error);
-        toast({
-          title: "Error",
-          description: "Failed to update staff status",
-          variant: "destructive"
-        });
-        throw error;
-      }
-
-      setStaff(prevStaff =>
-        prevStaff.map(member =>
-          member.id === staffId ? { ...member, status: newStatus } : member
-        )
-      );
     } catch (error) {
       console.error("Error updating staff status:", error);
       toast({
         title: "Error",
         description: "Failed to update staff status",
-        variant: "destructive"
+        variant: "destructive",
       });
-      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const updateStaffInfo = async (staffId: number, updates: Partial<StaffMember>): Promise<void> => {
+  const updateStaffInfo = async (staffId: number, updates: Partial<StaffMember>) => {
+    setLoading(true);
     try {
-      const staffMemberUpdates: Partial<StaffDTO> = {};
-
-      if (updates.name !== undefined) staffMemberUpdates.name = updates.name;
-      if (updates.role !== undefined) staffMemberUpdates.role = updates.role;
-      if (updates.email !== undefined) staffMemberUpdates.email = updates.email;
-      if (updates.phone !== undefined) staffMemberUpdates.phone = updates.phone;
-      if (updates.salary !== undefined) staffMemberUpdates.salary = updates.salary;
-      if (updates.hireDate !== undefined) staffMemberUpdates.hire_date = updates.hireDate;
-      if (updates.schedule !== undefined) staffMemberUpdates.schedule = JSON.stringify(updates.schedule);
-      if (updates.certifications !== undefined) staffMemberUpdates.certifications = JSON.stringify(updates.certifications);
-      if (updates.performanceRating !== undefined) staffMemberUpdates.performance_rating = updates.performanceRating;
-      if (updates.notes !== undefined) staffMemberUpdates.notes = updates.notes;
-      if (updates.department !== undefined) staffMemberUpdates.department = updates.department;
-      if (updates.shift !== undefined) staffMemberUpdates.shift = updates.shift;
-
-      const { error } = await supabase
-        .from('staff_members')
-        .update(staffMemberUpdates)
-        .eq('id', staffId);
-
-      if (error) {
-        console.error("Error updating staff info:", error);
-        toast({
-          title: "Error",
-          description: "Failed to update staff information",
-          variant: "destructive"
-        });
-        throw error;
-      }
-
-      setStaff(prevStaff =>
-        prevStaff.map(member =>
-          member.id === staffId ? { ...member, ...updates } : member
-        )
-      );
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setStaff(staff.map(member => 
+        member.id === staffId ? { ...member, ...updates } : member
+      ));
+      
+      toast({
+        title: "Information Updated",
+        description: "Staff member's information has been updated",
+      });
     } catch (error) {
       console.error("Error updating staff info:", error);
       toast({
         title: "Error",
         description: "Failed to update staff information",
-        variant: "destructive"
+        variant: "destructive",
       });
-      throw error;
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleAddShift = (staffId: number, date: string, time: string) => {
+    const staffMember = staff.find(s => s.id === staffId);
+    if (!staffMember) return;
+
+    // Create a proper day name from the date
+    const dateObj = new Date(date);
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayOfWeek = dayNames[dateObj.getDay()];
+    
+    updateStaffInfo(staffId, {
+      schedule: {
+        ...staffMember.schedule,
+        [dayOfWeek]: time
+      }
+    });
+
+    toast({
+      title: "Shift added",
+      description: `Shift has been added for ${staffMember.name} on ${date}`
+    });
   };
 
   return {
@@ -221,6 +260,7 @@ export const useStaffBasic = () => {
     loading,
     addStaffMember,
     updateStaffStatus,
-    updateStaffInfo
+    updateStaffInfo,
+    handleAddShift
   };
 };

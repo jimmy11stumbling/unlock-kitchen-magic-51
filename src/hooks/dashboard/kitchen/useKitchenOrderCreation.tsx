@@ -22,16 +22,16 @@ export const useKitchenOrderCreation = () => {
         menu_item_id: item.menu_item_id,
         cooking_station: item.cooking_station,
         assigned_chef: item.assigned_chef,
-        modifications: item.modifications,
-        allergen_alert: item.allergen_alert,
+        modifications: item.modifications || [],
+        allergen_alert: item.allergen_alert || false,
         start_time: item.start_time,
         completion_time: item.completion_time
       }));
 
       const dbOrder = {
         order_id: orderData.order_id,
-        table_number: orderData.table_number,
-        server_name: orderData.server_name,
+        tableNumber: orderData.tableNumber,
+        serverName: orderData.serverName,
         items: serializedItems,
         status: orderData.status,
         priority: orderData.priority,

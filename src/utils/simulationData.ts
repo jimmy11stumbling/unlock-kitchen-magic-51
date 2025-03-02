@@ -1,3 +1,10 @@
+import type { InventoryItem } from "@/types/staff";
+
+// Helper function for random dates
+const randomDate = (start: Date, end: Date): string => {
+  const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+  return date.toISOString();
+};
 
 // Only change the supplier property to supplierId in the generateInventoryItems function
 export const generateInventoryItems = (count: number = 30): InventoryItem[] => {

@@ -26,7 +26,7 @@ export function OrderHeader({ order, onUpdatePriority }: OrderHeaderProps) {
       <div>
         <h3 className="text-lg font-semibold">Order #{order.order_id}</h3>
         <p className="text-sm text-muted-foreground">
-          Table {order.table_number} • {order.server_name}
+          Table {order.tableNumber} • {order.serverName}
         </p>
       </div>
       <div className="flex gap-2">

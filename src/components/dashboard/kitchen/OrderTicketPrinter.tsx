@@ -14,8 +14,8 @@ export function OrderTicketPrinter({ order }: OrderTicketPrinterProps) {
       // Format ticket data
       const ticketContent = `
         ORDER #${order.order_id}
-        Table: ${order.table_number}
-        Server: ${order.server_name}
+        Table: ${order.tableNumber}
+        Server: ${order.serverName}
         Time: ${new Date().toLocaleTimeString()}
         
         Items:

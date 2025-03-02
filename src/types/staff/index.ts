@@ -1,4 +1,3 @@
-
 // If the file already exists, add the following type definition:
 
 export interface StaffDTO {
@@ -15,6 +14,13 @@ export interface StaffDTO {
   performance_rating?: number;
   notes?: string;
   department?: string;
+  address?: string;
+  emergency_contact?: any;
+  shift?: string;
+  hourlyRate?: number;
+  overtimeRate?: number;
+  payrollSettings?: any;
+  payrollEntries?: any[];
 }
 
 // Basic staff member interfaces
@@ -32,7 +38,16 @@ export interface StaffMember {
   performanceRating?: number;
   notes?: string;
   department?: string;
-  shift?: string;
+  address?: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  hourlyRate?: number;
+  overtimeRate?: number;
+  payrollSettings?: PayrollSettings;
+  payrollEntries?: PayrollEntry[];
 }
 
 export type StaffStatus = 'active' | 'off_duty' | 'on_break' | 'on_leave' | 'terminated';
@@ -49,6 +64,8 @@ export interface MenuItem {
   preparationTime?: number;
   orderCount: number;
   image?: string;
+  ingredients?: any[];
+  prep_details?: string;
 }
 
 // Reservation related interfaces
@@ -82,6 +99,7 @@ export interface Order {
   guestCount?: number;
   estimatedPrepTime?: number;
   notes?: string;
+  specialInstructions?: string;
 }
 
 export interface OrderItem {
@@ -123,6 +141,8 @@ export interface KitchenOrderItem {
   assigned_chef?: string;
   course?: string;
   allergens?: string[];
+  modifications?: string[];
+  allergen_alert?: boolean;
 }
 
 // Table layout interface
@@ -150,7 +170,6 @@ export interface InventoryItem {
   supplierId?: number;
   lastOrderDate?: string;
   expiryDate?: string;
-  supplier?: string;
 }
 
 // Shift interface
@@ -173,6 +192,7 @@ export interface SalesData {
   salesCount: number;
   averageTicketSize?: number;
   topSellingItems?: string[];
+  costs?: number;
 }
 
 export interface DailyReport {
@@ -189,6 +209,7 @@ export interface DailyReport {
     category?: string;
     price: number;
     orderCount?: number;
+    description?: string;
   }[];
   hourlyData?: {
     hour: number;
