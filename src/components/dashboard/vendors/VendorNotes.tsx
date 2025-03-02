@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,10 +16,9 @@ interface Note {
 
 interface VendorNotesProps {
   vendor: Vendor;
-  onUpdate: () => void;
 }
 
-export const VendorNotes = ({ vendor, onUpdate }: VendorNotesProps) => {
+export const VendorNotes = ({ vendor }: VendorNotesProps) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [newNote, setNewNote] = useState("");
   const [editingNote, setEditingNote] = useState<string | null>(null);
@@ -52,7 +50,6 @@ export const VendorNotes = ({ vendor, onUpdate }: VendorNotesProps) => {
         title: "Note added",
         description: "Your note has been added successfully"
       });
-      onUpdate();
     } catch (error) {
       toast({
         title: "Error",
@@ -83,7 +80,6 @@ export const VendorNotes = ({ vendor, onUpdate }: VendorNotesProps) => {
         title: "Note updated",
         description: "Your note has been updated successfully"
       });
-      onUpdate();
     } catch (error) {
       toast({
         title: "Error",
@@ -156,7 +152,6 @@ export const VendorNotes = ({ vendor, onUpdate }: VendorNotesProps) => {
           ))
         )}
         
-        {/* Add new note */}
         <div className="space-y-2">
           <Textarea
             placeholder="Add a new note..."

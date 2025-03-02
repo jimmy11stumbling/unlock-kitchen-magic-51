@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -137,14 +136,12 @@ export const VendorDetails = ({ vendor, onUpdate }: VendorDetailsProps) => {
         <TabsContent value="documents" className="pt-4">
           <VendorDocuments 
             vendorId={vendor.id} 
-            onUpdate={() => fetchTabData("documents")} 
           />
         </TabsContent>
 
         <TabsContent value="notes" className="pt-4">
           <VendorNotes 
-            vendorId={vendor.id} 
-            onUpdate={() => fetchTabData("notes")} 
+            vendor={vendor}
           />
         </TabsContent>
       </Tabs>
