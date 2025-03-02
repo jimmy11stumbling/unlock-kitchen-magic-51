@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DollarSign, UserPlus } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember, StaffRole } from "@/types/staff";
 
 interface AddStaffDialogProps {
@@ -16,22 +17,37 @@ export const AddStaffDialog = ({ onAddStaff }: AddStaffDialogProps) => {
     name: string;
     role: StaffRole;
     salary: number;
+    email: string;
+    phone: string;
   }>({ 
     name: "", 
     role: "server",
-    salary: 0 
+    salary: 0,
+    email: "",
+    phone: ""
   });
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleAddStaff = () => {
+    if (!newStaff.name) {
+      toast({
+        title: "Error",
+        description: "Please enter a name for the staff member",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const currentDate = new Date().toISOString().split('T')[0];
     
     const completeStaffData: Omit<StaffMember, "id" | "status"> = {
       name: newStaff.name,
       role: newStaff.role,
       salary: newStaff.salary,
+      email: newStaff.email || "",
+      phone: newStaff.phone || "",
       shift: "Morning",
-      email: "",
-      phone: "",
       address: "",
       emergencyContact: {
         name: "",
@@ -60,11 +76,16 @@ export const AddStaffDialog = ({ onAddStaff }: AddStaffDialogProps) => {
     };
 
     onAddStaff(completeStaffData);
-    setNewStaff({ name: "", role: "server", salary: 0 });
+    setNewStaff({ name: "", role: "server", salary: 0, email: "", phone: "" });
+    toast({
+      title: "Staff Added",
+      description: `${completeStaffData.name} has been added to the staff list.`
+    });
+    setOpen(false);
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="h-4 w-4 mr-2" />
@@ -82,6 +103,24 @@ export const AddStaffDialog = ({ onAddStaff }: AddStaffDialogProps) => {
               value={newStaff.name}
               onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })}
               placeholder="Staff member name"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Email</label>
+            <Input
+              value={newStaff.email}
+              onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+              placeholder="Email address"
+              type="email"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Phone</label>
+            <Input
+              value={newStaff.phone}
+              onChange={(e) => setNewStaff({ ...newStaff, phone: e.target.value })}
+              placeholder="Phone number"
+              type="tel"
             />
           </div>
           <div>

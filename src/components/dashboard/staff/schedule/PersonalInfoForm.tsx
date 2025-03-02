@@ -1,7 +1,11 @@
 
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember } from "@/types/staff";
 
 interface PersonalInfoFormProps {
@@ -10,79 +14,149 @@ interface PersonalInfoFormProps {
 }
 
 export const PersonalInfoForm = ({ staff, onUpdateInfo }: PersonalInfoFormProps) => {
+  const [formData, setFormData] = useState({
+    name: staff.name,
+    email: staff.email || "",
+    phone: staff.phone || "",
+    address: staff.address || "",
+    emergencyContact: {
+      name: staff.emergencyContact?.name || "",
+      phone: staff.emergencyContact?.phone || "",
+      relationship: staff.emergencyContact?.relationship || ""
+    },
+    notes: staff.notes || ""
+  });
+  const { toast } = useToast();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEmergencyContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      emergencyContact: {
+        ...prev.emergencyContact,
+        [name]: value
+      }
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdateInfo({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      emergencyContact: formData.emergencyContact,
+      notes: formData.notes
+    });
+    toast({
+      title: "Information Updated",
+      description: "Staff member's personal information has been updated."
+    });
+  };
+
   return (
-    <Card className="p-6">
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Full Name</label>
-            <Input
-              value={staff.name}
-              onChange={(e) => onUpdateInfo({ name: e.target.value })}
-            />
+    <Card>
+      <CardContent className="p-6">
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Personal Information</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Full Name</label>
+                <Input 
+                  name="name" 
+                  value={formData.name} 
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <Input 
+                  name="email" 
+                  type="email" 
+                  value={formData.email} 
+                  onChange={handleChange}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input 
+                  name="phone" 
+                  value={formData.phone} 
+                  onChange={handleChange}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Address</label>
+                <Input 
+                  name="address" 
+                  value={formData.address} 
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <h3 className="text-lg font-medium">Emergency Contact</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <Input 
+                  name="name" 
+                  value={formData.emergencyContact.name} 
+                  onChange={handleEmergencyContactChange}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input 
+                  name="phone" 
+                  value={formData.emergencyContact.phone} 
+                  onChange={handleEmergencyContactChange}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Relationship</label>
+                <Input 
+                  name="relationship" 
+                  value={formData.emergencyContact.relationship} 
+                  onChange={handleEmergencyContactChange}
+                />
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div>
+              <label className="text-sm font-medium">Notes</label>
+              <Textarea 
+                name="notes" 
+                value={formData.notes} 
+                onChange={handleChange}
+                className="min-h-[100px]"
+              />
+            </div>
+            
+            <Button type="submit" className="w-full md:w-auto">
+              Save Changes
+            </Button>
           </div>
-          <div>
-            <label className="text-sm font-medium">Email</label>
-            <Input
-              type="email"
-              value={staff.email}
-              onChange={(e) => onUpdateInfo({ email: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Phone</label>
-            <Input
-              value={staff.phone}
-              onChange={(e) => onUpdateInfo({ phone: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Address</label>
-            <Textarea
-              value={staff.address}
-              onChange={(e) => onUpdateInfo({ address: e.target.value })}
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Emergency Contact</label>
-            <Input
-              placeholder="Name"
-              value={staff.emergencyContact.name}
-              onChange={(e) => onUpdateInfo({
-                emergencyContact: {
-                  ...staff.emergencyContact,
-                  name: e.target.value
-                }
-              })}
-            />
-            <Input
-              className="mt-2"
-              placeholder="Phone"
-              value={staff.emergencyContact.phone}
-              onChange={(e) => onUpdateInfo({
-                emergencyContact: {
-                  ...staff.emergencyContact,
-                  phone: e.target.value
-                }
-              })}
-            />
-            <Input
-              className="mt-2"
-              placeholder="Relationship"
-              value={staff.emergencyContact.relationship}
-              onChange={(e) => onUpdateInfo({
-                emergencyContact: {
-                  ...staff.emergencyContact,
-                  relationship: e.target.value
-                }
-              })}
-            />
-          </div>
-        </div>
-      </div>
+        </form>
+      </CardContent>
     </Card>
   );
 };
