@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import type { Reservation } from "@/types/staff";
+import type { Reservation, ReservationStatus } from "@/types/reservations";
 
 export const useReservationState = () => {
   const { toast } = useToast();
@@ -11,6 +11,7 @@ export const useReservationState = () => {
     const newReservation: Reservation = {
       id: reservations.length + 1,
       ...reservation,
+      createdAt: new Date().toISOString(),
     };
     setReservations([...reservations, newReservation]);
     toast({
@@ -19,9 +20,11 @@ export const useReservationState = () => {
     });
   };
 
-  const updateReservationStatus = (reservationId: number, status: Reservation["status"]) => {
+  const updateReservationStatus = (reservationId: number, status: ReservationStatus) => {
     setReservations(reservations.map(reservation =>
-      reservation.id === reservationId ? { ...reservation, status } : reservation
+      reservation.id === reservationId 
+        ? { ...reservation, status, updatedAt: new Date().toISOString() } 
+        : reservation
     ));
     toast({
       title: "Reservation updated",

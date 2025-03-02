@@ -7,12 +7,13 @@ export interface Reservation {
   time: string;
   partySize: number;
   customerName: string;
-  phoneNumber?: string; // Making this optional since it's not always provided
+  customerPhone: string; // Making this required to match the other definition
   email?: string;
   status: ReservationStatus;
   tableAssigned?: number;
-  tableNumber?: number; // Add this field
+  tableNumber?: number;
   specialRequests?: string;
   notes?: string;
-  createdAt?: string;
+  createdAt: string;
+  updatedAt?: string; // Adding this field to match the other definition
 }

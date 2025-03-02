@@ -1,174 +1,185 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { DatabaseStaffMemberInsert, mapStaffStatusToDatabase } from '../../types/databaseTypes';
+import type { DatabaseStaffMemberInsert } from '../../types/databaseTypes';
 import type { StaffMember } from '@/types/staff/employee';
 import { mapStaffMemberToDatabase } from '../../utils/staffMapper';
 
-// Mock data for testing when Supabase is not available
-import { initialStaff } from '@/hooks/dashboard/staff/useStaffBasic';
+// Mock data for when table doesn't exist
+import { mockStaffData } from '../mockData/mockStaffData';
 
-// Check if tables exist (for development and testing)
-const tableExists = async (tableName: string): Promise<boolean> => {
+// Check if the staff_members table exists in the database
+export const checkTableExists = async (): Promise<boolean> => {
   try {
+    // This is a proper way to check if a table exists in Supabase
     const { data, error } = await supabase
-      .from(tableName)
+      .from('staff_members')
       .select('id')
       .limit(1);
     
-    return !error;
+    return !error; // If there's no error, the table exists
   } catch (error) {
-    console.error(`Error checking if table ${tableName} exists:`, error);
+    console.error('Error checking table existence:', error);
     return false;
   }
 };
 
-/**
- * Create a new staff member
- */
-export const createStaffMember = async (
-  staffData: Omit<StaffMember, 'id'>
-): Promise<StaffMember | null> => {
+// Create a new staff member
+export const createStaffMember = async (staffData: Omit<StaffMember, 'id'>): Promise<StaffMember> => {
   try {
-    const dbStaffMember = mapStaffMemberToDatabase(staffData);
+    const tableExists = await checkTableExists();
     
-    // Ensure status is compatible with database
-    if (dbStaffMember.status) {
-      dbStaffMember.status = mapStaffStatusToDatabase(staffData.status as any);
-    }
-
-    // Check if staff_members table exists
-    const hasTable = await tableExists('staff_members');
-    
-    if (!hasTable) {
-      // If table doesn't exist, simulate adding to the initialStaff array
-      console.log('Staff members table not found, using mock data');
-      const newId = Math.max(...initialStaff.map(s => s.id)) + 1;
+    if (!tableExists) {
+      console.warn('Staff members table does not exist, using mock data');
+      // Create a new mock staff member with an ID
+      const newId = Math.max(...mockStaffData.map(s => s.id)) + 1;
       const newStaff = {
-        ...staffData,
-        id: newId
-      } as StaffMember;
+        id: newId,
+        name: staffData.name || '',
+        email: staffData.email,
+        phone: staffData.phone,
+        role: staffData.role || 'server',
+        department: staffData.department,
+        status: staffData.status as any || 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        // Add other required properties based on DatabaseStaffMember type
+        performance_rating: 0,
+        certifications: [],
+        notes: '',
+        schedule: {},
+        salary: 0
+      };
       
-      return newStaff;
+      // In a real app, we would insert this into the database
+      // For now, just return the mock data
+      return {
+        id: newId,
+        name: staffData.name || '',
+        email: staffData.email,
+        phone: staffData.phone,
+        role: staffData.role || 'server',
+        department: staffData.department,
+        status: staffData.status || 'active',
+        // Add other properties from staffData
+        ...staffData
+      };
     }
-
+    
+    // Transform the staff data to match the database schema
+    const dbStaffData = mapStaffMemberToDatabase(staffData);
+    
     const { data, error } = await supabase
       .from('staff_members')
-      .insert(dbStaffMember as any)
-      .select()
+      .insert(dbStaffData)
+      .select('*')
       .single();
-
-    if (error) {
-      console.error('Error creating staff member:', error);
-      return null;
-    }
-
+    
+    if (error) throw error;
+    
+    // Map the database result back to a StaffMember
     return {
       id: data.id,
       name: data.name,
       email: data.email,
       phone: data.phone,
       role: data.role,
-      status: data.status || 'active',
-      hireDate: data.hire_date,
       department: data.department,
-      salary: data.salary,
-      // ... map other fields
-    } as StaffMember;
+      status: data.status,
+      // Add other properties from StaffMember
+      ...staffData
+    };
   } catch (error) {
-    console.error('Error in createStaffMember:', error);
-    return null;
+    console.error('Error creating staff member:', error);
+    throw error;
   }
 };
 
-/**
- * Update a staff member's status
- */
-export const updateStaffStatus = async (
-  staffId: number, 
-  status: string
-): Promise<boolean> => {
+// Update a staff member's status
+export const updateStaffStatus = async (staffId: number, status: string): Promise<boolean> => {
   try {
-    // Map the status to a database compatible value
-    const dbStatus = mapStaffStatusToDatabase(status as any);
+    const tableExists = await checkTableExists();
     
-    // Check if staff_members table exists
-    const hasTable = await tableExists('staff_members');
-    
-    if (!hasTable) {
-      // Mock update for testing
-      console.log(`Updating staff ${staffId} status to ${status}`);
-      return true;
-    }
-
-    const { error } = await supabase
-      .from('staff_members')
-      .update({ 
-        status: dbStatus,
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', staffId);
-
-    if (error) {
-      console.error(`Error updating staff ${staffId} status:`, error);
+    if (!tableExists) {
+      console.warn('Staff members table does not exist, using mock data');
+      // Find the staff member in mock data and update their status
+      const staffIndex = mockStaffData.findIndex(s => s.id === staffId);
+      if (staffIndex >= 0) {
+        mockStaffData[staffIndex].status = status as any;
+        return true;
+      }
       return false;
     }
-
+    
+    const { error } = await supabase
+      .from('staff_members')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', staffId);
+    
+    if (error) throw error;
+    
     return true;
   } catch (error) {
-    console.error('Error in updateStaffStatus:', error);
-    return false;
+    console.error('Error updating staff status:', error);
+    throw error;
   }
 };
 
-/**
- * Update staff member information
- */
-export const updateStaffInfo = async (
-  staffId: number, 
-  updates: Partial<StaffMember>
-): Promise<StaffMember | null> => {
+// Update staff member information
+export const updateStaffInfo = async (staffId: number, updates: Partial<StaffMember>): Promise<StaffMember> => {
   try {
+    const tableExists = await checkTableExists();
+    
+    if (!tableExists) {
+      console.warn('Staff members table does not exist, using mock data');
+      // Find the staff member in mock data and update their information
+      const staffIndex = mockStaffData.findIndex(s => s.id === staffId);
+      if (staffIndex >= 0) {
+        // Update mock data with the new information
+        const updatedStaff = { ...mockStaffData[staffIndex], ...mapStaffMemberToDatabase(updates), updated_at: new Date().toISOString() };
+        mockStaffData[staffIndex] = updatedStaff;
+        
+        // Convert to StaffMember type and return
+        return {
+          id: updatedStaff.id,
+          name: updatedStaff.name,
+          email: updatedStaff.email,
+          phone: updatedStaff.phone,
+          role: updatedStaff.role,
+          status: updatedStaff.status,
+          // Add other properties
+          ...updates
+        };
+      }
+      throw new Error('Staff member not found');
+    }
+    
+    // Transform updates to match database schema
     const dbUpdates = mapStaffMemberToDatabase(updates);
+    dbUpdates.updated_at = new Date().toISOString();
     
-    // Ensure status is compatible with database if it exists
-    if (updates.status) {
-      dbUpdates.status = mapStaffStatusToDatabase(updates.status);
-    }
-
-    // Check if staff_members table exists  
-    const hasTable = await tableExists('staff_members');
-    
-    if (!hasTable) {
-      // Mock update for testing
-      console.log(`Updating staff ${staffId} with:`, updates);
-      return { ...updates, id: staffId } as StaffMember;
-    }
-
     const { data, error } = await supabase
       .from('staff_members')
-      .update({
-        ...dbUpdates,
-        updated_at: new Date().toISOString()
-      })
+      .update(dbUpdates)
       .eq('id', staffId)
-      .select()
+      .select('*')
       .single();
-
-    if (error) {
-      console.error(`Error updating staff ${staffId}:`, error);
-      return null;
-    }
-
+    
+    if (error) throw error;
+    
+    // Map the database result back to a StaffMember
     return {
       id: data.id,
       name: data.name,
       email: data.email,
       phone: data.phone,
       role: data.role,
-      status: data.status || 'active',
-      // ... map other fields
-    } as StaffMember;
+      department: data.department,
+      status: data.status,
+      // Add other required properties
+      ...updates
+    };
   } catch (error) {
-    console.error('Error in updateStaffInfo:', error);
-    return null;
+    console.error('Error updating staff information:', error);
+    throw error;
   }
 };
