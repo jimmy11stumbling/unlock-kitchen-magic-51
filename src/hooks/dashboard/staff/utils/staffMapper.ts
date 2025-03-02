@@ -1,8 +1,8 @@
-import type { StaffMember, StaffRole, StaffStatus } from "@/types/staff";
+import type { StaffMember } from '@/types/staff';
+import type { Json } from '@/types/database';
 import type { DatabaseStaffMember } from '../types/databaseTypes';
-import { Json } from "@/types/database";
 
-export const mapDatabaseStaffToClient = (dbStaff: DatabaseStaffMember): StaffMember => {
+export const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMember => {
   // Extract emergency contact from JSON
   const emergencyContact = dbStaff.emergency_contact ? 
     typeof dbStaff.emergency_contact === 'string' 
@@ -35,6 +35,21 @@ export const mapDatabaseStaffToClient = (dbStaff: DatabaseStaffMember): StaffMem
     }
   }
 
+  // Update to handle missing hire_date and start_date properties
+  let hireDate = undefined;
+  if ('hire_date' in dbStaff && dbStaff.hire_date) {
+    hireDate = dbStaff.hire_date;
+  } else if ('created_at' in dbStaff && dbStaff.created_at) {
+    hireDate = dbStaff.created_at;
+  }
+
+  let startDate = undefined;
+  if ('start_date' in dbStaff && dbStaff.start_date) {
+    startDate = dbStaff.start_date;
+  } else if ('created_at' in dbStaff && dbStaff.created_at) {
+    startDate = dbStaff.created_at;
+  }
+
   return {
     id: dbStaff.id,
     name: dbStaff.name,
@@ -45,7 +60,7 @@ export const mapDatabaseStaffToClient = (dbStaff: DatabaseStaffMember): StaffMem
     address: dbStaff.address || '',
     department: dbStaff.department || '',
     shift: dbStaff.shift || '',
-    hireDate: dbStaff.hire_date || new Date().toISOString().split('T')[0], // Supply a default date
+    hireDate: hireDate || new Date().toISOString().split('T')[0], // Supply a default date
     hourlyRate: dbStaff.hourly_rate || 0,
     overtimeRate: dbStaff.overtime_rate || 0,
     salary: dbStaff.salary || 0,
@@ -58,35 +73,35 @@ export const mapDatabaseStaffToClient = (dbStaff: DatabaseStaffMember): StaffMem
       : [],
     performanceRating: dbStaff.performance_rating || 0,
     notes: dbStaff.notes || '',
-    startDate: dbStaff.start_date || '',
+    startDate: startDate || '',
     bankInfo: dbStaff.bank_info || null
   };
 };
 
-export const mapClientStaffToDatabase = (clientStaff: Omit<StaffMember, 'id'>): Omit<DatabaseStaffMember, 'id'> => {
-  const scheduleString = JSON.stringify(clientStaff.schedule);
-  const emergencyContactString = JSON.stringify(clientStaff.emergencyContact);
+export const mapStaffMemberToDatabase = (staff: Partial<StaffMember>): Omit<DatabaseStaffMember, "id"> => {
+  const scheduleString = JSON.stringify(staff.schedule);
+  const emergencyContactString = JSON.stringify(staff.emergencyContact);
 
   return {
-    name: clientStaff.name,
-    role: clientStaff.role,
-    status: clientStaff.status,
-    email: clientStaff.email || null,
-    phone: clientStaff.phone || null,
-    address: clientStaff.address || null,
-    department: clientStaff.department || null,
-    shift: clientStaff.shift || null,
-    hire_date: clientStaff.hireDate || new Date().toISOString().split('T')[0],
-    hourly_rate: clientStaff.hourlyRate || null,
-    overtime_rate: clientStaff.overtimeRate || null,
-    salary: clientStaff.salary || null,
+    name: staff.name,
+    role: staff.role,
+    status: staff.status,
+    email: staff.email || null,
+    phone: staff.phone || null,
+    address: staff.address || null,
+    department: staff.department || null,
+    shift: staff.shift || null,
+    hire_date: staff.hireDate || new Date().toISOString().split('T')[0],
+    hourly_rate: staff.hourlyRate || null,
+    overtime_rate: staff.overtimeRate || null,
+    salary: staff.salary || null,
     schedule: scheduleString as Json,
     emergency_contact: emergencyContactString as Json,
-    certifications: clientStaff.certifications || [],
-    performance_rating: clientStaff.performanceRating || null,
-    notes: clientStaff.notes || null,
-    start_date: clientStaff.startDate || null,
-    bank_info: clientStaff.bankInfo || null,
+    certifications: staff.certifications || [],
+    performance_rating: staff.performanceRating || null,
+    notes: staff.notes || null,
+    start_date: staff.startDate || null,
+    bank_info: staff.bankInfo || null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     tax_id: null,
@@ -94,3 +109,6 @@ export const mapClientStaffToDatabase = (clientStaff: Omit<StaffMember, 'id'>): 
     employment_status: "full_time",
   };
 };
+
+// Export this function that is referenced in other files
+export { mapDatabaseToStaffMember as mapDatabaseToStaffMember };

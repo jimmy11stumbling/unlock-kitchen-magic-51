@@ -1,9 +1,10 @@
-
 export interface OrderItem {
   id: number;
   name: string;
   quantity: number;
   price: number;
+  station?: string;
+  notes?: string;
 }
 
 export interface Order {

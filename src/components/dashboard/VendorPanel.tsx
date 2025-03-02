@@ -63,6 +63,8 @@ export const VendorPanel = () => {
   const adaptedVendors: Vendor[] = vendors ? vendors.map((vendor: any) => ({
     id: vendor.id,
     name: vendor.name,
+    contactName: vendor.contactName || '',
+    category: vendor.category || '',
     email: vendor.email || '',
     phone: vendor.phone || '',
     address: vendor.address || '',
@@ -77,7 +79,7 @@ export const VendorPanel = () => {
   const adaptedExpenses: Expense[] = expenses ? expenses.map((expense: any) => ({
     id: expense.id,
     vendorId: expense.vendorId,
-    vendorName: expense.vendorName,
+    vendorName: expense.vendorName || '',
     amount: expense.amount,
     date: expense.date,
     category: expense.category,
@@ -91,14 +93,22 @@ export const VendorPanel = () => {
   })) : [];
 
   const adaptedSummary: AccountingSummary = summary ? {
-    totalExpenses: summary.totalExpenses,
-    totalPaid: summary.totalPaid,
-    totalPending: summary.totalPending,
-    taxDeductibleAmount: summary.taxDeductibleAmount,
+    id: summary.id || '',
+    total: summary.total || 0,
+    paid: summary.paid || 0,
+    overdue: summary.overdue || 0,
+    totalExpenses: summary.totalExpenses || 0,
+    totalPaid: summary.totalPaid || 0,
+    totalPending: summary.totalPending || 0,
+    taxDeductibleAmount: summary.taxDeductibleAmount || 0,
     expensesByCategory: summary.expensesByCategory || {},
     expensesByVendor: summary.expensesByVendor || {},
     monthlyTotals: summary.monthlyTotals || {}
   } : {
+    id: '',
+    total: 0,
+    paid: 0,
+    overdue: 0,
     totalExpenses: 0,
     totalPaid: 0,
     totalPending: 0,

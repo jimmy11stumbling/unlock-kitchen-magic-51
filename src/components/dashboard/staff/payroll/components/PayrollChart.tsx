@@ -22,6 +22,14 @@ const PayrollChart: React.FC<PayrollChartProps> = ({ entries }) => {
     deductions: entry.grossPay - entry.netPay
   }));
 
+  // Format currency for the tooltip
+  const formatCurrency = (value: any) => {
+    if (typeof value === 'number') {
+      return `$${value.toFixed(2)}`;
+    }
+    return value;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -38,7 +46,7 @@ const PayrollChart: React.FC<PayrollChartProps> = ({ entries }) => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="period" />
               <YAxis />
-              <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+              <Tooltip formatter={(value) => formatCurrency(value)} />
               <Bar dataKey="grossPay" name="Gross Pay" fill="#4f46e5" />
               <Bar dataKey="netPay" name="Net Pay" fill="#84cc16" />
               <Bar dataKey="deductions" name="Deductions" fill="#f97316" />

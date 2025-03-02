@@ -61,5 +61,10 @@ export const paymentService = {
       status: "scheduled",
       reference
     };
+  },
+
+  // Add missing createPayment method
+  async createPayment(vendorId: number, amount: number, method: string, reference: string): Promise<VendorPayment> {
+    return this.makePayment(vendorId, amount, method, reference);
   }
 };

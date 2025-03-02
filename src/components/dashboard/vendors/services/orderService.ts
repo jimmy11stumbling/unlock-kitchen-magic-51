@@ -63,5 +63,23 @@ export const orderService = {
       console.error('Error fetching vendor orders:', error);
       return [];
     }
+  },
+
+  // Add methods that are referenced in vendorService.ts
+  async createNewOrder(vendorId: number, items: any[]): Promise<VendorOrder> {
+    console.log('Creating new order for vendor:', vendorId, 'with items:', items);
+    return {
+      id: uuidv4(),
+      vendorId,
+      date: new Date().toISOString(),
+      status: 'pending',
+      amount: items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0),
+      items
+    };
+  },
+
+  async generateOrderPdf(orderId: string): Promise<string> {
+    console.log('Generating PDF for order:', orderId);
+    return `https://example.com/orders/${orderId}.pdf`;
   }
 };

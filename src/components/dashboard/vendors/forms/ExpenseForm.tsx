@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +25,19 @@ interface ExpenseFormProps {
   onSuccess: () => void;
 }
 
+const initialExpense = {
+  vendorId: 0,
+  vendorName: '',
+  amount: 0,
+  date: new Date().toISOString().split('T')[0],
+  category: '',
+  description: '',
+  paymentMethod: 'bank_transfer',
+  status: 'pending' as const,
+  receiptUrl: '',
+  taxDeductible: false
+};
+
 export const ExpenseForm = ({ expense, onClose, onSuccess }: ExpenseFormProps) => {
   const { toast } = useToast();
   const [vendors, setVendors] = useState<{ id: number; name: string }[]>([]);
@@ -34,16 +46,18 @@ export const ExpenseForm = ({ expense, onClose, onSuccess }: ExpenseFormProps) =
   );
   
   const [formData, setFormData] = useState<Omit<Expense, "id" | "createdAt" | "updatedAt">>({
-    vendorId: expense?.vendorId || 0,
-    amount: expense?.amount || 0,
-    date: expense?.date || new Date().toISOString(),
-    category: expense?.category || "supplies",
-    description: expense?.description || "",
-    paymentMethod: expense?.paymentMethod || "bank_transfer",
-    receiptUrl: expense?.receiptUrl || "",
-    taxDeductible: expense?.taxDeductible || false,
-    status: expense?.status || "pending"
+    vendorId: expense?.vendorId || initialExpense.vendorId,
+    amount: expense?.amount || initialExpense.amount,
+    date: expense?.date || initialExpense.date,
+    category: expense?.category || initialExpense.category,
+    description: expense?.description || initialExpense.description,
+    paymentMethod: expense?.paymentMethod || initialExpense.paymentMethod,
+    receiptUrl: expense?.receiptUrl || initialExpense.receiptUrl,
+    taxDeductible: expense?.taxDeductible || initialExpense.taxDeductible,
+    status: expense?.status || initialExpense.status
   });
+
+  const [submitting, setSubmitting] = useState(false);
 
   // Fetch vendors for dropdown
   useEffect(() => {
@@ -89,14 +103,25 @@ export const ExpenseForm = ({ expense, onClose, onSuccess }: ExpenseFormProps) =
     e.preventDefault();
     
     try {
+      setSubmitting(true);
+      
+      // Find the selected vendor to get its name
+      const selectedVendorObj = vendors.find(v => v.id === formData.vendorId);
+      const vendorName = selectedVendorObj ? selectedVendorObj.name : '';
+      
+      const newExpense = {
+        ...formData,
+        vendorName // Add this line to include vendorName
+      };
+      
       if (expense) {
-        await vendorService.updateExpense(expense.id.toString(), formData);
+        await vendorService.updateExpense(expense.id.toString(), newExpense);
         toast({
           title: "Expense updated",
           description: "Expense record has been updated successfully"
         });
       } else {
-        await vendorService.addExpense(formData);
+        await vendorService.addExpense(newExpense);
         toast({
           title: "Expense added",
           description: "New expense record has been added successfully"
@@ -110,6 +135,8 @@ export const ExpenseForm = ({ expense, onClose, onSuccess }: ExpenseFormProps) =
         description: expense ? "Failed to update expense" : "Failed to add expense",
         variant: "destructive"
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
