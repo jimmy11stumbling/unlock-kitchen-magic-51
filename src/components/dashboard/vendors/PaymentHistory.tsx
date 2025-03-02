@@ -35,15 +35,9 @@ export const PaymentHistory = ({ payments, vendorId }: PaymentHistoryProps) => {
   const [showAddPayment, setShowAddPayment] = useState(false);
   const { toast } = useToast();
 
-  const handleCreatePayment = async () => {
+  const handleCreatePayment = async (paymentData: any) => {
     try {
-      await vendorService.createPayment({ 
-        vendorId, 
-        amount: 0,
-        date: new Date().toISOString(),
-        method: "bank_transfer", 
-        status: "pending" 
-      });
+      await vendorService.createPayment(paymentData);
       
       toast({
         title: "Payment created",
@@ -137,6 +131,7 @@ export const PaymentHistory = ({ payments, vendorId }: PaymentHistoryProps) => {
         isOpen={showAddPayment} 
         onClose={() => setShowAddPayment(false)}
         onConfirm={handleCreatePayment}
+        vendorId={vendorId}
       />
     </div>
   );
