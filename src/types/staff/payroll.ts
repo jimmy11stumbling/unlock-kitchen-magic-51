@@ -9,38 +9,26 @@ export interface PayrollEntry {
   regularRate: number;
   overtimeRate: number;
   grossPay: number;
+  netPay: number;
   deductions: {
     tax: number;
-    insurance: number;
-    retirement: number;
-    other: number;
+    insurance?: number;
+    retirement?: number;
+    other?: number;
   };
-  netPay: number;
-  status: 'pending' | 'processed' | 'paid';
-  paymentDate: string;
-  paymentMethod: 'direct_deposit' | 'check';
-  checkNumber?: string;
+  status: 'pending' | 'processing' | 'completed' | 'error';
+  paymentDate?: string;
+  paymentMethod?: string;
   totalPay?: number;
 }
 
-export interface PayStub {
-  id: number;
-  payrollEntryId: number;
-  staffId: number;
-  generatedDate: string;
-  documentUrl: string;
-}
-
 export interface PayrollSettings {
-  payPeriod: 'weekly' | 'biweekly' | 'monthly';
-  paymentMethod: 'direct_deposit' | 'check';
-  taxWithholding: {
-    federal: number;
-    state: number;
-    local: number;
-  };
-  benefits: {
+  taxRate: number;
+  overtimeThreshold: number;
+  overtimeMultiplier: number;
+  deductionRates: {
     insurance: number;
     retirement: number;
   };
+  paySchedule: 'weekly' | 'biweekly' | 'monthly';
 }

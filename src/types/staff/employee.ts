@@ -1,65 +1,35 @@
 
-import type { PayrollSettings } from './payroll';
-
-export type StaffRole = 'manager' | 'chef' | 'server' | 'host' | 'bartender';
-export type StaffStatus = 'active' | 'on_break' | 'off_duty';
-
 export interface StaffMember {
   id: number;
   name: string;
-  role: StaffRole;
-  status: StaffStatus;
-  shift: string;
-  salary: number;
+  email?: string;
+  phone?: string;
+  role: 'manager' | 'chef' | 'server' | 'bartender' | 'host';
+  hireDate: string;
+  schedule?: Record<string, string>;
   hourlyRate?: number;
   overtimeRate?: number;
-  email: string;
-  phone: string;
-  address: string;
-  emergencyContact: {
+  status?: 'active' | 'on_leave' | 'terminated' | 'on_duty' | 'off_duty';
+  department?: string;
+  performanceRating?: number;
+  address?: string;
+  certifications?: string[];
+  emergencyContact?: {
     name: string;
     phone: string;
     relationship: string;
   };
-  startDate: string;
-  department: string;
-  certifications: string[];
-  performanceRating: number;
-  notes: string;
-  schedule: {
-    monday: string;
-    tuesday: string;
-    wednesday: string;
-    thursday: string;
-    friday: string;
-    saturday: string;
-    sunday: string;
-  };
-  bankInfo: {
-    accountNumber: string;
-    routingNumber: string;
-    accountType: "checking" | "savings";
-  };
-  payrollSettings?: PayrollSettings;
-  taxInfo?: {
-    ssn: string;
-    w4Status: string;
-    allowances: number;
-    additionalWithholding: number;
-  };
-  payrollEntries?: any[];
-}
-
-export interface Message {
-  role: "user" | "assistant";
-  content: string;
+  shift?: string;
+  notes?: string;
+  payrollEntries?: PayrollEntry[];
 }
 
 export interface Shift {
   id: number;
   staffId: number;
   date: string;
-  time: string;
-  startTime?: string;
-  endTime?: string;
+  startTime: string;
+  endTime: string;
+  status?: 'scheduled' | 'completed' | 'missed' | 'in_progress';
+  notes?: string;
 }

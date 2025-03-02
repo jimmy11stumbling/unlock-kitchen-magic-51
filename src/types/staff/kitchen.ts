@@ -5,10 +5,10 @@ export interface KitchenOrderItem {
   name: string;
   quantity: number;
   status: 'pending' | 'preparing' | 'ready' | 'delivered';
-  cookingStation: 'grill' | 'fry' | 'salad' | 'dessert' | 'beverage' | 'hot' | 'cold';
-  assignedChef: string;
-  modifications: string[];
-  allergenAlert: boolean;
+  cookingStation: string;
+  assignedChef?: string;
+  modifications?: string[];
+  allergenAlert?: boolean;
   startTime?: string;
   completionTime?: string;
   notes?: string;
@@ -23,12 +23,10 @@ export interface KitchenOrder {
   serverName: string;
   items: KitchenOrderItem[];
   status: 'pending' | 'preparing' | 'ready' | 'delivered';
-  priority: 'normal' | 'high' | 'rush';
-  notes?: string;
+  priority: 'normal' | 'rush' | 'high';
+  created_at: string;  // Keep these snake_case as they come from database directly
+  updated_at: string;  // Keep these snake_case as they come from database directly
   estimatedDeliveryTime: string;
-  startTime?: string;
-  completionTime?: string;
-  created_at: string;
-  updated_at: string;
   coursing?: string;
+  notes?: string;
 }

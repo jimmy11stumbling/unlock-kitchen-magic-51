@@ -1,23 +1,28 @@
-export interface MenuItem {
+
+export interface InventoryItem {
   id: number;
   name: string;
-  description: string;
+  quantity: number;
+  unit: string;
+  minQuantity: number;
   price: number;
   category: string;
-  imageUrl?: string;
-  available: boolean;
-  popular: boolean;
-  allergens: string[];
-  calories: number;
-  prepTime: number;
-  ingredients: string[];
-  station?: string;
-  prep_details?: {
-    prepTime?: number;
-    cookTime?: number;
-    ingredients?: string[];
-    steps?: string[];
-    specialEquipment?: string[];
-    notes?: string;
-  };
+  reorderPoint?: number;
+  idealStockLevel?: number;
+  description?: string;
+  sku?: string;
+  location?: string;
+  categoryId?: string;
+  supplierId?: string;
+}
+
+export interface InventoryHistory {
+  id: string;
+  itemId: number;
+  action: string;
+  quantityChange: number;
+  previousQuantity: number;
+  newQuantity: number;
+  createdAt: string;
+  notes?: string;
 }
