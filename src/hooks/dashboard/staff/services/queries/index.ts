@@ -1,21 +1,23 @@
 
 import { readQueries } from './readQueries';
-import * as writeQueries from './writeQueries';
+// Import proper writeQueries once they're implemented
+// import { writeQueries } from './writeQueries';
 
-export * from './readQueries';
-export * from './writeQueries';
+// Export read queries
+export const {
+  getStaffList,
+  getStaffById,
+  getStaffSchedule,
+  getStaffPermissions,
+  getShiftsByDate,
+  getShiftsByStaffId
+} = readQueries;
 
-export const hasAdminAccess = (staffMember: import('@/types/staff').StaffMember | null): boolean => {
+// Function to check if a staff member has admin/manager access
+export const hasAdminAccess = (staffMember: any | null): boolean => {
   if (!staffMember) return false;
-  return staffMember.role === 'manager';
+  return staffMember.role === 'manager' || staffMember.role === 'owner';
 };
 
-export const getStaffPermissions = async (staffId: number): Promise<string[]> => {
-  try {
-    // This is a mock function until we have actual permissions implementation
-    return ['view_all', 'edit_menu', 'manage_staff', 'view_analytics', 'process_payments'];
-  } catch (error) {
-    console.error('Error fetching staff permissions:', error);
-    throw error;
-  }
-};
+// Export write queries once implemented
+// export const { createStaff, updateStaff, deleteStaff } = writeQueries;

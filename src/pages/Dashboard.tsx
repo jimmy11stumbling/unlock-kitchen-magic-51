@@ -16,7 +16,7 @@ import Tables from "@/routes/dashboard/Tables";
 import Orders from "@/routes/dashboard/Orders";
 import Vendors from "@/routes/dashboard/Vendors";
 import { useLocation } from "react-router-dom";
-import { ChefHat, Bell } from "lucide-react";
+import { ChefHat, Bell, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,11 +29,15 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { NotificationsProvider } from "@/hooks/useNotifications";
+import { SimulationControls } from "@/components/dashboard/SimulationControls";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const Dashboard = () => {
   const location = useLocation();
   const currentTab = location.pathname.split('/')[2] || 'overview';
   const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+  const [showSimulationDialog, setShowSimulationDialog] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,6 +53,20 @@ const Dashboard = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <Dialog open={showSimulationDialog} onOpenChange={setShowSimulationDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" className="relative">
+                  <Database className="h-5 w-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Simulation Controls</DialogTitle>
+                </DialogHeader>
+                <SimulationControls />
+              </DialogContent>
+            </Dialog>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">

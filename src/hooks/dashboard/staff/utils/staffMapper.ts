@@ -1,119 +1,104 @@
 
-import type { StaffMember, StaffStatus } from '@/types/staff';
+import type { StaffMember, StaffDTO } from "@/types/staff";
 
-export const staffMappers = {
-  mapStatusToDatabase: (status: StaffStatus): 'active' | 'on_break' | 'off_duty' => {
-    // Handle the mapping from StaffStatus to database status
-    if (status === 'terminated') {
-      return 'off_duty'; // Map terminated to off_duty as a fallback
-    }
-    return status as 'active' | 'on_break' | 'off_duty';
-  },
-
-  mapDatabaseStatusToStaffStatus: (status: 'active' | 'on_break' | 'off_duty'): StaffStatus => {
-    return status as StaffStatus;
-  },
-
-  mapStaffMemberToDatabase: (staffMember: Partial<StaffMember>): any => {
-    const mapped: any = { ...staffMember };
-    
-    // Convert status if present
-    if (mapped.status) {
-      mapped.status = this.mapStatusToDatabase(mapped.status);
-    }
-    
-    // Handle schedule, emergency_contact, etc. conversion to JSON
-    if (mapped.schedule && typeof mapped.schedule !== 'string') {
-      mapped.schedule = JSON.stringify(mapped.schedule);
-    }
-    
-    if (mapped.emergencyContact && typeof mapped.emergencyContact !== 'string') {
-      mapped.emergency_contact = JSON.stringify(mapped.emergencyContact);
-      delete mapped.emergencyContact;
-    }
-    
-    if (mapped.bankInfo && typeof mapped.bankInfo !== 'string') {
-      mapped.bank_info = JSON.stringify(mapped.bankInfo);
-      delete mapped.bankInfo;
-    }
-    
-    if (mapped.benefits && typeof mapped.benefits !== 'string') {
-      mapped.benefits = JSON.stringify(mapped.benefits);
-    }
-    
-    return mapped;
-  },
-
-  mapDatabaseToStaffMember: (data: any): StaffMember => {
-    const staff: any = { ...data };
-    
-    // Convert schedule from JSON to object
-    if (staff.schedule) {
-      try {
-        if (typeof staff.schedule === 'string') {
-          staff.schedule = JSON.parse(staff.schedule);
-        }
-      } catch (e) {
-        console.error('Error parsing schedule JSON:', e);
-        staff.schedule = {};
-      }
+/**
+ * Maps database DTO to frontend StaffMember model
+ */
+export const mapStaffDtoToModel = (dto: StaffDTO): StaffMember => {
+  let schedule = {};
+  let certifications = [];
+  
+  // Safely parse schedule from JSON string or object
+  try {
+    if (dto.schedule) {
+      schedule = typeof dto.schedule === 'string' 
+        ? JSON.parse(dto.schedule) 
+        : dto.schedule;
     } else {
-      staff.schedule = {};
+      schedule = {
+        monday: "OFF",
+        tuesday: "OFF",
+        wednesday: "OFF",
+        thursday: "OFF",
+        friday: "OFF",
+        saturday: "OFF",
+        sunday: "OFF"
+      };
     }
-    
-    // Convert emergency_contact from JSON to object
-    if (staff.emergency_contact) {
-      try {
-        if (typeof staff.emergency_contact === 'string') {
-          staff.emergencyContact = JSON.parse(staff.emergency_contact);
-        } else {
-          staff.emergencyContact = staff.emergency_contact;
-        }
-      } catch (e) {
-        console.error('Error parsing emergency contact JSON:', e);
-        staff.emergencyContact = { name: '', phone: '', relationship: '' };
-      }
-      delete staff.emergency_contact;
-    } else {
-      staff.emergencyContact = { name: '', phone: '', relationship: '' };
-    }
-    
-    // Convert bank_info from JSON to object
-    if (staff.bank_info) {
-      try {
-        if (typeof staff.bank_info === 'string') {
-          staff.bankInfo = JSON.parse(staff.bank_info);
-        } else {
-          staff.bankInfo = staff.bank_info;
-        }
-      } catch (e) {
-        console.error('Error parsing bank info JSON:', e);
-        staff.bankInfo = {};
-      }
-      delete staff.bank_info;
-    } else {
-      staff.bankInfo = {};
-    }
-    
-    // Convert benefits from JSON to object
-    if (staff.benefits) {
-      try {
-        if (typeof staff.benefits === 'string') {
-          staff.benefits = JSON.parse(staff.benefits);
-        }
-      } catch (e) {
-        console.error('Error parsing benefits JSON:', e);
-        staff.benefits = {};
-      }
-    } else {
-      staff.benefits = {};
-    }
-    
-    // Convert status
-    if (staff.status) {
-      staff.status = this.mapDatabaseStatusToStaffStatus(staff.status);
-    }
-    
-    return staff as StaffMember;
+  } catch (error) {
+    console.error("Error parsing schedule:", error);
+    schedule = {};
   }
+  
+  // Safely parse certifications from JSON string or array
+  try {
+    if (dto.certifications) {
+      certifications = typeof dto.certifications === 'string'
+        ? JSON.parse(dto.certifications)
+        : (Array.isArray(dto.certifications) ? dto.certifications : []);
+    }
+  } catch (error) {
+    console.error("Error parsing certifications:", error);
+    certifications = [];
+  }
+  
+  return {
+    id: dto.id,
+    name: dto.name,
+    role: dto.role || 'server',
+    email: dto.email || '',
+    phone: dto.phone || '',
+    status: dto.status || 'off_duty',
+    salary: dto.salary || 0,
+    hireDate: dto.hire_date || new Date().toISOString().split('T')[0],
+    schedule: schedule,
+    certifications: certifications,
+    performanceRating: dto.performance_rating || 0,
+    notes: dto.notes || '',
+    department: dto.department || 'service',
+  };
+};
+
+/**
+ * Maps frontend StaffMember model to database DTO
+ */
+export const mapStaffModelToDto = (model: StaffMember): StaffDTO => {
+  let scheduleString = '';
+  let certificationsArray = [];
+  
+  // Safely stringify schedule
+  try {
+    scheduleString = typeof model.schedule === 'string'
+      ? model.schedule
+      : JSON.stringify(model.schedule || {});
+  } catch (error) {
+    console.error("Error stringifying schedule:", error);
+    scheduleString = '{}';
+  }
+  
+  // Safely handle certifications
+  try {
+    certificationsArray = typeof model.certifications === 'string'
+      ? JSON.parse(model.certifications)
+      : (Array.isArray(model.certifications) ? model.certifications : []);
+  } catch (error) {
+    console.error("Error processing certifications:", error);
+    certificationsArray = [];
+  }
+  
+  return {
+    id: model.id,
+    name: model.name,
+    role: model.role,
+    email: model.email,
+    phone: model.phone,
+    status: model.status,
+    salary: model.salary,
+    hire_date: model.hireDate,
+    schedule: scheduleString,
+    certifications: certificationsArray,
+    performance_rating: model.performanceRating,
+    notes: model.notes,
+    department: model.department,
+  };
 };
