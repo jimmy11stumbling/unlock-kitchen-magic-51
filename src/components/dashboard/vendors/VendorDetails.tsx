@@ -115,7 +115,6 @@ export const VendorDetails = ({ vendor, onUpdate }: VendorDetailsProps) => {
 
         <TabsContent value="contacts" className="pt-4">
           <ContactsList 
-            contacts={contacts} 
             vendorId={vendor.id} 
             onUpdate={() => fetchTabData("contacts")} 
           />
@@ -137,7 +136,6 @@ export const VendorDetails = ({ vendor, onUpdate }: VendorDetailsProps) => {
 
         <TabsContent value="documents" className="pt-4">
           <VendorDocuments 
-            documents={documents} 
             vendorId={vendor.id} 
             onUpdate={() => fetchTabData("documents")} 
           />
@@ -145,7 +143,6 @@ export const VendorDetails = ({ vendor, onUpdate }: VendorDetailsProps) => {
 
         <TabsContent value="notes" className="pt-4">
           <VendorNotes 
-            notes={notes} 
             vendorId={vendor.id} 
             onUpdate={() => fetchTabData("notes")} 
           />
