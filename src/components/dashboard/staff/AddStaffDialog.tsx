@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,19 +8,24 @@ import type { StaffMember } from "@/types/staff";
 
 interface AddStaffDialogProps {
   open: boolean;
-  onClose: () => void;
+  onOpenChange: () => void;
   onAddStaff: (data: Omit<StaffMember, "id" | "status">) => Promise<StaffMember>;
 }
 
-export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProps) => {
-  const [formData, setFormData] = useState<Omit<StaffMember, "id" | "status">>({
+export function AddStaffDialog({ 
+  open, 
+  onOpenChange, 
+  onAddStaff 
+}: AddStaffDialogProps) {
+  const [staffData, setStaffData] = useState<Omit<StaffMember, "id" | "status">>({
     name: "",
     role: "server",
-    shift: "morning",
-    salary: 35000,
-    hireDate: new Date().toISOString().split('T')[0], // Current date as default hire date
     email: "",
     phone: "",
+    salary: 0,
+    hireDate: new Date().toISOString().split('T')[0],
+    department: "",
+    shift: "",
     address: "",
     emergencyContact: {
       name: "",
@@ -29,7 +33,6 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
       relationship: "",
     },
     startDate: new Date().toISOString().split('T')[0],
-    department: "service",
     certifications: [],
     notes: "",
     bankInfo: {
@@ -41,11 +44,11 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
   const [loading, setLoading] = useState(false);
 
   const handleChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setStaffData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleEmergencyContactChange = (field: string, value: string) => {
-    setFormData((prev) => ({
+    setStaffData((prev) => ({
       ...prev,
       emergencyContact: {
         ...prev.emergencyContact!,
@@ -57,8 +60,8 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await onAddStaff(formData);
-      onClose();
+      await onAddStaff(staffData);
+      onOpenChange();
     } catch (error) {
       console.error("Error adding staff:", error);
     } finally {
@@ -67,7 +70,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Add New Staff Member</DialogTitle>
@@ -78,7 +81,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
             <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
-              value={formData.name}
+              value={staffData.name}
               onChange={(e) => handleChange("name", e.target.value)}
             />
           </div>
@@ -86,7 +89,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
           <div className="space-y-1">
             <Label htmlFor="role">Role</Label>
             <Select
-              value={formData.role}
+              value={staffData.role}
               onValueChange={(value) => handleChange("role", value)}
             >
               <SelectTrigger id="role">
@@ -107,7 +110,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
             <Input
               id="email"
               type="email"
-              value={formData.email}
+              value={staffData.email}
               onChange={(e) => handleChange("email", e.target.value)}
             />
           </div>
@@ -116,7 +119,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
             <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
-              value={formData.phone}
+              value={staffData.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
             />
           </div>
@@ -126,18 +129,8 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
             <Input
               id="salary"
               type="number"
-              value={formData.salary}
+              value={staffData.salary}
               onChange={(e) => handleChange("salary", Number(e.target.value))}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="startDate">Start Date</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={formData.startDate}
-              onChange={(e) => handleChange("startDate", e.target.value)}
             />
           </div>
 
@@ -146,7 +139,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
             <Input
               id="hireDate"
               type="date"
-              value={formData.hireDate}
+              value={staffData.hireDate}
               onChange={(e) => handleChange("hireDate", e.target.value)}
             />
           </div>
@@ -155,7 +148,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
             <Label htmlFor="address">Address</Label>
             <Input
               id="address"
-              value={formData.address}
+              value={staffData.address}
               onChange={(e) => handleChange("address", e.target.value)}
             />
           </div>
@@ -167,7 +160,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
                 <Label htmlFor="emergency-name">Name</Label>
                 <Input
                   id="emergency-name"
-                  value={formData.emergencyContact?.name || ""}
+                  value={staffData.emergencyContact?.name || ""}
                   onChange={(e) => handleEmergencyContactChange("name", e.target.value)}
                 />
               </div>
@@ -175,7 +168,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
                 <Label htmlFor="emergency-phone">Phone</Label>
                 <Input
                   id="emergency-phone"
-                  value={formData.emergencyContact?.phone || ""}
+                  value={staffData.emergencyContact?.phone || ""}
                   onChange={(e) => handleEmergencyContactChange("phone", e.target.value)}
                 />
               </div>
@@ -183,7 +176,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
                 <Label htmlFor="emergency-relationship">Relationship</Label>
                 <Input
                   id="emergency-relationship"
-                  value={formData.emergencyContact?.relationship || ""}
+                  value={staffData.emergencyContact?.relationship || ""}
                   onChange={(e) => handleEmergencyContactChange("relationship", e.target.value)}
                 />
               </div>
@@ -192,7 +185,7 @@ export const AddStaffDialog = ({ open, onClose, onAddStaff }: AddStaffDialogProp
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onOpenChange}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>

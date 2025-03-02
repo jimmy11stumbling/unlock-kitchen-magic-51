@@ -63,17 +63,17 @@ export const useTableState = () => {
     const createKitchenOrder = (orderId: number, tableNumber: number, items: any[]) => {
       const kitchenItems: KitchenOrderItem[] = items.map((item, index) => ({
         id: index + 1,
-        menuItemId: item.id,
+        menu_item_id: item.id,  // Use menu_item_id instead of menuItemId
         name: item.name,
         quantity: item.quantity,
         status: "pending",
-        cookingStation: item.station || "grill",
+        cooking_station: item.station || "grill",  // Use cooking_station instead of cookingStation
         notes: item.notes
       }));
 
       const order: KitchenOrder = {
         id: Math.floor(Math.random() * 1000),
-        orderId: orderId,
+        order_id: orderId,  // Use order_id instead of orderId
         tableNumber: tableNumber,
         serverName: "Server",
         items: kitchenItems,
@@ -81,7 +81,7 @@ export const useTableState = () => {
         priority: "normal",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        estimatedDeliveryTime: new Date(Date.now() + 30 * 60000).toISOString(),
+        estimated_delivery_time: new Date(Date.now() + 30 * 60000).toISOString(),
         coursing: "standard"
       };
 

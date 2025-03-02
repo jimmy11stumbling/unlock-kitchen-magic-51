@@ -1,5 +1,4 @@
 
-import { useStaffState } from "./dashboard/useStaffState";
 import { useInventoryState } from "./dashboard/useInventoryState";
 import { useOrderState } from "./dashboard/useOrderState";
 import { useMenuState } from "./dashboard/useMenuState";
@@ -8,6 +7,7 @@ import { useAnalyticsState } from "./dashboard/useAnalyticsState";
 import { useLoyaltyState } from "./dashboard/useLoyaltyState";
 import { useTableState } from "./dashboard/useTableState";
 import { useKitchenState } from "./dashboard/useKitchenState";
+import { useStaffState } from "./dashboard/useStaffState"; // Import from the correct path
 
 export const useDashboardState = () => {
   const staffState = useStaffState();

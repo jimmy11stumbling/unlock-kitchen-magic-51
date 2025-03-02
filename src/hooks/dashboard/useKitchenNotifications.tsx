@@ -1,65 +1,94 @@
-
-import { useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { notificationService } from '@/services/notifications/notificationService';
-import type { KitchenOrder } from '@/types/staff';
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import type { KitchenOrder } from "@/types/staff";
 
 export const useKitchenNotifications = () => {
+  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    notificationService.requestPermission();
+    fetchKitchenOrders();
+    subscribeToKitchenOrders();
   }, []);
 
-  const notifyNewOrder = (order: KitchenOrder) => {
-    toast({
-      title: "New Order",
-      description: `Order #${order.order_id} received for Table ${order.table_number}`,
-    });
+  useEffect(() => {
+    const newNotifications = getNotifications();
+    setNotifications(newNotifications);
+  }, [kitchenOrders]);
 
-    notificationService.showNotification(
-      "New Kitchen Order",
-      {
-        body: `Order #${order.order_id} received for Table ${order.table_number}`,
-        icon: "/icons/kitchen.png"
+  const subscribeToKitchenOrders = () => {
+    const channel = supabase
+      .channel('kitchen-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'kitchen_orders'
+        },
+        () => {
+          fetchKitchenOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const fetchKitchenOrders = async () => {
+    const { data, error } = await supabase
+      .from('kitchen_orders')
+      .select('*')
+      .in('status', ['pending', 'preparing'])
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch kitchen orders",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setKitchenOrders(data as KitchenOrder[]);
+  };
+
+  const getNotifications = () => {
+    const notifications = [];
+    
+    // Add order delay notifications
+    for (const order of kitchenOrders) {
+      const estimatedDelivery = new Date(order.estimated_delivery_time);
+      const now = new Date();
+      
+      if (estimatedDelivery < now && order.status !== 'delivered') {
+        notifications.push({
+          id: `delay-${order.id}`,
+          title: "Order Delayed",
+          message: `Order #${order.order_id} for Table ${order.tableNumber} is past its estimated delivery time`,
+          type: 'warning',
+          timestamp: now.toISOString()
+        });
       }
-    );
-  };
-
-  const notifyOrderReady = (order: KitchenOrder) => {
-    toast({
-      title: "Order Ready",
-      description: `Order #${order.order_id} is ready for service`,
-    });
-
-    notificationService.showNotification(
-      "Order Ready for Service",
-      {
-        body: `Order #${order.order_id} is ready for pickup`,
-        icon: "/icons/ready.png"
+      
+      if (order.priority === 'rush') {
+        notifications.push({
+          id: `rush-${order.id}`,
+          title: "Rush Order",
+          message: `Order #${order.order_id} for Table ${order.tableNumber} is marked as rush priority`,
+          type: 'alert',
+          timestamp: order.created_at
+        });
       }
-    );
+    }
+    
+    return notifications;
   };
 
-  const notifyOrderOverdue = (order: KitchenOrder) => {
-    toast({
-      title: "Order Overdue",
-      description: `Order #${order.order_id} is taking longer than expected`,
-      variant: "destructive"
-    });
-
-    notificationService.showNotification(
-      "Order Overdue",
-      {
-        body: `Order #${order.order_id} requires immediate attention`,
-        icon: "/icons/warning.png"
-      }
-    );
-  };
-
-  return {
-    notifyNewOrder,
-    notifyOrderReady,
-    notifyOrderOverdue
-  };
+  return { notifications };
 };

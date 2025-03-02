@@ -3,21 +3,18 @@ import type { DailyReport } from "@/types/staff";
 export const initialDailyReports: DailyReport[] = [
   {
     id: 1,
-    date: "2024-03-01",
-    totalRevenue: 5800,
-    totalOrders: 145,
-    averageOrderValue: 40,
+    date: "2023-06-01",
+    totalRevenue: 4780.45,
+    totalOrders: 156,
+    averageOrderValue: 30.64,
     topSellingItems: [
-      { 
+      {
         id: 1,
         name: "Classic Burger",
-        price: 14.99,
         category: "main",
-        description: "Angus beef patty with lettuce, tomato, and special sauce",
-        available: true,
-        allergens: ["dairy", "gluten"],
-        preparationTime: 15,
-        orderCount: 45
+        price: 14.99,
+        orderCount: 48,
+        description: "Angus beef patty with lettuce, tomato, and special sauce"
       },
       {
         id: 4,
@@ -25,9 +22,6 @@ export const initialDailyReports: DailyReport[] = [
         price: 7.99,
         category: "beverage",
         description: "Glass of house red or white wine",
-        available: true,
-        allergens: ["sulfites"],
-        preparationTime: 2,
         orderCount: 38
       },
       {
@@ -36,15 +30,12 @@ export const initialDailyReports: DailyReport[] = [
         price: 8.99,
         category: "dessert",
         description: "Warm chocolate cake with molten center",
-        available: true,
-        allergens: ["dairy", "eggs", "gluten"],
-        preparationTime: 20,
         orderCount: 32
       }
     ],
-    laborCosts: 1200,
-    inventoryCosts: 2000,
-    netProfit: 2600
+    laborCosts: 1200.00,
+    inventoryCosts: 1650.25,
+    netProfit: 1930.20
   },
   {
     id: 2,
@@ -53,15 +44,12 @@ export const initialDailyReports: DailyReport[] = [
     totalOrders: 178,
     averageOrderValue: 30.06,
     topSellingItems: [
-      { 
+      {
         id: 2,
         name: "Margherita Pizza",
         price: 16.99,
         category: "main",
         description: "Fresh mozzarella, tomatoes, and basil",
-        available: true,
-        allergens: ["dairy", "gluten"],
-        preparationTime: 18,
         orderCount: 52
       },
       {
@@ -70,9 +58,6 @@ export const initialDailyReports: DailyReport[] = [
         price: 8.99,
         category: "beverage",
         description: "Selection of local craft beers",
-        available: true,
-        allergens: ["gluten"],
-        preparationTime: 2,
         orderCount: 41
       },
       {
@@ -81,9 +66,6 @@ export const initialDailyReports: DailyReport[] = [
         price: 9.99,
         category: "dessert",
         description: "Classic Italian dessert",
-        available: true,
-        allergens: ["dairy", "eggs", "gluten"],
-        preparationTime: 5,
         orderCount: 35
       }
     ],
@@ -98,15 +80,12 @@ export const initialDailyReports: DailyReport[] = [
     totalOrders: 163,
     averageOrderValue: 30.00,
     topSellingItems: [
-      { 
+      {
         id: 7,
         name: "Seafood Pasta",
         price: 22.99,
         category: "main",
         description: "Fresh seafood in white wine sauce",
-        available: true,
-        allergens: ["shellfish", "gluten"],
-        preparationTime: 20,
         orderCount: 38
       },
       {
@@ -115,9 +94,6 @@ export const initialDailyReports: DailyReport[] = [
         price: 11.99,
         category: "beverage",
         description: "Classic Cuban cocktail",
-        available: true,
-        allergens: [],
-        preparationTime: 4,
         orderCount: 45
       },
       {
@@ -126,9 +102,6 @@ export const initialDailyReports: DailyReport[] = [
         price: 7.99,
         category: "dessert",
         description: "Warm apple pie with vanilla ice cream",
-        available: true,
-        allergens: ["dairy", "gluten"],
-        preparationTime: 8,
         orderCount: 29
       }
     ],

@@ -1,96 +1,90 @@
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Clock, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import type { KitchenOrder, KitchenOrderItem } from "@/types/staff";
 
 interface KitchenStationTabsProps {
   orders: KitchenOrder[];
-  onUpdateStatus: (orderId: number, status: KitchenOrderItem["status"]) => void;
+  onUpdateStatus: (orderId: number, status: KitchenOrder["status"]) => void;
+  onUpdateItemStatus: (
+    orderId: number,
+    itemId: number,
+    status: KitchenOrderItem["status"],
+    assignedChef?: string
+  ) => void;
 }
 
-export function KitchenStationTabs({ orders, onUpdateStatus }: KitchenStationTabsProps) {
-  const stations = ["grill", "fry", "salad", "dessert", "beverage", "hot", "cold"];
+export function KitchenStationTabs({ orders, onUpdateStatus, onUpdateItemStatus }: KitchenStationTabsProps) {
+  const [activeTab, setActiveTab] = useState("all");
 
-  const getItemsForStation = (items: KitchenOrderItem[], station: string) => {
-    return items.filter(item => item.cooking_station === station);
-  };
+  // Calculate item status counts for each order
+  const [itemStatusCounts, setItemStatusCounts] = useState<{
+    [orderId: number]: { total: number; completed: number };
+  }>({});
 
-  const timeElapsed = (item: KitchenOrderItem) => {
-    if (!item.start_time) return 0;
-    return Math.floor(
-      (new Date().getTime() - new Date(item.start_time).getTime()) / 1000 / 60
-    );
-  };
+  useEffect(() => {
+    const counts: { [orderId: number]: { total: number; completed: number } } = {};
+    orders.forEach((order) => {
+      const totalItems = order.items.length;
+      const completedItems = order.items.filter((item) => item.status === "ready").length;
+      counts[order.id] = { total: totalItems, completed: completedItems };
+    });
+    setItemStatusCounts(counts);
+  }, [orders]);
+
+  // Filter orders based on the active tab
+  const filteredOrders = activeTab === "all"
+    ? orders
+    : orders.filter((order) => order.items.some((item) => item.cooking_station === activeTab));
 
   return (
-    <Tabs defaultValue={stations[0]} className="w-full">
-      <TabsList className="grid grid-cols-7">
-        {stations.map(station => (
-          <TabsTrigger key={station} value={station} className="capitalize">
-            {station}
-          </TabsTrigger>
-        ))}
+    <Tabs defaultValue="all" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="all">All Stations</TabsTrigger>
+        <TabsTrigger value="grill">Grill</TabsTrigger>
+        <TabsTrigger value="fry">Fry Station</TabsTrigger>
+        <TabsTrigger value="salad">Salad Station</TabsTrigger>
+        <TabsTrigger value="dessert">Dessert Station</TabsTrigger>
+        <TabsTrigger value="beverage">Beverage Station</TabsTrigger>
       </TabsList>
-      {stations.map(station => (
-        <TabsContent key={station} value={station}>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {orders.map(order => {
-              const stationItems = getItemsForStation(order.items, station);
-              if (stationItems.length === 0) return null;
 
-              return (
-                <Card key={order.id} className="p-4">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-semibold">Order #{order.order_id}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Table {order.table_number}
-                      </p>
-                    </div>
-                    <Badge className="bg-yellow-100 text-yellow-800">
-                      {order.status}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-4">
-                    {stationItems.map(item => (
-                      <div
-                        key={item.id}
-                        className="flex justify-between items-center p-2 bg-muted rounded"
-                      >
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="h-4 w-4" />
-                            {item.start_time && (
-                              <span>{timeElapsed(item)}m</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {item.status === "preparing" && timeElapsed(item) > 15 && (
-                            <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => onUpdateStatus(order.id, "ready")}
-                            disabled={item.status === "ready" || item.status === "delivered"}
-                          >
-                            Mark Ready
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              );
-            })}
+      <TabsContent value="all" className="space-y-4">
+        {filteredOrders.map(order => (
+          <div key={order.id} className="border rounded-lg p-4">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-semibold">Order #{order.order_id}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Table {order.tableNumber}, {itemStatusCounts[order.id]?.completed}/{itemStatusCounts[order.id]?.total} items ready
+                </p>
+              </div>
+              
+              {/* Add action buttons or status indicators here */}
+            </div>
           </div>
-        </TabsContent>
-      ))}
+        ))}
+      </TabsContent>
+      
+      <TabsContent value="grill">
+        {/* Content for Grill Station */}
+      </TabsContent>
+      
+      <TabsContent value="fry">
+        {/* Content for Fry Station */}
+      </TabsContent>
+      
+      <TabsContent value="salad">
+        {/* Content for Salad Station */}
+      </TabsContent>
+      
+      <TabsContent value="dessert">
+        {/* Content for Dessert Station */}
+      </TabsContent>
+      
+      <TabsContent value="beverage">
+        {/* Content for Beverage Station */}
+      </TabsContent>
     </Tabs>
   );
 }

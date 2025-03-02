@@ -1,14 +1,13 @@
-
 import { Card } from "@/components/ui/card";
-import { DollarSign } from "lucide-react";
+import { MetricEntry } from "./MetricEntry";
 import type { StaffMember } from "@/types/staff";
 
-interface StaffMetricsCardProps {
-  selectedStaff: StaffMember;
+export interface StaffMetricsCardProps {
+  staffMember: StaffMember;
   calculateWeeklyHours: (staffId: number) => number;
 }
 
-export const StaffMetricsCard = ({ selectedStaff, calculateWeeklyHours }: StaffMetricsCardProps) => {
+export function StaffMetricsCard({ staffMember, calculateWeeklyHours }: StaffMetricsCardProps) {
   return (
     <Card className="p-6">
       <div className="space-y-4">
@@ -16,12 +15,12 @@ export const StaffMetricsCard = ({ selectedStaff, calculateWeeklyHours }: StaffM
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Salary</p>
-            <p className="text-lg font-medium">${selectedStaff.salary?.toLocaleString()}/year</p>
+            <p className="text-lg font-medium">${staffMember.salary?.toLocaleString()}/year</p>
           </div>
           
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Weekly Hours</p>
-            <p className="text-lg font-medium">{calculateWeeklyHours(selectedStaff.id)} hours</p>
+            <p className="text-lg font-medium">{calculateWeeklyHours(staffMember.id)} hours</p>
           </div>
           
           <div className="space-y-1">
@@ -37,4 +36,4 @@ export const StaffMetricsCard = ({ selectedStaff, calculateWeeklyHours }: StaffM
       </div>
     </Card>
   );
-};
+}

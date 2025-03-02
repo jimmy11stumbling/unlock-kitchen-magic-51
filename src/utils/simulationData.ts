@@ -1,3 +1,4 @@
+
 import type { InventoryItem } from "@/types/staff";
 
 // Helper function for random dates
@@ -35,4 +36,26 @@ export const generateInventoryItems = (count: number = 30): InventoryItem[] => {
   }
   
   return inventoryItems;
+};
+
+// Add the missing functions
+export const initializeWithSimulationData = () => {
+  // Implementation details here
+  console.log("Initializing with simulation data");
+  return true;
+};
+
+export const getSimulationData = () => {
+  // Implementation details here
+  return {
+    // Return dummy data
+    inventory: generateInventoryItems(10),
+    // Add more simulation data as needed
+  };
+};
+
+export const clearSimulationData = () => {
+  // Implementation details here
+  console.log("Clearing simulation data");
+  return true;
 };

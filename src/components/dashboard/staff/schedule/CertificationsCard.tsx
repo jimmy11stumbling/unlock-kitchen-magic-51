@@ -1,67 +1,40 @@
-
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { GraduationCap } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { PlusIcon, Calendar, Star } from "lucide-react";
 import type { StaffMember } from "@/types/staff";
 
-interface CertificationsCardProps {
-  selectedStaff: StaffMember;
-  onAddCertification: () => void;
-  onUpdatePerformance: () => void;
+export interface CertificationsCardProps {
+  staffMember: StaffMember | null;
 }
 
-export const CertificationsCard = ({ 
-  selectedStaff, 
-  onAddCertification,
-  onUpdatePerformance
-}: CertificationsCardProps) => {
+export function CertificationsCard({ staffMember }: CertificationsCardProps) {
   return (
-    <Card className="p-6">
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold">Qualifications & Certifications</h3>
-          <Button variant="outline" onClick={onAddCertification}>
-            Add Certification
-          </Button>
-        </div>
-        
-        <div className="space-y-2">
-          {selectedStaff.certifications && selectedStaff.certifications.length > 0 ? (
-            selectedStaff.certifications.map((cert, index) => (
-              <div key={index} className="flex justify-between items-center p-3 border rounded-md">
-                <div className="flex items-center">
-                  <GraduationCap className="h-5 w-5 mr-2 text-primary" />
+    <Card>
+      <CardHeader>
+        <CardTitle>Certifications</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {staffMember && staffMember.certifications && staffMember.certifications.length > 0 ? (
+          <div className="space-y-2">
+            {staffMember.certifications.map((cert, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Star className="h-4 w-4 text-yellow-500" />
                   <span>{cert}</span>
                 </div>
-                <Button variant="ghost" size="sm">View</Button>
+                <Badge variant="secondary">Valid</Badge>
               </div>
-            ))
-          ) : (
-            <p className="text-muted-foreground">No certifications added yet.</p>
-          )}
-        </div>
-        
-        <div className="mt-6">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold">Performance Rating</h3>
-            <Button size="sm" onClick={onUpdatePerformance}>Update</Button>
+            ))}
           </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-4">
-            <div 
-              className="bg-primary h-4 rounded-full" 
-              style={{ width: `${(selectedStaff.performanceRating / 5) * 100}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between mt-1 text-sm">
-            <span>0</span>
-            <span className="font-medium">{selectedStaff.performanceRating}/5</span>
-            <span>5</span>
-          </div>
-        </div>
-      </div>
+        ) : (
+          <p className="text-muted-foreground">No certifications added.</p>
+        )}
+        <Button variant="outline" className="w-full justify-start gap-2">
+          <PlusIcon className="h-4 w-4" />
+          Add Certification
+        </Button>
+      </CardContent>
     </Card>
   );
-};
+}

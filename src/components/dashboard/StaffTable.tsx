@@ -43,7 +43,7 @@ export const StaffTable = ({ staff, onUpdateStatus }: StaffTableProps) => {
                 {member.status.replace("_", " ")}
               </span>
             </TableCell>
-            <TableCell>{member.shift}</TableCell>
+            <TableCell>{member.shift || 'Not assigned'}</TableCell>
             <TableCell className="text-right">
               <Button variant="outline" size="sm">
                 Manage

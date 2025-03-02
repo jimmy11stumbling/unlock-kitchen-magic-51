@@ -1,3 +1,4 @@
+
 // If the file already exists, add the following type definition:
 
 export interface StaffDTO {
@@ -48,6 +49,7 @@ export interface StaffMember {
   overtimeRate?: number;
   payrollSettings?: PayrollSettings;
   payrollEntries?: PayrollEntry[];
+  shift?: string; // Add shift property
 }
 
 export type StaffStatus = 'active' | 'off_duty' | 'on_break' | 'on_leave' | 'terminated';
@@ -124,8 +126,8 @@ export interface KitchenOrder {
   estimated_delivery_time: string;
   notes?: string;
   coursing?: string;
-  tableNumber?: number;
-  serverName?: string;
+  tableNumber: number; // Using camelCase property name
+  serverName: string; // Using camelCase property name
 }
 
 export interface KitchenOrderItem {
@@ -193,6 +195,7 @@ export interface SalesData {
   averageTicketSize?: number;
   topSellingItems?: string[];
   costs?: number;
+  totalSales?: number; // Add totalSales property
 }
 
 export interface DailyReport {
@@ -210,6 +213,7 @@ export interface DailyReport {
     price: number;
     orderCount?: number;
     description?: string;
+    available?: boolean; // Add available property
   }[];
   hourlyData?: {
     hour: number;

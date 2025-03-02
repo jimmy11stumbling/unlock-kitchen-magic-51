@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
@@ -91,13 +92,16 @@ export const ScheduleManager = ({
             {staff.map((staffMember) => (
               <div key={staffMember.id} className="mb-4">
                 <h3 className="text-lg font-semibold">{staffMember.name}</h3>
-                <StaffMetricsCard staffMember={staffMember} calculateWeeklyHours={calculateWeeklyHours} />
+                <StaffMetricsCard 
+                  staffMember={staffMember} 
+                  calculateWeeklyHours={calculateWeeklyHours} 
+                />
                 <div className="grid grid-cols-7 gap-2 mt-2">
-                  {Object.keys(staffMember.schedule).map((day) => (
+                  {Object.keys(staffMember.schedule || {}).map((day) => (
                     <div key={day} className="text-center">
                       <div className="font-medium capitalize">{day}</div>
                       <div className="text-sm">
-                        {typeof staffMember.schedule[day] === 'string' 
+                        {staffMember.schedule && typeof staffMember.schedule[day] === 'string' 
                           ? staffMember.schedule[day] as ReactNode 
                           : "N/A"}
                       </div>
@@ -146,16 +150,23 @@ export const ScheduleManager = ({
           </CardHeader>
           <CardContent>
             {selectedStaff ? (
-              <PersonalInfoForm staffMember={selectedStaff} onUpdate={handleUpdateStaffInfo} />
+              <PersonalInfoForm 
+                staffMember={selectedStaff} 
+                onUpdate={handleUpdateStaffInfo} 
+              />
             ) : (
               <p className="text-muted-foreground">Select a staff member to view information.</p>
             )}
           </CardContent>
         </Card>
 
-        <DocumentsCard staffMember={selectedStaff} />
+        <DocumentsCard 
+          staffMember={selectedStaff} 
+        />
 
-        <CertificationsCard staffMember={selectedStaff} />
+        <CertificationsCard 
+          staffMember={selectedStaff} 
+        />
       </div>
     </div>
   );

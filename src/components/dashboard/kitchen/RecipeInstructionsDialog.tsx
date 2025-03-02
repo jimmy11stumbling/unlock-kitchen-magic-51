@@ -1,232 +1,168 @@
-
-// Only fixing the temperature handling part of the file
-import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ChefHat, Clock, Thermometer, Utensils, Check } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2 } from "lucide-react";
 import type { MenuItem } from "@/types/staff";
 
 interface RecipeInstructionsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   menuItem: MenuItem;
 }
 
-export function RecipeInstructionsDialog({
-  menuItem,
-}: RecipeInstructionsDialogProps) {
-  const formatTime = (minutes: number) => {
-    if (minutes < 60) {
-      return `${minutes} min`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins > 0 ? `${mins}m` : ""}`;
-  };
-
-  const prepDetails = menuItem.prep_details || {};
-
-  // Parse temperature values to numbers if they're strings
-  const parseTemperature = (tempStr: string | undefined): number | undefined => {
-    if (!tempStr) return undefined;
-    const numMatch = tempStr.match(/\d+/);
-    return numMatch ? parseInt(numMatch[0], 10) : undefined;
-  };
-
-  // Get min and max temperatures if present
-  const getTemperatureRange = () => {
-    if (!prepDetails.temperature_requirements) return null;
+export function RecipeInstructionsDialog({ open, onOpenChange, menuItem }: RecipeInstructionsDialogProps) {
+  const [activeTab, setActiveTab] = useState("recipe");
+  
+  // Create a safe recipe object with default values for missing properties
+  const recipeDetails = useMemo(() => {
+    const defaultRecipe = {
+      temperature_requirements: {},
+      prepTime: 0,
+      cookTime: 0,
+      equipment_needed: [],
+      quality_checks: [],
+      steps: [],
+      notes: ""
+    };
     
-    // Handle the case where temperature is a string
-    const tempReq = prepDetails.temperature_requirements;
-    const tempText = typeof tempReq === 'string' ? tempReq : '';
-    
-    // Try to extract min and max temperatures from text
-    const minMatch = tempText.match(/min[imum]*\s+(\d+)/i);
-    const maxMatch = tempText.match(/max[imum]*\s+(\d+)/i);
-    
-    const min = minMatch ? parseInt(minMatch[1], 10) : undefined;
-    const max = maxMatch ? parseInt(maxMatch[1], 10) : undefined;
-    
-    return { min, max, text: tempText };
-  };
-
-  const tempRange = getTemperatureRange();
+    // Merge with actual prep_details if available
+    return menuItem?.prep_details 
+      ? { ...defaultRecipe, ...(typeof menuItem.prep_details === 'string' 
+          ? JSON.parse(menuItem.prep_details) 
+          : menuItem.prep_details) }
+      : defaultRecipe;
+  }, [menuItem]);
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <ChefHat className="h-4 w-4 mr-2" />
-          Preparation Details
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Recipe: {menuItem.name}</DialogTitle>
+          <DialogTitle>{menuItem?.name} Instructions</DialogTitle>
+          <DialogDescription>
+            Complete preparation instructions and requirements
+          </DialogDescription>
         </DialogHeader>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Preparation Time</CardTitle>
-                <CardDescription>
-                  Total time: {formatTime(menuItem.preparationTime)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between mb-2">
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      Prep Time
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium">
-                    {formatTime(prepDetails.prepTime || 0)}
-                  </span>
+        
+        <Tabs defaultValue={activeTab} className="mt-4" onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="recipe">Recipe</TabsTrigger>
+            <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="recipe" className="mt-6">
+            <div className="space-y-4">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Temperature Requirements</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(recipeDetails.temperature_requirements).length > 0 ? 
+                    Object.entries(recipeDetails.temperature_requirements).map(([key, value]) => (
+                      <div key={key} className="flex justify-between p-3 border rounded-md">
+                        <span className="font-medium capitalize">{key.replace('_', ' ')}</span>
+                        <span>{value}°F</span>
+                      </div>
+                    )) : 
+                    <p className="text-muted-foreground">No temperature requirements specified</p>
+                  }
                 </div>
-                <div className="flex justify-between">
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      Cook Time
-                    </span>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Time Requirements</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex justify-between p-3 border rounded-md">
+                    <span className="font-medium">Prep Time</span>
+                    <span>{recipeDetails.prepTime} mins</span>
                   </div>
-                  <span className="text-sm font-medium">
-                    {formatTime(prepDetails.cookTime || 0)}
-                  </span>
+                  <div className="flex justify-between p-3 border rounded-md">
+                    <span className="font-medium">Cook Time</span>
+                    <span>{recipeDetails.cookTime} mins</span>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Equipment</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {prepDetails.equipment_needed && prepDetails.equipment_needed.length > 0 ? (
-                  <ul className="space-y-2">
-                    {Array.isArray(prepDetails.equipment_needed) && prepDetails.equipment_needed.map((equipment, i) => (
-                      <li key={i} className="flex items-center">
-                        <Utensils className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span className="text-sm">{equipment}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No special equipment needed
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {tempRange && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Temperature</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start gap-2">
-                    <Thermometer className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm">{tempRange.text}</p>
-                      {tempRange.min && tempRange.max && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Range: {tempRange.min}°F - {tempRange.max}°F
-                        </p>
-                      )}
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Equipment</h3>
+                <div className="grid grid-cols-1 gap-2">
+                  {Array.isArray(recipeDetails.equipment_needed) && recipeDetails.equipment_needed.length > 0 ? (
+                    recipeDetails.equipment_needed.map((equipment, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 border rounded-md">
+                        <span>{typeof equipment === 'string' ? equipment : JSON.stringify(equipment)}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground">No special equipment needed</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Quality Checks</h3>
+                <div className="grid grid-cols-1 gap-2">
+                  {Array.isArray(recipeDetails.quality_checks) && recipeDetails.quality_checks.length > 0 ? (
+                    recipeDetails.quality_checks.map((check, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 border rounded-md">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span>{check}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground">No quality checks specified</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Preparation Steps</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {Array.isArray(recipeDetails.steps) && recipeDetails.steps.length > 0 ? (
+                    recipeDetails.steps.map((step, index) => (
+                      <div key={index} className="p-3 border rounded-md">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline">{index + 1}</Badge>
+                          <h4 className="font-medium">{step.title}</h4>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{step.description}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground">No preparation steps specified</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Additional Notes</h3>
+                <div className="p-3 border rounded-md">
+                  {recipeDetails.notes ? (
+                    <p className="text-sm">{recipeDetails.notes}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No additional notes</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="ingredients" className="mt-6">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Ingredients</h3>
+              <div className="grid grid-cols-1 gap-2">
+                {menuItem && Array.isArray(menuItem.ingredients) && menuItem.ingredients.length > 0 ? (
+                  menuItem.ingredients.map((ingredient, index) => (
+                    <div key={index} className="flex justify-between p-2 border rounded-md">
+                      <span>{ingredient.name}</span>
+                      <span>{ingredient.quantity} {ingredient.unit}</span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {prepDetails.quality_checks && prepDetails.quality_checks.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Quality Checks</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {prepDetails.quality_checks.map((check, i) => (
-                      <li key={i} className="flex items-center">
-                        <Check className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span className="text-sm">{check}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Ingredients</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {menuItem.ingredients && menuItem.ingredients.length > 0 ? (
-                  <ul className="space-y-1">
-                    {menuItem.ingredients.map((ingredient, i) => (
-                      <li key={i} className="text-sm">
-                        • {ingredient}
-                      </li>
-                    ))}
-                  </ul>
+                  ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No ingredients listed
-                  </p>
+                  <p className="text-muted-foreground">No ingredients specified</p>
                 )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Preparation Steps</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {prepDetails.steps && prepDetails.steps.length > 0 ? (
-                  <ol className="space-y-3 ml-4 list-decimal">
-                    {prepDetails.steps.map((step, i) => (
-                      <li key={i} className="text-sm pl-1">{step}</li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No preparation steps provided
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {prepDetails.notes && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Notes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm">{prepDetails.notes}</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

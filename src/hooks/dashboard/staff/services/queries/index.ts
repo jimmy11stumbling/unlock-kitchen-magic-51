@@ -1,16 +1,16 @@
 
-import { getAllStaffMembers, getStaffMemberById } from './readQueries';
+import { getAllStaffMembers, getStaffMemberById } from "./readQueries";
 
-// Create missing exports
+// Add stub implementations for the missing exported functions
 const getStaffList = getAllStaffMembers;
 const getStaffById = getStaffMemberById;
-const getStaffSchedule = () => Promise.resolve([]);
-const getStaffPermissions = () => Promise.resolve({});
-const getShiftsByDate = () => Promise.resolve([]);
-const getShiftsByStaffId = () => Promise.resolve([]);
-const hasAdminAccess = () => Promise.resolve(true);
+const getStaffSchedule = async () => []; // Stub implementation
+const getStaffPermissions = async () => ({}); // Stub implementation
+const getShiftsByDate = async () => []; // Stub implementation
+const getShiftsByStaffId = async () => []; // Stub implementation
+const hasAdminAccess = async () => false; // Stub implementation
 
-export const staffQueries = {
+export {
   getAllStaffMembers,
   getStaffMemberById,
   getStaffList,
@@ -20,18 +20,4 @@ export const staffQueries = {
   getShiftsByDate,
   getShiftsByStaffId,
   hasAdminAccess
-};
-
-// Add these functions for writeQueries
-const addStaffMember = () => Promise.resolve({});
-const updateStaffInfo = () => Promise.resolve({});
-
-export const staffMutations = {
-  addStaffMember,
-  updateStaffInfo
-};
-
-// Add searchStaff for searchQueries
-export const searchQueries = {
-  searchStaff: () => Promise.resolve([])
 };

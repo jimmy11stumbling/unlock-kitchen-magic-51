@@ -1,14 +1,31 @@
-import { StaffMember } from "@/types/staff";
+import type { StaffMember } from "@/types/staff";
 
-export const calculateAveragePerformance = (staffMembers: StaffMember[]): number => {
-  const validRatings = staffMembers
-    .filter(staff => staff.performanceRating !== undefined)
-    .map(staff => staff.performanceRating as number);
+export const calculateAveragePerformance = (staff: StaffMember[]): number => {
+  const staffWithRatings = staff.filter(member => 
+    member.performanceRating !== undefined
+  );
   
-  if (validRatings.length === 0) return 0;
+  if (staffWithRatings.length === 0) return 0;
   
-  const sum = validRatings.reduce((total, rating) => total + rating, 0);
-  return sum / validRatings.length;
+  const sum = staffWithRatings.reduce((total, member) => {
+    const rating = typeof member.performanceRating === 'number' 
+      ? member.performanceRating 
+      : 0;
+    return total + rating;
+  }, 0);
+  
+  return sum / staffWithRatings.length;
+};
+
+export const getTopPerformers = (staff: StaffMember[], count: number = 3): StaffMember[] => {
+  return [...staff]
+    .filter(member => typeof member.performanceRating === 'number')
+    .sort((a, b) => {
+      const ratingA = typeof a.performanceRating === 'number' ? a.performanceRating : 0;
+      const ratingB = typeof b.performanceRating === 'number' ? b.performanceRating : 0;
+      return ratingB - ratingA;
+    })
+    .slice(0, count);
 };
 
 export const calculateTotalSalary = (staffMembers: StaffMember[]): number => {

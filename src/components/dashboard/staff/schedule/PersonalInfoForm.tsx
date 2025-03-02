@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,23 +7,23 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import type { StaffMember } from "@/types/staff";
 
-interface PersonalInfoFormProps {
-  staff: StaffMember;
-  onUpdateInfo: (updates: Partial<StaffMember>) => void;
+export interface PersonalInfoFormProps {
+  staffMember: StaffMember;
+  onUpdate: (updates: Partial<StaffMember>) => void;
 }
 
-export const PersonalInfoForm = ({ staff, onUpdateInfo }: PersonalInfoFormProps) => {
+export const PersonalInfoForm = ({ staffMember, onUpdate }: PersonalInfoFormProps) => {
   const [formData, setFormData] = useState({
-    name: staff.name,
-    email: staff.email || "",
-    phone: staff.phone || "",
-    address: staff.address || "",
+    name: staffMember.name,
+    email: staffMember.email || "",
+    phone: staffMember.phone || "",
+    address: staffMember.address || "",
     emergencyContact: {
-      name: staff.emergencyContact?.name || "",
-      phone: staff.emergencyContact?.phone || "",
-      relationship: staff.emergencyContact?.relationship || ""
+      name: staffMember.emergencyContact?.name || "",
+      phone: staffMember.emergencyContact?.phone || "",
+      relationship: staffMember.emergencyContact?.relationship || ""
     },
-    notes: staff.notes || ""
+    notes: staffMember.notes || ""
   });
   const { toast } = useToast();
 
@@ -46,7 +45,7 @@ export const PersonalInfoForm = ({ staff, onUpdateInfo }: PersonalInfoFormProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateInfo({
+    onUpdate({
       name: formData.name,
       email: formData.email,
       phone: formData.phone,

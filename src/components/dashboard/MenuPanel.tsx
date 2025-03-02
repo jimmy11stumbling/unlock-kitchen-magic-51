@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ const defaultMenuItem: MenuItemFormData = {
   allergens: [],
   preparationTime: 15,
   image: undefined,
+  orderCount: 0,
 };
 
 export const MenuPanel = ({
@@ -57,7 +57,13 @@ export const MenuPanel = ({
       });
       return;
     }
-    onAddMenuItem(newItem);
+    
+    const completeItem: Omit<MenuItem, "id"> = {
+      ...newItem,
+      orderCount: newItem.orderCount || 0
+    };
+    
+    onAddMenuItem(completeItem);
     setNewItem(defaultMenuItem);
   };
 
