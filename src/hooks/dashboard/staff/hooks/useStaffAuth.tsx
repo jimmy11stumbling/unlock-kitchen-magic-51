@@ -1,42 +1,55 @@
 
-import { useState } from "react";
+import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
-import type { StaffMember } from "@/types/staff";
-import { hasAdminAccess, getStaffPermissions } from "../services/queries";
+import type { StaffMember } from '@/types/staff';
+import { supabase } from '@/integrations/supabase/client';
+import { hasAdminAccess, getStaffPermissions } from '../services/queries';
 
-export const useStaffAuth = (currentUser: StaffMember | null) => {
-  const { toast } = useToast();
+export const useStaffAuth = (staffMember: StaffMember | null) => {
   const [permissions, setPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  const checkPermissions = async (staffId: number) => {
-    try {
-      const userPermissions = await getStaffPermissions(staffId);
-      setPermissions(userPermissions);
-      return userPermissions;
-    } catch (error) {
-      console.error('Error checking permissions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to check staff permissions",
-        variant: "destructive",
-      });
-      return [];
-    }
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      if (!staffMember) return;
+      
+      setLoading(true);
+      try {
+        const staffPermissions = await getStaffPermissions(staffMember.id);
+        setPermissions(staffPermissions);
+      } catch (error) {
+        console.error('Error fetching staff permissions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load staff permissions",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, [staffMember, toast]);
+
+  const hasPermission = (permission: string): boolean => {
+    if (!staffMember) return false;
+    
+    // Manager role has all permissions
+    if (hasAdminAccess(staffMember)) return true;
+    
+    return permissions.includes(permission);
   };
 
-  const isAdmin = hasAdminAccess(currentUser);
-
-  const verifyAccess = (requiredPermission: 'admin' | 'basic' = 'basic'): boolean => {
-    if (requiredPermission === 'admin') {
-      return isAdmin;
-    }
-    return true;
+  const isAdmin = (): boolean => {
+    return hasAdminAccess(staffMember);
   };
 
   return {
-    isAdmin,
     permissions,
-    checkPermissions,
-    verifyAccess,
+    hasPermission,
+    isAdmin,
+    loading
   };
 };
