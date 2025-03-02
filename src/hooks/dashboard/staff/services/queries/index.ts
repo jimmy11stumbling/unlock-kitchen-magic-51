@@ -1,50 +1,14 @@
 
-import { getAllStaffMembers, getStaffMemberById } from './readQueries';
-import type { StaffMember } from '@/types/staff';
+// Export read queries
+import { getAllStaffMembers, getStaffMemberById, getStaffList, getStaffById, getStaffSchedule, getStaffPermissions, getShiftsByDate, getShiftsByStaffId, hasAdminAccess } from './readQueries';
 
-// Add missing functions
-const getStaffList = getAllStaffMembers;
-const getStaffById = getStaffMemberById;
+// Export write queries
+import { updateStaffStatus, addStaffMember, updateStaffInfo } from './writeQueries';
 
-const getStaffSchedule = async (staffId: number) => {
-  const staff = await getStaffById(staffId);
-  return staff?.schedule || {};
-};
+// Export search queries
+import { searchStaff } from './searchQueries';
 
-const getStaffPermissions = async (staffId: number) => {
-  const staff = await getStaffById(staffId);
-  const role = staff?.role || 'server';
-  
-  // Basic permission mapping based on role
-  const permissions = {
-    canEditMenu: ['manager', 'chef'].includes(role),
-    canManageStaff: ['manager'].includes(role),
-    canViewReports: ['manager'].includes(role),
-    canProcessPayments: ['manager', 'server'].includes(role),
-    canManageReservations: ['manager', 'host'].includes(role),
-  };
-  
-  return permissions;
-};
-
-const hasAdminAccess = async (staffId: number) => {
-  const staff = await getStaffById(staffId);
-  return staff?.role === 'manager';
-};
-
-const getShiftsByDate = async (date: string): Promise<any[]> => {
-  // This would be implemented with a real API or database
-  // For now, return an empty array
-  return [];
-};
-
-const getShiftsByStaffId = async (staffId: number): Promise<any[]> => {
-  // This would be implemented with a real API or database
-  // For now, return an empty array
-  return [];
-};
-
-// Export all query functions
+// Export all queries as a single object
 export const staffQueries = {
   getAllStaffMembers,
   getStaffMemberById,
@@ -52,7 +16,28 @@ export const staffQueries = {
   getStaffById,
   getStaffSchedule,
   getStaffPermissions,
-  hasAdminAccess,
   getShiftsByDate,
-  getShiftsByStaffId
+  getShiftsByStaffId,
+  hasAdminAccess,
+  updateStaffStatus,
+  addStaffMember,
+  updateStaffInfo,
+  searchStaff
+};
+
+// Also export individual functions for direct imports
+export {
+  getAllStaffMembers,
+  getStaffMemberById,
+  getStaffList,
+  getStaffById,
+  getStaffSchedule,
+  getStaffPermissions,
+  getShiftsByDate,
+  getShiftsByStaffId,
+  hasAdminAccess,
+  updateStaffStatus,
+  addStaffMember,
+  updateStaffInfo,
+  searchStaff
 };
