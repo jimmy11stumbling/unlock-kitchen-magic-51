@@ -1,111 +1,184 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
+import { useState, useEffect, useMemo } from "react";
+import { KitchenLayout } from "./KitchenLayout";
+import { EquipmentMonitor } from "./EquipmentMonitor";
+import { KitchenOrderCard } from "./KitchenOrderCard";
+import { QualityControl } from "./QualityControl";
+import { TemperatureMonitor } from "./TemperatureMonitor";
+import { InventoryTracker } from "./InventoryTracker";
+import { useKitchenState } from "@/hooks/dashboard/useKitchenState";
+import { KitchenNotifications } from "./KitchenNotifications";
+import { KitchenAnalytics } from "./KitchenAnalytics";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useDashboardState } from "@/hooks/useDashboardState";
-import { RecipeInstructionsDialog } from "@/components/dashboard/kitchen/RecipeInstructionsDialog";
-import type { KitchenOrder } from "@/types/staff";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Filter } from "lucide-react";
 
-export const KitchenDashboard = () => {
-  const [filter, setFilter] = useState<"all" | KitchenOrder["status"]>("all");
-  const [search, setSearch] = useState("");
-  const { kitchenOrders } = useDashboardState();
+export function KitchenDashboard() {
+  const { 
+    kitchenOrders,
+    updateKitchenOrderStatus,
+    updateOrderPriority,
+    updateItemStatus 
+  } = useKitchenState();
 
-  const filteredOrders = kitchenOrders?.filter(order => {
-    if (filter === 'all' || (filter === order.status)) {
-      return order.items.some(item =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    return false;
-  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+
+  // This ensures we preload the audio for quicker response when needed
+  useEffect(() => {
+    const audio = new Audio('/sounds/notification.mp3');
+    audio.preload = 'auto';
+    
+    // Just trigger loading without playing
+    audio.load();
+    
+    return () => {
+      audio.remove();
+    };
+  }, []);
+
+  const filteredOrders = useMemo(() => {
+    if (!kitchenOrders) return [];
+    
+    return kitchenOrders.filter(order => {
+      // Search by order ID, table number, or server name
+      const matchesSearch = 
+        order.order_id.toString().includes(searchTerm) ||
+        (order.tableNumber?.toString() || '').includes(searchTerm) ||
+        (order.serverName?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+      
+      // Filter by status
+      const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+      
+      // Filter by priority
+      const matchesPriority = priorityFilter === "all" || order.priority === priorityFilter;
+      
+      return matchesSearch && matchesStatus && matchesPriority;
+    });
+  }, [kitchenOrders, searchTerm, statusFilter, priorityFilter]);
+
+  const activeOrders = useMemo(() => {
+    return kitchenOrders?.filter(order => order.status === 'preparing' || order.status === 'pending') || [];
+  }, [kitchenOrders]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div className="md:col-span-1">
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter kitchen orders</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Command>
-              <CommandInput placeholder="Search items..." value={search} onValueChange={setSearch} />
-              <CommandList>
-                <CommandEmpty>No items found.</CommandEmpty>
-                <CommandGroup heading="Items">
-                  {kitchenOrders?.flatMap(order => order.items).map((item) => (
-                    <CommandItem key={item.id} value={item.name} onSelect={() => setSearch(item.name)}>
-                      {item.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-            <div>
-              <h4 className="mb-2 font-medium">Status</h4>
-              <div className="flex flex-col space-y-1">
-                <Button variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>
-                  All
-                </Button>
-                <Button variant={filter === "pending" ? "default" : "outline"} onClick={() => setFilter("pending")}>
-                  Pending
-                </Button>
-                <Button variant={filter === "preparing" ? "default" : "outline"} onClick={() => setFilter("preparing")}>
-                  Preparing
-                </Button>
-                <Button variant={filter === "ready" ? "default" : "outline"} onClick={() => setFilter("ready")}>
-                  Ready
-                </Button>
-                <Button variant={filter === "delivered" ? "default" : "outline"} onClick={() => setFilter("delivered")}>
-                  Delivered
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-6 p-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Kitchen Dashboard</h1>
+        <div className="flex items-center gap-4">
+          <KitchenNotifications activeOrders={activeOrders} />
+        </div>
       </div>
 
-      <div className="md:col-span-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Kitchen Orders</CardTitle>
-            <CardDescription>List of current kitchen orders</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[80vh] w-full">
-              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                {filteredOrders?.map((order) => (
-                  <Card key={order.id} className="bg-muted/50">
-                    <CardHeader>
-                      <CardTitle>Order #{order.order_id}</CardTitle>
-                      <CardDescription>Table {order.tableNumber}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {order.items.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between">
-                            <span>{item.name}</span>
-                            <Badge variant="secondary">{item.quantity}</Badge>
-                            <RecipeInstructionsDialog menuItemId={item.menu_item_id} />
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 flex justify-between items-center">
-                        <Badge variant="outline">{order.status}</Badge>
-                        <span>{order.priority} Priority</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* Orders Section - 8 columns on xl screens */}
+        <div className="xl:col-span-8 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1 space-y-2">
+              <Label>Search Orders</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by order #, table, or server"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 w-full sm:w-auto">
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="preparing">Preparing</SelectItem>
+                    <SelectItem value="ready">Ready</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Priority</Label>
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Priorities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priorities</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="rush">Rush</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <Tabs defaultValue="active">
+            <TabsList>
+              <TabsTrigger value="active">
+                Active Orders ({activeOrders.length})
+              </TabsTrigger>
+              <TabsTrigger value="all">
+                All Orders ({kitchenOrders?.length || 0})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="active" className="space-y-4 mt-4">
+              {activeOrders.length === 0 ? (
+                <div className="text-center py-12 border rounded-lg bg-muted/20">
+                  <p className="text-muted-foreground">No active orders at this time</p>
+                </div>
+              ) : (
+                activeOrders.map(order => (
+                  <KitchenOrderCard
+                    key={order.id}
+                    order={order}
+                    onUpdateStatus={updateKitchenOrderStatus}
+                    onUpdatePriority={updateOrderPriority}
+                    onUpdateItemStatus={updateItemStatus}
+                  />
+                ))
+              )}
+            </TabsContent>
+            
+            <TabsContent value="all" className="space-y-4 mt-4">
+              {filteredOrders.length === 0 ? (
+                <div className="text-center py-12 border rounded-lg bg-muted/20">
+                  <p className="text-muted-foreground">No orders match your filters</p>
+                </div>
+              ) : (
+                filteredOrders.map(order => (
+                  <KitchenOrderCard
+                    key={order.id}
+                    order={order}
+                    onUpdateStatus={updateKitchenOrderStatus}
+                    onUpdatePriority={updateOrderPriority}
+                    onUpdateItemStatus={updateItemStatus}
+                  />
+                ))
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Kitchen Layout & Equipment - 4 columns on xl screens */}
+        <div className="xl:col-span-4 space-y-6">
+          <KitchenAnalytics orders={kitchenOrders || []} />
+          <KitchenLayout activeOrders={activeOrders} />
+          <EquipmentMonitor />
+          <QualityControl />
+          <TemperatureMonitor stationId="main-kitchen" />
+        </div>
       </div>
     </div>
   );
-};
+}
