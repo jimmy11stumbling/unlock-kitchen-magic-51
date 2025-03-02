@@ -7,8 +7,8 @@ export interface Reservation {
   time: string;
   partySize: number;
   customerName: string;
-  customerPhone: string; // Make sure this matches with the main type
-  email?: string;
+  customerPhone: string;
+  customerEmail?: string; // Updated to match main type
   status: ReservationStatus;
   tableAssigned?: number;
   tableNumber?: number;

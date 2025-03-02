@@ -1,3 +1,4 @@
+
 import type { StaffMember, StaffStatus } from '@/types/staff';
 
 export const staffMappers = {
@@ -47,15 +48,15 @@ export const staffMappers = {
     const staff: any = { ...data };
     
     // Convert schedule from JSON to object
-    if (staff.schedule && typeof staff.schedule === 'string') {
+    if (staff.schedule) {
       try {
-        staff.schedule = JSON.parse(staff.schedule);
+        if (typeof staff.schedule === 'string') {
+          staff.schedule = JSON.parse(staff.schedule);
+        }
       } catch (e) {
         console.error('Error parsing schedule JSON:', e);
         staff.schedule = {};
       }
-    } else if (typeof staff.schedule === 'object') {
-      // Already an object, keep as is
     } else {
       staff.schedule = {};
     }
@@ -73,6 +74,8 @@ export const staffMappers = {
         staff.emergencyContact = { name: '', phone: '', relationship: '' };
       }
       delete staff.emergency_contact;
+    } else {
+      staff.emergencyContact = { name: '', phone: '', relationship: '' };
     }
     
     // Convert bank_info from JSON to object
@@ -88,6 +91,8 @@ export const staffMappers = {
         staff.bankInfo = {};
       }
       delete staff.bank_info;
+    } else {
+      staff.bankInfo = {};
     }
     
     // Convert benefits from JSON to object
@@ -100,6 +105,8 @@ export const staffMappers = {
         console.error('Error parsing benefits JSON:', e);
         staff.benefits = {};
       }
+    } else {
+      staff.benefits = {};
     }
     
     // Convert status
