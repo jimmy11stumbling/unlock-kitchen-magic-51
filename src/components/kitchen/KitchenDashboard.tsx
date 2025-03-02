@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
-import { KitchenLayout } from "./KitchenLayout";
-import { EquipmentMonitor } from "./EquipmentMonitor";
-import { KitchenOrderCard } from "./KitchenOrderCard";
-import { QualityControl } from "./QualityControl";
-import { TemperatureMonitor } from "./TemperatureMonitor";
-import { InventoryTracker } from "./InventoryTracker";
+import { KitchenLayout } from "@/components/dashboard/kitchen/KitchenLayout";
+import { EquipmentMonitor } from "@/components/dashboard/kitchen/EquipmentMonitor";
+import { KitchenOrderCard } from "@/components/dashboard/kitchen/KitchenOrderCard";
+import { QualityControl } from "@/components/dashboard/kitchen/QualityControl";
+import { TemperatureMonitor } from "@/components/dashboard/kitchen/TemperatureMonitor";
+import { InventoryTracker } from "@/components/dashboard/kitchen/InventoryTracker";
 import { useKitchenState } from "@/hooks/dashboard/useKitchenState";
-import { KitchenNotifications } from "./KitchenNotifications";
-import { KitchenAnalytics } from "./KitchenAnalytics";
+import { KitchenNotifications } from "@/components/dashboard/kitchen/KitchenNotifications";
+import { KitchenAnalytics } from "@/components/dashboard/kitchen/KitchenAnalytics";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,12 +26,10 @@ export function KitchenDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
 
-  // This ensures we preload the audio for quicker response when needed
   useEffect(() => {
     const audio = new Audio('/sounds/notification.mp3');
     audio.preload = 'auto';
     
-    // Just trigger loading without playing
     audio.load();
     
     return () => {
@@ -43,16 +41,13 @@ export function KitchenDashboard() {
     if (!kitchenOrders) return [];
     
     return kitchenOrders.filter(order => {
-      // Search by order ID, table number, or server name
       const matchesSearch = 
         order.order_id.toString().includes(searchTerm) ||
         (order.tableNumber?.toString() || '').includes(searchTerm) ||
         (order.serverName?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       
-      // Filter by status
       const matchesStatus = statusFilter === "all" || order.status === statusFilter;
       
-      // Filter by priority
       const matchesPriority = priorityFilter === "all" || order.priority === priorityFilter;
       
       return matchesSearch && matchesStatus && matchesPriority;
@@ -73,7 +68,6 @@ export function KitchenDashboard() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Orders Section - 8 columns on xl screens */}
         <div className="xl:col-span-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1 space-y-2">
@@ -170,10 +164,9 @@ export function KitchenDashboard() {
           </Tabs>
         </div>
 
-        {/* Kitchen Layout & Equipment - 4 columns on xl screens */}
         <div className="xl:col-span-4 space-y-6">
           <KitchenAnalytics orders={kitchenOrders || []} />
-          <KitchenLayout activeOrders={activeOrders} />
+          <KitchenLayout orders={activeOrders} />
           <EquipmentMonitor />
           <QualityControl />
           <TemperatureMonitor stationId="main-kitchen" />

@@ -51,10 +51,10 @@ const KITCHEN_STATIONS: Station[] = [
 ];
 
 interface KitchenLayoutProps {
-  activeOrders?: KitchenOrder[];
+  orders?: KitchenOrder[];
 }
 
-export function KitchenLayout({ activeOrders = [] }: KitchenLayoutProps) {
+export function KitchenLayout({ orders = [] }: KitchenLayoutProps) {
   const [stations, setStations] = useState<Station[]>(KITCHEN_STATIONS);
 
   useEffect(() => {
@@ -93,7 +93,7 @@ export function KitchenLayout({ activeOrders = [] }: KitchenLayoutProps) {
   };
 
   const getStationLoad = (stationId: string) => {
-    return activeOrders.filter(order => 
+    return orders.filter(order => 
       order.items.some(item => item.cooking_station === stationId)
     ).length;
   };

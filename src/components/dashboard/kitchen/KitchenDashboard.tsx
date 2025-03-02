@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { KitchenLayout } from "./KitchenLayout";
 import { EquipmentMonitor } from "./EquipmentMonitor";
@@ -27,12 +26,10 @@ export function KitchenDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
 
-  // This ensures we preload the audio for quicker response when needed
   useEffect(() => {
     const audio = new Audio('/sounds/notification.mp3');
     audio.preload = 'auto';
     
-    // Just trigger loading without playing
     audio.load();
     
     return () => {
@@ -44,16 +41,13 @@ export function KitchenDashboard() {
     if (!kitchenOrders) return [];
     
     return kitchenOrders.filter(order => {
-      // Search by order ID, table number, or server name
       const matchesSearch = 
         order.order_id.toString().includes(searchTerm) ||
         (order.tableNumber?.toString() || '').includes(searchTerm) ||
         (order.serverName?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       
-      // Filter by status
       const matchesStatus = statusFilter === "all" || order.status === statusFilter;
       
-      // Filter by priority
       const matchesPriority = priorityFilter === "all" || order.priority === priorityFilter;
       
       return matchesSearch && matchesStatus && matchesPriority;
@@ -74,7 +68,6 @@ export function KitchenDashboard() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Orders Section - 8 columns on xl screens */}
         <div className="xl:col-span-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1 space-y-2">
@@ -171,10 +164,8 @@ export function KitchenDashboard() {
           </Tabs>
         </div>
 
-        {/* Kitchen Layout & Equipment - 4 columns on xl screens */}
         <div className="xl:col-span-4 space-y-6">
           <KitchenAnalytics orders={kitchenOrders || []} />
-          {/* Pass the activeOrders as orders to avoid the type error */}
           <KitchenLayout orders={activeOrders} />
           <EquipmentMonitor />
           <QualityControl />
