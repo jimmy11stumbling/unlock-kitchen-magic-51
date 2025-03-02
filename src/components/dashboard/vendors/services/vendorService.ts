@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -67,8 +66,7 @@ export const vendorService = {
   },
 
   async getVendorOrders(vendorId: number) {
-    // This would normally fetch from a dedicated orders table
-    // Fetch via the orderApiService
+    // Fix the excessive type instantiation by explicitly typing the return
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -203,8 +201,6 @@ export const vendorService = {
     console.log("Document deleted:", documentId);
     return { success: true };
   },
-
-  // Add missing methods to fix errors
 
   async getVendors() {
     // Simulated vendor data
@@ -341,7 +337,7 @@ export const vendorService = {
   },
 
   async getAccountingSummary(vendorId?: number) {
-    // Simulated accounting summary
+    // Add the missing properties to match the AccountingSummary type
     return {
       totalExpenses: 12450.75,
       totalPaid: 9875.50,
@@ -349,7 +345,29 @@ export const vendorService = {
       taxDeductibleAmount: 10250.50,
       lastMonthExpenses: 4320.25,
       thisMonthExpenses: 3150.50,
-      yearToDateExpenses: 37580.25
+      yearToDateExpenses: 37580.25,
+      expensesByCategory: {
+        "Ingredients": 5600.25,
+        "Equipment": 3200.50,
+        "Services": 2100.75,
+        "Maintenance": 1000.25,
+        "Other": 549.00
+      },
+      expensesByVendor: {
+        "Farm Fresh Suppliers": 4500.50,
+        "Premium Meats Inc.": 3200.75,
+        "Global Spice Traders": 2100.25,
+        "Metro Beverage Co.": 1500.50,
+        "Quality Dairy Products": 1149.75
+      },
+      monthlyTotals: {
+        "2023-01": 3200.50,
+        "2023-02": 3450.25,
+        "2023-03": 3600.75,
+        "2023-04": 3800.50,
+        "2023-05": 4100.25,
+        "2023-06": 4300.75
+      }
     };
   },
 
