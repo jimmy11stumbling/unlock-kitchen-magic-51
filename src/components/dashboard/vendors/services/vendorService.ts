@@ -87,6 +87,15 @@ export const vendorService = {
     return mapTransactionToVendor(data);
   },
 
+  async deleteVendor(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('financial_transactions')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
   async getExpenses(): Promise<Expense[]> {
     const { data, error } = await supabase
       .from('financial_transactions')
@@ -155,5 +164,195 @@ export const vendorService = {
     });
 
     return summary;
+  },
+
+  // Additional methods for vendor details functionality
+  async getVendorOrders(vendorId: number): Promise<any[]> {
+    // Mock implementation - in a real app, this would fetch from the database
+    return [
+      {
+        id: uuidv4(),
+        date: new Date().toISOString(),
+        amount: 1250.00,
+        status: 'completed',
+        items: [
+          { name: 'Product A', quantity: 5, unitPrice: 100 },
+          { name: 'Product B', quantity: 10, unitPrice: 75 }
+        ]
+      },
+      {
+        id: uuidv4(),
+        date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        amount: 850.00,
+        status: 'pending',
+        items: [
+          { name: 'Product C', quantity: 2, unitPrice: 200 },
+          { name: 'Product D', quantity: 3, unitPrice: 150 }
+        ]
+      }
+    ];
+  },
+
+  async getVendorPayments(vendorId: number): Promise<any[]> {
+    // Mock implementation
+    return [
+      {
+        id: uuidv4(),
+        date: new Date().toISOString(),
+        amount: 1250.00,
+        method: 'bank_transfer',
+        status: 'completed',
+        reference: 'INV-20230515'
+      },
+      {
+        id: uuidv4(),
+        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        amount: 850.00,
+        method: 'credit_card',
+        status: 'pending',
+        reference: 'INV-20230410'
+      }
+    ];
+  },
+
+  async createNewOrder(vendorId: number): Promise<any> {
+    // Mock implementation
+    return {
+      id: uuidv4(),
+      vendorId,
+      date: new Date().toISOString(),
+      status: 'draft'
+    };
+  },
+
+  async createPayment(paymentData: any): Promise<any> {
+    // Mock implementation
+    return {
+      id: uuidv4(),
+      ...paymentData,
+      date: new Date().toISOString(),
+      status: 'pending'
+    };
+  },
+
+  async generateOrderPdf(orderId: string): Promise<string> {
+    // Mock implementation
+    return `https://example.com/orders/${orderId}.pdf`;
+  },
+
+  async getVendorContacts(vendorId: number): Promise<any[]> {
+    // Mock implementation
+    return [
+      {
+        id: uuidv4(),
+        name: 'John Smith',
+        email: 'john.smith@vendor.com',
+        phone: '(555) 123-4567',
+        role: 'Account Manager'
+      },
+      {
+        id: uuidv4(),
+        name: 'Jane Doe',
+        email: 'jane.doe@vendor.com',
+        phone: '(555) 987-6543',
+        role: 'Sales Representative'
+      }
+    ];
+  },
+
+  async addVendorContact(vendorId: number, contactData: any): Promise<any> {
+    // Mock implementation
+    return {
+      id: uuidv4(),
+      ...contactData,
+      vendorId
+    };
+  },
+
+  async updateVendorContact(contactId: string, contactData: any): Promise<any> {
+    // Mock implementation
+    return {
+      id: contactId,
+      ...contactData
+    };
+  },
+
+  async deleteVendorContact(contactId: string): Promise<void> {
+    // Mock implementation
+    return;
+  },
+
+  async getVendorNotes(vendorId: number): Promise<any[]> {
+    // Mock implementation
+    return [
+      {
+        id: uuidv4(),
+        content: 'Negotiated new payment terms. They agreed to Net 15 for orders over $5,000.',
+        createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        createdBy: 'Admin User'
+      },
+      {
+        id: uuidv4(),
+        content: 'Quality issues with last shipment discussed. They promised to improve QC process.',
+        createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+        createdBy: 'Admin User'
+      }
+    ];
+  },
+
+  async addVendorNote(vendorId: number, content: string): Promise<any> {
+    // Mock implementation
+    return {
+      id: uuidv4(),
+      content,
+      createdAt: new Date().toISOString(),
+      createdBy: 'Current User'
+    };
+  },
+
+  async updateVendorNote(noteId: string, content: string): Promise<any> {
+    // Mock implementation
+    return {
+      id: noteId,
+      content,
+      updatedAt: new Date().toISOString()
+    };
+  },
+
+  async getVendorDocuments(vendorId: number): Promise<any[]> {
+    // Mock implementation
+    return [
+      {
+        id: uuidv4(),
+        name: 'Vendor Agreement',
+        type: 'pdf',
+        size: 2457600, // 2.4 MB
+        uploadedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+        url: '#'
+      },
+      {
+        id: uuidv4(),
+        name: 'Price List 2023',
+        type: 'xlsx',
+        size: 1228800, // 1.2 MB
+        uploadedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        url: '#'
+      }
+    ];
+  },
+
+  async uploadDocument(formData: FormData): Promise<any> {
+    // Mock implementation
+    const file = formData.get('file') as File;
+    const name = formData.get('name') as string;
+    
+    return {
+      id: uuidv4(),
+      name: name || file.name,
+      type: file.name.split('.').pop(),
+      size: file.size,
+      uploadedAt: new Date().toISOString(),
+      url: '#'
+    };
   }
 };
