@@ -1,75 +1,120 @@
-import { supabase } from "@/integrations/supabase/client";
-import { checkTableExists } from "../utils/supabaseUtils";
-import { mockStaffData } from "../mockData/mockStaffData";
-import type { StaffMember } from "@/types/staff";
-import type { DatabaseStaffMember, DatabaseStaffMemberInsert } from "../../types/databaseTypes";
+import { supabase } from '@/integrations/supabase/client';
+import type { StaffMember } from '@/types/staff/employee';
+import type { Json } from '@/integrations/supabase/types';
+import { mapStaffMemberToDatabase } from '../../utils/staffMapper';
 
-export const createStaffMember = async (data: Omit<StaffMember, "id" | "status">) => {
+// Type to match the database insert requirements
+type DatabaseStaffMemberInsert = {
+  name: string;
+  role: 'manager' | 'chef' | 'server' | 'bartender' | 'host';
+  email?: string;
+  phone?: string;
+  address?: string;
+  department?: string;
+  certifications?: string[];
+  performance_rating?: number;
+  status: 'active' | 'on_break' | 'off_duty';
+  notes?: string;
+  schedule?: Json;
+  salary?: number;
+  hourly_rate?: number;
+  overtime_rate?: number;
+  shift?: string;
+  emergency_contact?: Json;
+  bank_info?: Json;
+  benefits?: Json;
+  employment_status?: 'full_time' | 'part_time' | 'contract' | 'terminated';
+  tax_id?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export const createStaffMember = async (
+  staffData: Omit<StaffMember, 'id'>
+): Promise<number | null> => {
   try {
-    const tableExists = await checkTableExists();
-
-    if (!tableExists) {
-      console.warn('Staff members table does not exist, using mock data');
-      const newId = mockStaffData.length + 1;
-      const newStaff: DatabaseStaffMember = {
-        id: newId,
-        name: data.name,
-        role: data.role,
-        email: data.email,
-        phone: data.phone,
-        status: 'active',
-        salary: data.salary,
-        department: data.department,
-        certifications: data.certifications,
-        performance_rating: data.performanceRating || 0,
-        shift: data.shift,
-        address: data.address,
-        schedule: data.schedule,
-        bank_info: data.bankInfo,
-        emergency_contact: data.emergencyContact,
-        employment_status: 'full_time',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        hire_date: data.hireDate || new Date().toISOString().split('T')[0]
-      };
-      mockStaffData.push(newStaff);
-      return newStaff;
-    }
-
-    const staffData: any = {
-      name: data.name,
-      role: data.role,
-      email: data.email,
-      phone: data.phone,
-      status: 'active',
-      salary: data.salary,
-      department: data.department,
-      certifications: data.certifications,
-      performance_rating: data.performanceRating || 0,
-      shift: data.shift,
-      address: data.address,
-      schedule: data.schedule,
-      bank_info: data.bankInfo,
-      emergency_contact: data.emergencyContact,
-      employment_status: 'full_time',
+    // Convert from app type to database type
+    const dbStaffData = mapStaffMemberToDatabase(staffData);
+    
+    // Add created_at timestamp
+    const dataToInsert = {
+      ...dbStaffData,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      hire_date: data.hireDate || new Date().toISOString().split('T')[0]
+      status: 'active' as const, // Ensure this matches database enum
     };
-
-    const { data: newStaff, error } = await supabase
+    
+    const { data, error } = await supabase
       .from('staff_members')
-      .insert(staffData as any)
-      .select()
-      .single();
-
+      .insert(dataToInsert)
+      .select();
+    
     if (error) throw error;
-    if (!newStaff) throw new Error('Failed to create staff member');
-
-    return newStaff;
+    
+    return data?.[0]?.id || null;
   } catch (error) {
     console.error('Error creating staff member:', error);
-    throw error;
+    return null;
+  }
+};
+
+export const updateStaffMember = async (
+  staffId: number,
+  updates: Partial<StaffMember>
+): Promise<boolean> => {
+  try {
+    // Convert status from app format to database format if needed
+    let dbStatus: 'active' | 'on_break' | 'off_duty' | undefined;
+    let employmentStatus: 'full_time' | 'part_time' | 'contract' | 'terminated' | undefined;
+    
+    if (updates.status) {
+      if (updates.status === 'on_break') {
+        dbStatus = 'on_break';
+      } else if (updates.status === 'off_duty') {
+        dbStatus = 'off_duty';
+      } else if (updates.status === 'terminated') {
+        employmentStatus = 'terminated';
+        dbStatus = 'active'; // Default since database doesn't have terminated
+      } else {
+        dbStatus = 'active';
+      }
+    }
+    
+    // Prepare the updates object with snakecase keys for database
+    const dbUpdates: any = {
+      updated_at: new Date().toISOString()
+    };
+    
+    // Map fields from the updates object
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.role) dbUpdates.role = updates.role;
+    if (dbStatus) dbUpdates.status = dbStatus;
+    if (employmentStatus) dbUpdates.employment_status = employmentStatus;
+    if (updates.email) dbUpdates.email = updates.email;
+    if (updates.phone) dbUpdates.phone = updates.phone;
+    if (updates.address) dbUpdates.address = updates.address;
+    if (updates.department) dbUpdates.department = updates.department;
+    if (updates.certifications) dbUpdates.certifications = updates.certifications;
+    if (updates.performanceRating) dbUpdates.performance_rating = updates.performanceRating;
+    if (updates.notes) dbUpdates.notes = updates.notes;
+    if (updates.schedule) dbUpdates.schedule = updates.schedule;
+    if (updates.salary) dbUpdates.salary = updates.salary;
+    if (updates.hourlyRate) dbUpdates.hourly_rate = updates.hourlyRate;
+    if (updates.overtimeRate) dbUpdates.overtime_rate = updates.overtimeRate;
+    if (updates.shift) dbUpdates.shift = updates.shift;
+    if (updates.emergencyContact) dbUpdates.emergency_contact = updates.emergencyContact;
+    if (updates.bankInfo) dbUpdates.bank_info = updates.bankInfo;
+    if (updates.hireDate) dbUpdates.hire_date = updates.hireDate;
+    
+    const { error } = await supabase
+      .from('staff_members')
+      .update(dbUpdates)
+      .eq('id', staffId);
+    
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error updating staff member:', error);
+    return false;
   }
 };
 

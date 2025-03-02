@@ -1,111 +1,114 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import type { Expense } from "@/types/vendor";
 import { v4 as uuidv4 } from 'uuid';
-import { mapTransactionToExpense } from "./utils/mappingUtils";
+import { supabase } from '@/integrations/supabase/client';
+import type { Expense } from '@/types/vendor';
+import { mapTransactionToExpense } from './utils/mappingUtils';
+
+// Type for valid payment methods
+type ValidPaymentMethod = 'cash' | 'card' | 'bank_transfer' | 'check';
 
 export const expenseApiService = {
   async getExpenses(): Promise<Expense[]> {
-    const { data, error } = await supabase
-      .from('financial_transactions')
-      .select('*')
-      .eq('type', 'expense')
-      .order('date', { ascending: false });
-    
-    if (error) throw error;
-    
-    return (data || []).map(mapTransactionToExpense);
-  },
-
-  async addExpense(expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt' | 'vendorName'>): Promise<Expense> {
-    let vendorName = '';
-    if (expense.vendorId) {
-      const { data } = await supabase
+    try {
+      const { data, error } = await supabase
         .from('financial_transactions')
-        .select('description')
-        .eq('id', expense.vendorId.toString())
-        .maybeSingle();
-        
-      vendorName = data?.description || '';
+        .select('*')
+        .eq('type', 'expense');
+      
+      if (error) throw error;
+      
+      return data.map(transaction => mapTransactionToExpense(transaction));
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      return [];
     }
-    
-    const statusRef = expense.status === 'paid' ? 'paid-' + Date.now() : '';
-    
-    const { data, error } = await supabase
-      .from('financial_transactions')
-      .insert({
-        amount: expense.amount,
-        category_id: expense.vendorId.toString(),
-        date: expense.date,
-        description: expense.description,
-        payment_method: expense.paymentMethod,
-        type: 'expense',
-        created_by: uuidv4(),
-        reference_number: vendorName ? `${vendorName} ${statusRef}` : statusRef
-      })
-      .select()
-      .maybeSingle();
-    
-    if (error) throw error;
-    if (!data) throw new Error('Failed to create expense');
-    
-    return {
-      ...mapTransactionToExpense(data),
-      vendorName,
-      vendorId: expense.vendorId,
-      category: expense.category,
-      taxDeductible: expense.taxDeductible,
-      status: expense.status
-    };
   },
-
-  async updateExpense(id: string, updates: Partial<Omit<Expense, 'id' | 'createdAt' | 'updatedAt' | 'vendorName'>>): Promise<Expense> {
-    let vendorName = '';
-    if (updates.vendorId) {
-      const { data } = await supabase
+  
+  async createExpense(expenseData: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> {
+    try {
+      // Map the payment method to a valid database enum value
+      const paymentMethod = mapToValidPaymentMethod(expenseData.paymentMethod);
+      
+      const { data, error } = await supabase
         .from('financial_transactions')
-        .select('description')
-        .eq('id', updates.vendorId.toString())
-        .maybeSingle();
-        
-      vendorName = data?.description || '';
+        .insert({
+          id: uuidv4(),
+          type: 'expense',
+          amount: expenseData.amount,
+          date: expenseData.date,
+          description: expenseData.description,
+          payment_method: paymentMethod,
+          reference_number: `EXP-${Date.now()}`,
+          category_id: expenseData.category // This might need adjustment based on your schema
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return mapTransactionToExpense({
+        ...data,
+        vendor_id: expenseData.vendorId,
+        vendor_name: expenseData.vendorName,
+        category: expenseData.category,
+        receipt_url: expenseData.receiptUrl,
+        tax_deductible: expenseData.taxDeductible,
+        status: expenseData.status
+      });
+    } catch (error) {
+      console.error('Error creating expense:', error);
+      throw error;
     }
-    
-    const statusRef = updates.status === 'paid' ? 'paid-' + Date.now() : '';
-    
-    const { data, error } = await supabase
-      .from('financial_transactions')
-      .update({
-        amount: updates.amount,
-        category_id: updates.vendorId?.toString(),
-        date: updates.date,
-        description: updates.description,
-        payment_method: updates.paymentMethod,
-        reference_number: vendorName ? `${vendorName} ${statusRef}` : statusRef
-      })
-      .eq('id', id)
-      .select()
-      .maybeSingle();
-    
-    if (error) throw error;
-    if (!data) throw new Error('Expense not found');
-    
-    return {
-      ...mapTransactionToExpense(data),
-      vendorName,
-      vendorId: updates.vendorId || 0,
-      category: updates.category || '',
-      taxDeductible: updates.taxDeductible || false,
-      status: updates.status || 'pending'
-    };
   },
-
-  async deleteExpense(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('financial_transactions')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+  
+  async updateExpense(id: number, updates: Partial<Expense>): Promise<Expense> {
+    try {
+      // Prepare updates in the format the database expects
+      const dbUpdates: any = {};
+      
+      if (updates.amount) dbUpdates.amount = updates.amount;
+      if (updates.date) dbUpdates.date = updates.date;
+      if (updates.description) dbUpdates.description = updates.description;
+      if (updates.paymentMethod) {
+        // Map the payment method to a valid database enum value
+        dbUpdates.payment_method = mapToValidPaymentMethod(updates.paymentMethod);
+      }
+      
+      const { data, error } = await supabase
+        .from('financial_transactions')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return mapTransactionToExpense({
+        ...data,
+        vendor_id: updates.vendorId || data.vendor_id,
+        vendor_name: updates.vendorName || data.vendor_name,
+        category: updates.category || data.category,
+        receipt_url: updates.receiptUrl || data.receipt_url,
+        tax_deductible: updates.taxDeductible ?? data.tax_deductible,
+        status: updates.status || data.status
+      });
+    } catch (error) {
+      console.error('Error updating expense:', error);
+      throw error;
+    }
   }
 };
+
+// Helper function to map any payment method string to valid enum values
+function mapToValidPaymentMethod(method: string): ValidPaymentMethod {
+  const validMethods: Record<string, ValidPaymentMethod> = {
+    'cash': 'cash',
+    'card': 'card',
+    'bank_transfer': 'bank_transfer',
+    'bank transfer': 'bank_transfer',
+    'check': 'check',
+    'cheque': 'check'
+  };
+  
+  return validMethods[method.toLowerCase()] || 'card'; // Default to card if invalid
+}

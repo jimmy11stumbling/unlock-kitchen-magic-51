@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import type { VendorOrder } from '@/types/vendor';
 
@@ -32,7 +33,6 @@ export const orderService = {
     ];
   },
 
-  // Add the missing methods
   async createNewOrder(vendorId: number, items: any[], totalAmount: number): Promise<VendorOrder> {
     // Simulated order creation
     return {

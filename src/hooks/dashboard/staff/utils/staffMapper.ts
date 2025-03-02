@@ -1,56 +1,96 @@
 
-import type { StaffMember } from "@/types/staff";
-import type { DatabaseStaffMember } from "../types/databaseTypes";
+import type { StaffMember } from '@/types/staff';
+import type { Json } from '@/integrations/supabase/types';
 
-// Define the function once, removing the duplicate declaration
+// Define the database staff type
+interface DatabaseStaffMember {
+  id: number;
+  name: string;
+  role: 'manager' | 'chef' | 'server' | 'bartender' | 'host';
+  email?: string;
+  phone?: string;
+  address?: string;
+  department?: string;
+  certifications?: string[];
+  performance_rating?: number;
+  status?: 'active' | 'on_break' | 'off_duty';
+  notes?: string;
+  schedule?: Json;
+  salary?: number;
+  hourly_rate?: number;
+  overtime_rate?: number;
+  shift?: string;
+  emergency_contact?: Json;
+  bank_info?: Json;
+  benefits?: Json;
+  employment_status?: 'full_time' | 'part_time' | 'contract' | 'terminated';
+  tax_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  // Newly added for compatibility
+  hire_date?: string;
+  start_date?: string;
+}
+
+// Map database staff member to app staff member
 export const mapDatabaseToStaffMember = (dbStaff: DatabaseStaffMember): StaffMember => {
-  // Create a schedule object based on the database format
-  const schedule: Record<string, string> = {};
-
-  if (dbStaff.schedule) {
-    if (typeof dbStaff.schedule === 'object') {
-      const scheduleObj = dbStaff.schedule as Record<string, any>;
-      
-      // Map each day from the schedule
-      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-      days.forEach(day => {
-        schedule[day] = scheduleObj[day] ? String(scheduleObj[day]) : 'OFF';
-      });
-    }
+  // Map status from database to app format
+  let appStatus: StaffMember['status'] = 'active';
+  
+  if (dbStaff.status === 'on_break') {
+    appStatus = 'on_break';
+  } else if (dbStaff.status === 'off_duty') {
+    appStatus = 'off_duty';
+  } else if (dbStaff.employment_status === 'terminated') {
+    appStatus = 'terminated';
+  } else if (dbStaff.status === 'active') {
+    appStatus = 'active';
   }
-
-  // Map emergency contact
-  const emergencyContact = dbStaff.emergency_contact ? {
-    name: (dbStaff.emergency_contact as any).name || '',
-    phone: (dbStaff.emergency_contact as any).phone || '',
-    relationship: (dbStaff.emergency_contact as any).relationship || '',
-  } : undefined;
-
+  
   return {
     id: dbStaff.id,
     name: dbStaff.name,
     role: dbStaff.role,
-    email: dbStaff.email,
-    phone: dbStaff.phone,
-    address: dbStaff.address,
-    department: dbStaff.department,
-    schedule,
-    hourlyRate: dbStaff.hourly_rate,
-    overtimeRate: dbStaff.overtime_rate,
-    salary: dbStaff.salary,
-    status: dbStaff.status,
+    email: dbStaff.email || '',
+    phone: dbStaff.phone || '',
+    address: dbStaff.address || '',
+    department: dbStaff.department || '',
+    hireDate: dbStaff.hire_date || dbStaff.start_date || new Date().toISOString(),
+    schedule: dbStaff.schedule as Record<string, string> || {},
+    hourlyRate: dbStaff.hourly_rate || 0,
+    overtimeRate: dbStaff.overtime_rate || 0,
+    status: appStatus,
+    shift: dbStaff.shift || '',
+    salary: dbStaff.salary || 0,
     certifications: dbStaff.certifications || [],
     performanceRating: dbStaff.performance_rating || 0,
-    notes: dbStaff.notes,
-    emergencyContact,
-    shift: dbStaff.shift,
-    hireDate: dbStaff.hire_date || new Date().toISOString().split('T')[0],
-    startDate: dbStaff.hire_date || new Date().toISOString().split('T')[0], // For backward compatibility
-    bankInfo: dbStaff.bank_info
+    notes: dbStaff.notes || '',
+    emergencyContact: dbStaff.emergency_contact as any || {
+      name: '',
+      phone: '',
+      relationship: ''
+    },
+    bankInfo: dbStaff.bank_info as any || {}
   };
 };
 
-export const mapStaffMemberToDatabase = (staff: Partial<StaffMember>): Omit<DatabaseStaffMember, "id"> => {
+// Map app staff member to database format
+export const mapStaffMemberToDatabase = (
+  staff: Omit<StaffMember, 'id'>
+): Omit<DatabaseStaffMember, 'id'> => {
+  // Map app status to database format
+  let dbStatus: DatabaseStaffMember['status'] = 'active';
+  let employmentStatus: DatabaseStaffMember['employment_status'] = 'full_time';
+  
+  if (staff.status === 'on_break') {
+    dbStatus = 'on_break';
+  } else if (staff.status === 'off_duty') {
+    dbStatus = 'off_duty';
+  } else if (staff.status === 'terminated') {
+    employmentStatus = 'terminated';
+    dbStatus = 'active'; // Default to active since database doesn't have terminated status
+  }
+  
   return {
     name: staff.name,
     role: staff.role,
@@ -58,20 +98,19 @@ export const mapStaffMemberToDatabase = (staff: Partial<StaffMember>): Omit<Data
     phone: staff.phone,
     address: staff.address,
     department: staff.department,
-    schedule: staff.schedule,
-    hourly_rate: staff.hourlyRate,
-    overtime_rate: staff.overtimeRate,
-    salary: staff.salary,
-    status: staff.status,
     certifications: staff.certifications,
     performance_rating: staff.performanceRating,
+    status: dbStatus,
     notes: staff.notes,
-    emergency_contact: staff.emergencyContact,
+    schedule: staff.schedule as Json,
+    salary: staff.salary,
+    hourly_rate: staff.hourlyRate,
+    overtime_rate: staff.overtimeRate,
     shift: staff.shift,
-    bank_info: staff.bankInfo,
-    hire_date: staff.hireDate || staff.startDate,
-    employment_status: 'full_time', // Default value
-    created_at: new Date().toISOString(),
+    emergency_contact: staff.emergencyContact as Json,
+    bank_info: staff.bankInfo as Json,
+    employment_status: employmentStatus,
+    hire_date: staff.hireDate,
     updated_at: new Date().toISOString()
   };
 };
