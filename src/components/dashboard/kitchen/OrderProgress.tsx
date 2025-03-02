@@ -1,9 +1,10 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { KitchenOrderItem } from "@/types/staff";
+import { useToast } from "@/components/ui/use-toast";
 
 interface OrderProgressProps {
   items: KitchenOrderItem[];
@@ -15,6 +16,7 @@ export function OrderProgress({ items, createdAt, estimatedDeliveryTime }: Order
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [isDelayed, setIsDelayed] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Calculate progress based on items status
@@ -37,6 +39,15 @@ export function OrderProgress({ items, createdAt, estimatedDeliveryTime }: Order
     if (currentTime >= estimatedTime) {
       setIsDelayed(true);
       setTimeRemaining(Math.floor((currentTime - estimatedTime) / 60000)); // Minutes delayed
+      
+      if (!isDelayed) {
+        // Only toast when status first changes to delayed
+        toast({
+          variant: "destructive",
+          title: "Order Delayed",
+          description: `Order is now delayed by ${Math.floor((currentTime - estimatedTime) / 60000)} minutes.`,
+        });
+      }
     } else {
       setIsDelayed(false);
       setTimeRemaining(Math.floor((estimatedTime - currentTime) / 60000)); // Minutes remaining
@@ -45,6 +56,13 @@ export function OrderProgress({ items, createdAt, estimatedDeliveryTime }: Order
     const timer = setInterval(() => {
       const now = new Date().getTime();
       if (now >= estimatedTime) {
+        if (!isDelayed) {
+          toast({
+            variant: "destructive",
+            title: "Order Delayed",
+            description: `Order is now delayed by ${Math.floor((now - estimatedTime) / 60000)} minutes.`,
+          });
+        }
         setIsDelayed(true);
         setTimeRemaining(Math.floor((now - estimatedTime) / 60000));
       } else {
@@ -53,7 +71,7 @@ export function OrderProgress({ items, createdAt, estimatedDeliveryTime }: Order
     }, 60000); // Update every minute
 
     return () => clearInterval(timer);
-  }, [items, createdAt, estimatedDeliveryTime]);
+  }, [items, createdAt, estimatedDeliveryTime, isDelayed, toast]);
 
   return (
     <div className="space-y-2">
@@ -69,7 +87,8 @@ export function OrderProgress({ items, createdAt, estimatedDeliveryTime }: Order
             Delayed by {timeRemaining}m
           </Badge>
         ) : timeRemaining !== null ? (
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="flex items-center gap-1 text-xs">
+            <Clock className="h-3 w-3" />
             {timeRemaining}m remaining
           </Badge>
         ) : null}

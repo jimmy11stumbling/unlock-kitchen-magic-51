@@ -1,7 +1,9 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, AlertTriangle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Download, AlertTriangle, Filter, Search } from "lucide-react";
 import { exportReport } from "@/utils/exportUtils";
 import { useState, useMemo, useCallback } from "react";
 import type { DailyReport, MenuItem, SalesData } from "@/types/staff";
@@ -11,6 +13,10 @@ import { MetricsCards } from "./reports/MetricsCards";
 import { RevenueChart } from "./reports/RevenueChart";
 import { TopPerformingItems } from "./reports/TopPerformingItems";
 import { ReportsTable } from "./reports/ReportsTable";
+import { DetailedRevenue } from "./reports/DetailedRevenue";
+import { CategoryPerformance } from "./reports/CategoryPerformance";
+import { SalesHeatmap } from "./reports/SalesHeatmap";
+import { Input } from "@/components/ui/input";
 
 interface DailyReportsPanelProps {
   reports: DailyReport[];
@@ -29,6 +35,8 @@ export const DailyReportsPanel = ({
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeView, setActiveView] = useState<'overview' | 'detailed' | 'categories' | 'hourly'>('overview');
   
   const handleExport = async () => {
     try {
@@ -65,9 +73,18 @@ export const DailyReportsPanel = ({
       const reportDate = new Date(report.date);
       if (startDate && reportDate < startDate) return false;
       if (endDate && reportDate > endDate) return false;
+      
+      // Filter by search term in item names
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        return report.topSellingItems.some(item => 
+          item.name.toLowerCase().includes(searchLower)
+        );
+      }
+      
       return true;
     });
-  }, [reports, startDate, endDate]);
+  }, [reports, startDate, endDate, searchTerm]);
 
   const metrics = useMemo(() => {
     if (!filteredReports.length) return null;
@@ -78,6 +95,24 @@ export const DailyReportsPanel = ({
     const totalInventoryCosts = filteredReports.reduce((sum, report) => sum + report.inventoryCosts, 0);
     const totalProfit = filteredReports.reduce((sum, report) => sum + report.netProfit, 0);
 
+    // Calculate period over period comparisons if we have more than one report
+    let revenueGrowth = 0;
+    let orderGrowth = 0;
+    let profitGrowth = 0;
+    
+    if (filteredReports.length > 1) {
+      const sortedReports = [...filteredReports].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      
+      const firstReport = sortedReports[0];
+      const lastReport = sortedReports[sortedReports.length - 1];
+      
+      revenueGrowth = ((lastReport.totalRevenue - firstReport.totalRevenue) / firstReport.totalRevenue) * 100;
+      orderGrowth = ((lastReport.totalOrders - firstReport.totalOrders) / firstReport.totalOrders) * 100;
+      profitGrowth = ((lastReport.netProfit - firstReport.netProfit) / firstReport.netProfit) * 100;
+    }
+
     return {
       totalRevenue,
       totalOrders,
@@ -86,7 +121,10 @@ export const DailyReportsPanel = ({
       profitMargin: (totalProfit / totalRevenue) * 100,
       laborCostRatio: (totalLaborCosts / totalRevenue) * 100,
       inventoryCostRatio: (totalInventoryCosts / totalRevenue) * 100,
-      averageDailyRevenue: totalRevenue / filteredReports.length
+      averageDailyRevenue: totalRevenue / filteredReports.length,
+      revenueGrowth,
+      orderGrowth,
+      profitGrowth
     };
   }, [filteredReports]);
 
@@ -144,62 +182,98 @@ export const DailyReportsPanel = ({
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold">Daily Reports</h2>
-            <p className="text-muted-foreground">Comprehensive performance analysis</p>
+        <div className="flex flex-col gap-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold">Daily Reports</h2>
+              <p className="text-muted-foreground">Comprehensive performance analysis</p>
+            </div>
+            <div className="flex gap-4">
+              <DateRangeSelector
+                startDate={startDate}
+                endDate={endDate}
+                onRangeChange={handleDateRangeChange}
+              />
+              <Select
+                value={timeframe}
+                onValueChange={(value: 'day' | 'week' | 'month') => setTimeframe(value)}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Select timeframe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Daily</SelectItem>
+                  <SelectItem value="week">Weekly</SelectItem>
+                  <SelectItem value="month">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={exportFormat}
+                onValueChange={(value: 'csv' | 'pdf') => setExportFormat(value)}
+              >
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue placeholder="Format" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="csv">CSV</SelectItem>
+                  <SelectItem value="pdf">PDF</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={handleExport}>
+                <Download className="w-4 h-4 mr-2" />
+                Export {exportFormat.toUpperCase()}
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-4">
-            <DateRangeSelector
-              startDate={startDate}
-              endDate={endDate}
-              onRangeChange={handleDateRangeChange}
-            />
-            <Select
-              value={timeframe}
-              onValueChange={(value: 'day' | 'week' | 'month') => setTimeframe(value)}
-            >
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Select timeframe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="day">Daily</SelectItem>
-                <SelectItem value="week">Weekly</SelectItem>
-                <SelectItem value="month">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={exportFormat}
-              onValueChange={(value: 'csv' | 'pdf') => setExportFormat(value)}
-            >
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="Format" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="csv">CSV</SelectItem>
-                <SelectItem value="pdf">PDF</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="w-4 h-4 mr-2" />
-              Export {exportFormat.toUpperCase()}
-            </Button>
+          
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search menu items..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Tabs value={activeView} onValueChange={(v: string) => setActiveView(v as any)}>
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="detailed">Detailed</TabsTrigger>
+                <TabsTrigger value="categories">Categories</TabsTrigger>
+                <TabsTrigger value="hourly">Hourly</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
+
+          <MetricsCards metrics={metrics} />
+
+          {activeView === 'overview' && (
+            <div className="grid gap-6 md:grid-cols-2 mb-6">
+              <RevenueChart 
+                reports={filteredReports}
+                chartType={chartType}
+                onChartTypeChange={setChartType}
+              />
+              <TopPerformingItems items={topPerformingItems} />
+            </div>
+          )}
+          
+          {activeView === 'detailed' && (
+            <DetailedRevenue reports={filteredReports} />
+          )}
+          
+          {activeView === 'categories' && (
+            <CategoryPerformance reports={filteredReports} />
+          )}
+          
+          {activeView === 'hourly' && (
+            <SalesHeatmap reports={filteredReports} />
+          )}
+
+          <ReportsTable reports={filteredReports} />
         </div>
-
-        <MetricsCards metrics={metrics} />
-
-        <div className="grid gap-6 md:grid-cols-2 mb-6">
-          <RevenueChart 
-            reports={filteredReports}
-            chartType={chartType}
-            onChartTypeChange={setChartType}
-          />
-          <TopPerformingItems items={topPerformingItems} />
-        </div>
-
-        <ReportsTable reports={filteredReports} />
       </Card>
     </div>
   );
-};
+}
