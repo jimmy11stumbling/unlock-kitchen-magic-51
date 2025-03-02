@@ -12,8 +12,7 @@ const generateTables = (): TableLayoutType[] => {
       status: "available",
       activeOrder: null,
       shape: "rectangle",
-      position: { x: 100, y: 100 },
-      // Make sure these properties match the TableLayout interface
+      // Replace position with positionX and positionY
       positionX: 100,
       positionY: 100,
       width: 80,
@@ -23,7 +22,8 @@ const generateTables = (): TableLayoutType[] => {
       currentOrderId: null,
       rotation: 0,
       serverAssigned: undefined,
-      notes: ""
+      notes: "",
+      reservationId: null
     },
     {
       id: 2,
@@ -33,8 +33,7 @@ const generateTables = (): TableLayoutType[] => {
       status: "available",
       activeOrder: null,
       shape: "round",
-      position: { x: 200, y: 100 },
-      // Make sure these properties match the TableLayout interface
+      // Replace position with positionX and positionY
       positionX: 200,
       positionY: 100,
       width: 60,
@@ -44,7 +43,8 @@ const generateTables = (): TableLayoutType[] => {
       currentOrderId: null,
       rotation: 0,
       serverAssigned: undefined,
-      notes: ""
+      notes: "",
+      reservationId: null
     }
   ];
 };

@@ -1,206 +1,133 @@
 
-import React, { useState, useEffect } from 'react';
-import { Bell, Volume2 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { useState } from 'react';
+import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { toast } from 'sonner';
-import type { KitchenOrder } from "@/types/staff";
+import { Bell, Volume2, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-interface KitchenNotificationsProps {
-  activeOrders: KitchenOrder[];
-}
-
-export function KitchenNotifications({ activeOrders }: KitchenNotificationsProps) {
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<Array<{
-    id: string;
-    message: string;
-    type: 'warning' | 'info' | 'error';
-    timestamp: Date;
-    read: boolean;
-  }>>([]);
+export function KitchenNotifications() {
+  const [notifications, setNotifications] = useState([
+    {
+      id: '1',
+      title: 'Order #45 Ready',
+      message: 'Table 5 order is ready for pickup',
+      time: '2 mins ago',
+      read: false,
+      type: 'info'
+    },
+    {
+      id: '2',
+      title: 'Temperature Alert',
+      message: 'Walk-in freezer temperature above threshold',
+      time: '10 mins ago',
+      read: false,
+      type: 'warning'
+    },
+    {
+      id: '3',
+      title: 'Inventory Alert',
+      message: 'Chicken stock running low (15%)',
+      time: '30 mins ago',
+      read: true,
+      type: 'warning'
+    }
+  ]);
   
   const [soundEnabled, setSoundEnabled] = useState(true);
-
-  useEffect(() => {
-    // Check for delayed orders
-    const delayed = activeOrders.filter(order => 
-      new Date() > new Date(order.estimated_delivery_time)
-    );
-    
-    // Process new notifications
-    if (delayed.length > 0) {
-      const newNotifications = delayed.map(order => ({
-        id: `delay-${order.id}-${Date.now()}`,
-        message: `Order #${order.order_id} for Table ${order.tableNumber} is delayed`,
-        type: 'warning' as const,
-        timestamp: new Date(),
-        read: false
-      }));
-      
-      // Add new notifications (avoiding duplicates)
-      setNotifications(prev => {
-        // Get IDs of existing notifications
-        const existingIds = prev.map(n => n.id.split('-')[1]);
-        
-        // Filter out notifications for orders that already have a delay notification
-        const uniqueNew = newNotifications.filter(n => 
-          !existingIds.includes(n.id.split('-')[1])
-        );
-        
-        if (uniqueNew.length > 0 && soundEnabled) {
-          playNotificationSound();
-          uniqueNew.forEach(notification => {
-            toast.warning(notification.message);
-          });
-        }
-        
-        return [...uniqueNew, ...prev].slice(0, 20); // Keep last 20 notifications
-      });
-    }
-    
-    // Check for rush orders
-    const rush = activeOrders.filter(order => order.priority === 'rush');
-    if (rush.length > 0) {
-      const newNotifications = rush.map(order => ({
-        id: `rush-${order.id}-${Date.now()}`,
-        message: `RUSH order #${order.order_id} for Table ${order.tableNumber} needs attention!`,
-        type: 'error' as const,
-        timestamp: new Date(),
-        read: false
-      }));
-      
-      // Add new notifications (avoiding duplicates)
-      setNotifications(prev => {
-        // Get IDs of existing notifications
-        const existingIds = prev.map(n => n.id.split('-')[1]);
-        
-        // Filter out notifications for orders that already have a rush notification
-        const uniqueNew = newNotifications.filter(n => 
-          !existingIds.includes(n.id.split('-')[1])
-        );
-        
-        if (uniqueNew.length > 0 && soundEnabled) {
-          playNotificationSound();
-          uniqueNew.forEach(notification => {
-            toast.error(notification.message);
-          });
-        }
-        
-        return [...uniqueNew, ...prev].slice(0, 20); // Keep last 20 notifications
-      });
-    }
-    
-    // Update unread count
-    setUnreadCount(notifications.filter(n => !n.read).length);
-  }, [activeOrders, soundEnabled]);
-
-  const playNotificationSound = () => {
-    try {
-      const audio = new Audio('/sounds/notification.mp3');
-      audio.play().catch(e => console.error("Failed to play notification sound:", e));
-    } catch (error) {
-      console.error("Error playing notification sound:", error);
-    }
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-    setUnreadCount(0);
-  };
-
+  const [alertsEnabled, setAlertsEnabled] = useState(true);
+  
   const markAsRead = (id: string) => {
     setNotifications(notifications.map(n => 
       n.id === id ? { ...n, read: true } : n
     ));
-    setUnreadCount(prev => Math.max(0, prev - 1));
   };
-
+  
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  };
+  
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'warning':
+        return <AlertTriangle className="h-5 w-5 text-amber-500" />;
+      default:
+        return <Bell className="h-5 w-5 text-blue-500" />;
+    }
+  };
+  
+  const unreadCount = notifications.filter(n => !n.read).length;
+  
   return (
-    <div>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-600 rounded-full flex items-center justify-center text-xs text-white">
-                {unreadCount}
-              </span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-80">
-          <div className="flex items-center justify-between mb-2 pb-2 border-b">
-            <h3 className="font-semibold">Notifications</h3>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="sound-notifications"
-                  checked={soundEnabled}
-                  onCheckedChange={setSoundEnabled}
-                  size="sm"
-                />
-                <Label htmlFor="sound-notifications" className="text-xs">
-                  Sound
-                </Label>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={markAllAsRead}
-                className="text-xs h-7"
-              >
-                Mark all read
-              </Button>
-            </div>
-          </div>
-          
-          <div className="max-h-[300px] overflow-y-auto space-y-2">
-            {notifications.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground py-8">
-                No notifications
-              </p>
-            ) : (
-              notifications.map((notification) => (
-                <div 
-                  key={notification.id}
-                  className={`p-2 border rounded-md cursor-pointer ${
-                    !notification.read ? 'bg-slate-50' : ''
-                  }`}
-                  onClick={() => markAsRead(notification.id)}
-                >
-                  <div className="flex justify-between">
-                    <span className={`text-sm font-medium ${
-                      notification.type === 'error' ? 'text-red-600' : 
-                      notification.type === 'warning' ? 'text-amber-600' : 'text-slate-600'
-                    }`}>
-                      {notification.type === 'error' ? 'Urgent' : 
-                       notification.type === 'warning' ? 'Warning' : 'Info'}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {notification.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <p className="text-sm mt-1">{notification.message}</p>
-                </div>
-              ))
-            )}
-          </div>
-          
-          {soundEnabled && (
-            <div className="flex items-center gap-1 mt-2 pt-2 border-t text-xs text-muted-foreground">
-              <Volume2 className="h-3 w-3" />
-              <span>Sound alerts are enabled</span>
-            </div>
+    <Card className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">Kitchen Notifications</h2>
+          {unreadCount > 0 && (
+            <Badge variant="destructive" className="h-5 min-w-5 rounded-full flex items-center justify-center">
+              {unreadCount}
+            </Badge>
           )}
-        </PopoverContent>
-      </Popover>
-    </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Volume2 className="h-4 w-4 text-muted-foreground" />
+            <Switch 
+              id="sound-switch" 
+              checked={soundEnabled} 
+              onCheckedChange={setSoundEnabled}
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <Switch 
+              id="alerts-switch" 
+              checked={alertsEnabled}
+              onCheckedChange={setAlertsEnabled}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-3 max-h-[300px] overflow-auto">
+        {notifications.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">No notifications</p>
+        ) : (
+          notifications.map((notification) => (
+            <div 
+              key={notification.id}
+              className={`p-3 border rounded-md flex items-start gap-3 ${notification.read ? 'bg-background' : 'bg-muted/20'}`}
+              onClick={() => markAsRead(notification.id)}
+            >
+              <div className="mt-1">
+                {getTypeIcon(notification.type)}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center gap-2">
+                  <h4 className={`font-medium truncate ${!notification.read ? 'text-primary' : ''}`}>
+                    {notification.title}
+                  </h4>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {notification.time}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">{notification.message}</p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+      
+      {notifications.length > 0 && (
+        <div className="flex justify-end mt-4">
+          <Button variant="outline" size="sm" onClick={markAllAsRead}>
+            Mark all as read
+          </Button>
+        </div>
+      )}
+    </Card>
   );
 }

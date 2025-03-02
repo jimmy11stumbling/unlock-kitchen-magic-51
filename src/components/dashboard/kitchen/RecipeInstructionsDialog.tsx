@@ -1,12 +1,9 @@
 
-// This file has a TypeScript error where it's trying to access `steps` property on a string
-// The fix would likely involve correctly parsing JSON or ensuring proper type checking
-// Without seeing the full file, I'm adding a type guard to safely handle this case:
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge"; // Add missing Badge import
 import type { MenuItem } from "@/types/staff";
 
 interface RecipeInstructionsDialogProps {
@@ -20,8 +17,10 @@ export function RecipeInstructionsDialog({
   onOpenChange, 
   menuItem 
 }: RecipeInstructionsDialogProps) {
-  // Check if prep_details is defined and is an object
-  const prepDetails = menuItem?.prep_details || {};
+  // Convert prep_details to an object if it's a string, or use an empty object as fallback
+  const prepDetails = typeof menuItem?.prep_details === 'string' 
+    ? JSON.parse(menuItem.prep_details || '{}') 
+    : (menuItem?.prep_details || {});
   
   // Safely handle steps, ensuring it's an array
   const steps = Array.isArray(prepDetails.steps) ? prepDetails.steps : [];
