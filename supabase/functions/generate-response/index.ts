@@ -27,18 +27,6 @@ serve(async (req) => {
   }
 
   try {
-    // Check if this is a request from our Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    );
-
-    // Get current user
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
-
     // Parse request body
     const body: RequestBody = await req.json();
     const { messages, system } = body;

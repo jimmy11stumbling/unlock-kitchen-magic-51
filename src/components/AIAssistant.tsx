@@ -17,7 +17,7 @@ export const AIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
-    content: "Hello! I'm your AI assistant powered by Claude. How can I help you with your restaurant management today?"
+    content: "Hello! I'm your AI assistant for MaestroAI. How can I help you with your restaurant management today?"
   }]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
