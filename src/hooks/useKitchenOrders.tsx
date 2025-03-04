@@ -122,10 +122,13 @@ export function useKitchenOrders(autoRefresh = true) {
 
   const updateOrderStatus = async (orderId: number, status: string) => {
     try {
+      // Ensure status is one of the allowed values
+      const validStatus = status as KitchenOrder['status'];
+      
       // Optimistic update for UI
       setOrders(prev => 
         prev.map(order => 
-          order.id === orderId ? { ...order, status } : order
+          order.id === orderId ? { ...order, status: validStatus } : order
         )
       );
 
@@ -155,13 +158,16 @@ export function useKitchenOrders(autoRefresh = true) {
 
   const updateItemStatus = async (orderId: number, itemIdx: number, status: string) => {
     try {
+      // Ensure status is one of the allowed values
+      const validStatus = status as KitchenOrder['items'][0]['status'];
+      
       // Optimistic update for UI
       setOrders(prev => 
         prev.map(order => {
           if (order.id === orderId) {
             const updatedItems = [...order.items];
             if (updatedItems[itemIdx]) {
-              updatedItems[itemIdx] = { ...updatedItems[itemIdx], status };
+              updatedItems[itemIdx] = { ...updatedItems[itemIdx], status: validStatus };
             }
             return { ...order, items: updatedItems };
           }

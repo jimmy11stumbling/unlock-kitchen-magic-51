@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { KitchenLayout } from "@/components/kitchen/KitchenLayout";
 import { useKitchenOrders } from "@/hooks/useKitchenOrders";
-import { BarChart, LineChart, Clock, AlertCircle, Settings, Thermometer, Tool } from "lucide-react";
+import { BarChart, LineChart, Clock, AlertCircle, Settings, Thermometer, Wrench } from "lucide-react";
 
 export default function Kitchen() {
   const { orders, isLoading, updateOrderStatus, updateItemStatus, refreshOrders } = useKitchenOrders();
@@ -86,7 +86,7 @@ export default function Kitchen() {
               `}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Tool className="h-5 w-5" />
+                    <Wrench className="h-5 w-5" />
                     {equipment.name}
                   </CardTitle>
                   <CardDescription>
