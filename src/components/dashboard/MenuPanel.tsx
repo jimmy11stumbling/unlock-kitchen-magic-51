@@ -12,6 +12,7 @@ import { MenuItemGrid } from "./menu/MenuItemGrid";
 import { MenuItemTable } from "./menu/MenuItemTable";
 import { MenuSearchFilters } from "./menu/MenuSearchFilters";
 
+// Default values for a new menu item
 const defaultMenuItem: MenuItemFormData = {
   name: "",
   price: 0,
@@ -48,6 +49,7 @@ export const MenuPanel = ({
   const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "available" | "unavailable">("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
+  // Filter and sort menu items based on user selections
   const filteredItems = menuItems
     .filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -87,11 +89,9 @@ export const MenuPanel = ({
     setIsAddDialogOpen(false);
   };
 
-  const handleUpdateMenuItem = (itemId: number, updatedItem: Partial<MenuItem>) => {
+  const handleUpdateMenuItem = (itemId: number, updatedItem: Partial<MenuItem>, imageFile?: File) => {
     if (onUpdateMenuItem) {
-      // Extract the imageFile property from the updatedItem if it exists
-      const { imageFile, ...itemData } = updatedItem as any;
-      onUpdateMenuItem(itemId, itemData, imageFile);
+      onUpdateMenuItem(itemId, updatedItem, imageFile);
     }
   };
 
@@ -141,6 +141,7 @@ export const MenuPanel = ({
               variant={viewMode === "grid" ? "default" : "outline"}
               size="icon"
               onClick={() => setViewMode("grid")}
+              title="Grid view"
             >
               <Image className="h-4 w-4" />
             </Button>
@@ -148,6 +149,7 @@ export const MenuPanel = ({
               variant={viewMode === "table" ? "default" : "outline"}
               size="icon"
               onClick={() => setViewMode("table")}
+              title="Table view"
             >
               <TableIcon className="h-4 w-4" />
             </Button>

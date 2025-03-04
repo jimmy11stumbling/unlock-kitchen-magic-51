@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Image, Upload } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MenuItem } from "@/types/staff";
 import type { MenuItemFormData } from "./types";
+import { Switch } from "@/components/ui/switch";
 
 interface MenuItemFormProps {
   data: MenuItemFormData;
@@ -24,6 +25,11 @@ interface MenuItemFormProps {
 export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItemFormProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(data.image || null);
   
+  // Reset preview URL when data changes (e.g., when opening the form for a different item)
+  useEffect(() => {
+    setPreviewUrl(data.image || null);
+  }, [data.id, data.image]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -35,6 +41,8 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
       onChange({ ...data, imageFile: file });
     }
   };
+
+  const categories: MenuItem["category"][] = ["appetizer", "main", "dessert", "beverage"];
 
   return (
     <div className="space-y-4">
@@ -56,19 +64,20 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
           }
         >
           <SelectTrigger>
-            <SelectValue />
+            <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="appetizer">Appetizer</SelectItem>
-            <SelectItem value="main">Main Course</SelectItem>
-            <SelectItem value="dessert">Dessert</SelectItem>
-            <SelectItem value="beverage">Beverage</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
       <div>
-        <label className="text-sm font-medium">Price</label>
+        <label className="text-sm font-medium">Price ($)</label>
         <Input
           type="number"
           step="0.01"
@@ -84,6 +93,7 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
           value={data.description}
           onChange={(e) => onChange({ ...data, description: e.target.value })}
           placeholder="Description"
+          rows={3}
         />
       </div>
 
@@ -93,6 +103,7 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
           type="number"
           value={data.preparationTime}
           onChange={(e) => onChange({ ...data, preparationTime: Number(e.target.value) })}
+          min={1}
         />
       </div>
 
@@ -108,10 +119,21 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
         />
       </div>
 
+      <div className="flex items-center space-x-2">
+        <Switch 
+          id="available"
+          checked={data.available}
+          onCheckedChange={(checked) => onChange({ ...data, available: checked })}
+        />
+        <label htmlFor="available" className="text-sm font-medium">
+          Available
+        </label>
+      </div>
+
       <div>
         <label className="text-sm font-medium">Item Image</label>
         <div className="flex items-center gap-4 mt-2">
-          <div className="relative w-24 h-24 border rounded-md overflow-hidden bg-muted flex items-center justify-center">
+          <div className="relative w-28 h-28 border rounded-md overflow-hidden bg-muted flex items-center justify-center">
             {previewUrl ? (
               <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
             ) : (
@@ -132,6 +154,9 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
                 onChange={handleImageChange}
               />
             </label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Recommended: 16:9 ratio, max 2MB
+            </p>
           </div>
         </div>
       </div>

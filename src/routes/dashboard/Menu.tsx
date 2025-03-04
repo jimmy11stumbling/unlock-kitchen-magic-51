@@ -3,7 +3,7 @@ import { MenuPanel } from "@/components/dashboard/MenuPanel";
 import { useDashboardState } from "@/hooks/useDashboardState";
 import { useToast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
-import { TrendingUp, Users, Clock, ChevronDown, BarChart, Star } from "lucide-react";
+import { TrendingUp, Users, Clock, BarChart, Star } from "lucide-react";
 import type { MenuItem } from "@/types/staff";
 
 const Menu = () => {

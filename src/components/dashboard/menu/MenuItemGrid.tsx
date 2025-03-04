@@ -8,7 +8,9 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MenuItemForm } from "./MenuItemForm";
 import { useToast } from "@/components/ui/use-toast";
+import type { MenuItemFormData } from "./types";
 
+// Predefined food images to use as placeholders
 const placeholderImages = [
   "/food-images/burger.jpg",
   "/food-images/salad.jpg",
@@ -17,13 +19,12 @@ const placeholderImages = [
   "/food-images/pasta.jpg",
   "/food-images/steak.jpg",
   "/food-images/sushi.jpg",
-  "/food-images/cocktail.jpg",
 ];
 
 interface MenuItemGridProps {
   items: MenuItem[];
   onUpdateAvailability: (itemId: number, available: boolean) => void;
-  onUpdateMenuItem?: (itemId: number, item: Partial<MenuItem>) => void;
+  onUpdateMenuItem?: (itemId: number, item: Partial<MenuItem>, imageFile?: File) => void;
   onDeleteMenuItem?: (itemId: number) => void;
 }
 
@@ -33,24 +34,35 @@ export const MenuItemGrid = ({
   onUpdateMenuItem,
   onDeleteMenuItem 
 }: MenuItemGridProps) => {
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [editingItem, setEditingItem] = useState<MenuItemFormData | null>(null);
   const { toast } = useToast();
 
   const handleAvailabilityChange = (itemId: number, available: boolean) => {
     onUpdateAvailability(itemId, available);
-    toast({
-      title: "Availability Updated",
-      description: `Item is now ${available ? 'available' : 'unavailable'}`,
-    });
   };
 
   const handleEdit = (item: MenuItem) => {
-    setEditingItem(item);
+    setEditingItem({
+      ...item,
+      imageFile: undefined
+    });
   };
 
-  const handleUpdateItem = (itemId: number, updatedData: Partial<MenuItem>) => {
-    if (onUpdateMenuItem) {
-      onUpdateMenuItem(itemId, updatedData);
+  const handleUpdateItem = () => {
+    if (editingItem && onUpdateMenuItem) {
+      onUpdateMenuItem(
+        editingItem.id!, 
+        {
+          name: editingItem.name,
+          price: editingItem.price,
+          category: editingItem.category,
+          description: editingItem.description,
+          available: editingItem.available,
+          allergens: editingItem.allergens,
+          preparationTime: editingItem.preparationTime,
+        },
+        editingItem.imageFile
+      );
       setEditingItem(null);
       toast({
         title: "Item Updated",
@@ -71,7 +83,8 @@ export const MenuItemGrid = ({
   };
 
   // Function to get an image URL for a menu item
-  const getItemImage = (item: MenuItem, index: number) => {
+  const getItemImage = (item: MenuItem) => {
+    // If the item has an image, use it
     if (item.image) return item.image;
     
     // Use a deterministic placeholder image based on item ID
@@ -81,30 +94,38 @@ export const MenuItemGrid = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {items.map((item, index) => (
+      {items.map((item) => (
         <Card key={item.id} className="p-4">
           <div className="aspect-video relative overflow-hidden rounded-lg mb-4">
             <img
-              src={getItemImage(item, index)}
+              src={getItemImage(item)}
               alt={item.name}
               className="object-cover w-full h-full"
             />
+            <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+              {item.category}
+            </div>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-start">
               <h3 className="font-semibold">{item.name}</h3>
               <p className="font-semibold">${item.price.toFixed(2)}</p>
             </div>
-            <p className="text-sm text-muted-foreground">{item.description}</p>
-            <div className="flex flex-wrap gap-1">
-              {item.allergens.map((allergen) => (
-                <span
-                  key={allergen}
-                  className="px-2 py-1 text-xs bg-muted rounded-full"
-                >
-                  {allergen}
-                </span>
-              ))}
+            <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+            {item.allergens.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {item.allergens.map((allergen) => (
+                  <span
+                    key={allergen}
+                    className="px-2 py-1 text-xs bg-muted rounded-full"
+                  >
+                    {allergen}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="text-xs text-muted-foreground">
+              Prep time: {item.preparationTime} min
             </div>
             <div className="flex items-center justify-between pt-2">
               <div className="flex items-center space-x-2">
@@ -137,7 +158,7 @@ export const MenuItemGrid = ({
         </Card>
       ))}
 
-      <Dialog open={!!editingItem} onOpenChange={() => setEditingItem(null)}>
+      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Menu Item</DialogTitle>
@@ -145,13 +166,8 @@ export const MenuItemGrid = ({
           {editingItem && (
             <MenuItemForm
               data={editingItem}
-              onSubmit={() => {
-                if (editingItem && onUpdateMenuItem) {
-                  onUpdateMenuItem(editingItem.id, editingItem);
-                  setEditingItem(null);
-                }
-              }}
-              onChange={(data) => setEditingItem({ ...editingItem, ...data })}
+              onSubmit={handleUpdateItem}
+              onChange={setEditingItem}
               submitLabel="Update Item"
             />
           )}
