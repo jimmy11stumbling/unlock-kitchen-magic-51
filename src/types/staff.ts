@@ -1,4 +1,3 @@
-
 export type StaffRole = 'manager' | 'chef' | 'server' | 'host' | 'bartender';
 export type StaffStatus = 'active' | 'on_break' | 'off_duty';
 
@@ -170,6 +169,7 @@ export interface MenuItem {
   description: string;
   available: boolean;
   image?: string;
+  imageFile?: File;
   allergens: string[];
   preparationTime: number;
   orderCount?: number;
@@ -208,7 +208,7 @@ export interface KitchenOrder {
   items: {
     name: string;
     quantity: number;
-    status: "pending" | "cooking" | "ready" | "cancelled" | "preparing";
+    status: "pending" | "preparing" | "ready" | "cancelled" | "cooking";
     modifications: string[];
     menuItemId?: number;
     cookingStation?: string;
@@ -254,7 +254,7 @@ export interface DailySales {
   totalRevenue: number;
 }
 
-export type TableStatus = "available" | "occupied" | "reserved" | "cleaning" | "dirty";
+export type TableStatus = "available" | "occupied" | "reserved" | "cleaning" | "dirty" | "maintenance";
 
 export interface TableData {
   id: number;

@@ -9,6 +9,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MenuItemForm } from "./MenuItemForm";
 import { useToast } from "@/components/ui/use-toast";
 
+const placeholderImages = [
+  "/food-images/burger.jpg",
+  "/food-images/salad.jpg",
+  "/food-images/cake.jpg",
+  "/food-images/pizza.jpg",
+  "/food-images/pasta.jpg",
+  "/food-images/steak.jpg",
+  "/food-images/sushi.jpg",
+  "/food-images/cocktail.jpg",
+];
+
 interface MenuItemGridProps {
   items: MenuItem[];
   onUpdateAvailability: (itemId: number, available: boolean) => void;
@@ -59,13 +70,22 @@ export const MenuItemGrid = ({
     }
   };
 
+  // Function to get an image URL for a menu item
+  const getItemImage = (item: MenuItem, index: number) => {
+    if (item.image) return item.image;
+    
+    // Use a deterministic placeholder image based on item ID
+    const placeholderIndex = item.id % placeholderImages.length;
+    return placeholderImages[placeholderIndex];
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {items.map((item) => (
+      {items.map((item, index) => (
         <Card key={item.id} className="p-4">
           <div className="aspect-video relative overflow-hidden rounded-lg mb-4">
             <img
-              src={item.image || "/placeholder.svg"}
+              src={getItemImage(item, index)}
               alt={item.name}
               className="object-cover w-full h-full"
             />

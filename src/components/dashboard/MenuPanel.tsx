@@ -2,12 +2,11 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Image, Plus, Table as TableIcon } from "lucide-react";
 import { useState } from "react";
 import type { MenuItem } from "@/types/staff";
-import type { MenuPanelProps, MenuItemFormData } from "./menu/types";
+import type { MenuItemFormData } from "./menu/types";
 import { MenuItemForm } from "./menu/MenuItemForm";
 import { MenuItemGrid } from "./menu/MenuItemGrid";
 import { MenuItemTable } from "./menu/MenuItemTable";
@@ -22,6 +21,7 @@ const defaultMenuItem: MenuItemFormData = {
   allergens: [],
   preparationTime: 15,
   image: undefined,
+  imageFile: undefined,
 };
 
 export const MenuPanel = ({
@@ -31,7 +31,14 @@ export const MenuPanel = ({
   onUpdatePrice,
   onDeleteMenuItem,
   onUpdateMenuItem,
-}: MenuPanelProps) => {
+}: {
+  menuItems: MenuItem[];
+  onAddMenuItem: (item: Omit<MenuItem, "id">, imageFile?: File) => void;
+  onUpdateAvailability: (itemId: number, available: boolean) => void;
+  onUpdatePrice: (itemId: number, price: number) => void;
+  onDeleteMenuItem?: (itemId: number) => void;
+  onUpdateMenuItem?: (itemId: number, item: Partial<MenuItem>, imageFile?: File) => void;
+}) => {
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<MenuItem["category"] | "all">("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -39,6 +46,7 @@ export const MenuPanel = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "price" | "category">("name");
   const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "available" | "unavailable">("all");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const filteredItems = menuItems
     .filter(item => {
@@ -72,8 +80,19 @@ export const MenuPanel = ({
       });
       return;
     }
-    onAddMenuItem(newItem);
+    
+    // Pass both the new item data and the image file if it exists
+    onAddMenuItem(newItem, newItem.imageFile);
     setNewItem(defaultMenuItem);
+    setIsAddDialogOpen(false);
+  };
+
+  const handleUpdateMenuItem = (itemId: number, updatedItem: Partial<MenuItem>) => {
+    if (onUpdateMenuItem) {
+      // Extract the imageFile property from the updatedItem if it exists
+      const { imageFile, ...itemData } = updatedItem as any;
+      onUpdateMenuItem(itemId, itemData, imageFile);
+    }
   };
 
   return (
@@ -84,7 +103,7 @@ export const MenuPanel = ({
             <h2 className="text-2xl font-semibold">Menu Management</h2>
             <p className="text-muted-foreground">Manage your restaurant's menu items</p>
           </div>
-          <Dialog>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
@@ -139,14 +158,14 @@ export const MenuPanel = ({
           <MenuItemGrid
             items={filteredItems}
             onUpdateAvailability={onUpdateAvailability}
-            onUpdateMenuItem={onUpdateMenuItem}
+            onUpdateMenuItem={handleUpdateMenuItem}
             onDeleteMenuItem={onDeleteMenuItem}
           />
         ) : (
           <MenuItemTable
             items={filteredItems}
             onUpdateAvailability={onUpdateAvailability}
-            onUpdateMenuItem={onUpdateMenuItem}
+            onUpdateMenuItem={handleUpdateMenuItem}
             onDeleteMenuItem={onDeleteMenuItem}
           />
         )}

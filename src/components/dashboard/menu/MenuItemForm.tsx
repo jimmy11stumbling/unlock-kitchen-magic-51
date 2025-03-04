@@ -9,6 +9,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Image, Upload } from "lucide-react";
+import { useState } from "react";
 import type { MenuItem } from "@/types/staff";
 import type { MenuItemFormData } from "./types";
 
@@ -20,6 +22,20 @@ interface MenuItemFormProps {
 }
 
 export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItemFormProps) => {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(data.image || null);
+  
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Create a preview URL for the selected image
+      const imageUrl = URL.createObjectURL(file);
+      setPreviewUrl(imageUrl);
+      
+      // Update the form data with the image file
+      onChange({ ...data, imageFile: file });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -90,6 +106,34 @@ export const MenuItemForm = ({ data, onSubmit, onChange, submitLabel }: MenuItem
           })}
           placeholder="e.g., nuts, dairy, gluten"
         />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">Item Image</label>
+        <div className="flex items-center gap-4 mt-2">
+          <div className="relative w-24 h-24 border rounded-md overflow-hidden bg-muted flex items-center justify-center">
+            {previewUrl ? (
+              <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+            ) : (
+              <Image className="w-8 h-8 text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex-1">
+            <label htmlFor="menu-item-image" className="cursor-pointer">
+              <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-md text-sm hover:bg-muted/80 transition-colors">
+                <Upload className="w-4 h-4" />
+                <span>Upload Image</span>
+              </div>
+              <input
+                id="menu-item-image"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
+            </label>
+          </div>
+        </div>
       </div>
 
       <div className="pt-4">

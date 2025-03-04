@@ -48,8 +48,8 @@ const getOrderStatusLabel = (status) => {
 };
 
 const TableLayout = ({ table, onUpdateStatus }: TableLayoutProps) => {
-  const handleStatusChange = (status: TableStatus) => {
-    onUpdateStatus(table.id, status);
+  const handleStatusChange = (tableId: number, status: TableStatus) => {
+    onUpdateStatus(tableId, status);
   };
 
   const renderReservationInfo = (table) => {
@@ -122,19 +122,19 @@ const TableLayout = ({ table, onUpdateStatus }: TableLayoutProps) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => handleStatusChange("available")}>
+            <DropdownMenuItem onClick={() => handleStatusChange(table.id, "available")}>
               Mark as Available
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange("occupied")}>
+            <DropdownMenuItem onClick={() => handleStatusChange(table.id, "occupied")}>
               Mark as Occupied
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange("reserved")}>
+            <DropdownMenuItem onClick={() => handleStatusChange(table.id, "reserved")}>
               Mark as Reserved
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange("dirty")}>
+            <DropdownMenuItem onClick={() => handleStatusChange(table.id, "dirty")}>
               Mark as Dirty
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange("maintenance")}>
+            <DropdownMenuItem onClick={() => handleStatusChange(table.id, "maintenance")}>
               Mark as Maintenance
             </DropdownMenuItem>
             <DropdownMenuSeparator />

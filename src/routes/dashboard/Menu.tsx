@@ -2,17 +2,9 @@
 import { MenuPanel } from "@/components/dashboard/MenuPanel";
 import { useDashboardState } from "@/hooks/useDashboardState";
 import { useToast } from "@/components/ui/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { TrendingUp, Users, Clock, ChevronDown, BarChart, Star } from "lucide-react";
 import type { MenuItem } from "@/types/staff";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 
 const Menu = () => {
   const { 
@@ -33,12 +25,32 @@ const Menu = () => {
     .sort((a, b) => ((b.orderCount || 0) - (a.orderCount || 0)))
     .slice(0, 5);
 
-  const handleAddMenuItem = (item: Omit<MenuItem, "id">) => {
-    addMenuItem(item);
-    toast({
-      title: "Menu Item Added",
-      description: `${item.name} has been added to the menu.`,
-    });
+  const handleAddMenuItem = (item: Omit<MenuItem, "id">, imageFile?: File) => {
+    // Process the image file if it exists
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageDataUrl = e.target?.result as string;
+        // Add the menu item with the image data URL
+        addMenuItem({
+          ...item,
+          image: imageDataUrl
+        });
+        
+        toast({
+          title: "Menu Item Added",
+          description: `${item.name} has been added to the menu.`,
+        });
+      };
+      reader.readAsDataURL(imageFile);
+    } else {
+      // Add the menu item without an image
+      addMenuItem(item);
+      toast({
+        title: "Menu Item Added",
+        description: `${item.name} has been added to the menu.`,
+      });
+    }
   };
 
   const handleUpdateAvailability = (itemId: number, available: boolean) => {
@@ -78,12 +90,30 @@ const Menu = () => {
     }
   };
 
-  const handleUpdateMenuItem = (itemId: number, updatedItem: Partial<MenuItem>) => {
-    updateMenuItem(itemId, updatedItem);
-    toast({
-      title: "Menu Item Updated",
-      description: "The menu item has been updated successfully.",
-    });
+  const handleUpdateMenuItem = (itemId: number, updatedItem: Partial<MenuItem>, imageFile?: File) => {
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageDataUrl = e.target?.result as string;
+        // Update the menu item with the image data URL
+        updateMenuItem(itemId, {
+          ...updatedItem,
+          image: imageDataUrl
+        });
+        toast({
+          title: "Menu Item Updated",
+          description: "The menu item has been updated successfully.",
+        });
+      };
+      reader.readAsDataURL(imageFile);
+    } else {
+      // Update the menu item without changing the image
+      updateMenuItem(itemId, updatedItem);
+      toast({
+        title: "Menu Item Updated",
+        description: "The menu item has been updated successfully.",
+      });
+    }
   };
 
   return (
@@ -98,26 +128,6 @@ const Menu = () => {
           <h1 className="font-playfair text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
             MaestroAI
           </h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[280px] p-2">
-              <DropdownMenuItem className="cursor-pointer flex items-center gap-2 p-3">
-                <BarChart className="h-4 w-4" />
-                Menu Analytics
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer flex items-center gap-2 p-3">
-                <Star className="h-4 w-4" />
-                Popular Items
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer flex items-center gap-2 p-3">
-                <Clock className="h-4 w-4" />
-                Prep Times
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
         <p className="text-muted-foreground text-sm">
           Intelligent menu management and optimization system
@@ -163,6 +173,13 @@ const Menu = () => {
             <div key={item.id} className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-lg font-semibold text-muted-foreground">#{index + 1}</span>
+                {item.image && (
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    className="w-10 h-10 rounded-md object-cover"
+                  />
+                )}
                 <div>
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-muted-foreground">${item.price}</p>
