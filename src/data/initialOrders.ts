@@ -39,8 +39,15 @@ export const initialKitchenOrders: KitchenOrder[] = [
   {
     id: 1,
     orderId: 1,
+    tableNumber: 5,
+    serverName: "Sofia Chen",
+    status: "new",
+    timestamp: new Date().toISOString(),
+    estimatedPrepTime: 30,
+    specialInstructions: "Allergy: dairy",
     items: [
       {
+        name: "Truffle Wagyu Burger",
         menuItemId: 1,
         quantity: 2,
         status: "preparing",
@@ -51,6 +58,7 @@ export const initialKitchenOrders: KitchenOrder[] = [
         allergenAlert: true
       },
       {
+        name: "Lobster Bisque",
         menuItemId: 3,
         quantity: 1,
         status: "pending",
@@ -61,6 +69,7 @@ export const initialKitchenOrders: KitchenOrder[] = [
         allergenAlert: true
       },
       {
+        name: "Signature Martini",
         menuItemId: 6,
         quantity: 2,
         status: "ready",
@@ -80,8 +89,15 @@ export const initialKitchenOrders: KitchenOrder[] = [
   {
     id: 2,
     orderId: 2,
+    tableNumber: 3,
+    serverName: "James Wilson",
+    status: "in-progress",
+    timestamp: new Date().toISOString(),
+    estimatedPrepTime: 25,
+    specialInstructions: "VIP Guest - Priority Service",
     items: [
       {
+        name: "Mediterranean Quinoa Bowl",
         menuItemId: 2,
         quantity: 1,
         status: "preparing",
@@ -92,6 +108,7 @@ export const initialKitchenOrders: KitchenOrder[] = [
         allergenAlert: false
       },
       {
+        name: "Tuna Tartare",
         menuItemId: 4,
         quantity: 2,
         status: "pending",

@@ -1,3 +1,4 @@
+
 export type StaffRole = 'manager' | 'chef' | 'server' | 'host' | 'bartender';
 export type StaffStatus = 'active' | 'on_break' | 'off_duty';
 
@@ -118,7 +119,7 @@ export interface Order {
   id: number;
   tableNumber: number;
   items: OrderItem[];
-  status: "pending" | "preparing" | "ready" | "delivered";
+  status: "pending" | "preparing" | "ready" | "delivered" | "completed" | "cancelled";
   total: number;
   timestamp: string;
   serverName: string;
