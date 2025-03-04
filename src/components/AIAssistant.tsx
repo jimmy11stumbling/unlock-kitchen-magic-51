@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { HelpCircle, Send, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -16,7 +17,7 @@ export const AIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
-    content: "Hello! I'm your AI assistant powered by Claude. How can I help you today?"
+    content: "Hello! I'm your AI assistant powered by Claude. How can I help you with your restaurant management today?"
   }]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +37,7 @@ export const AIAssistant = () => {
       const { data, error } = await supabase.functions.invoke('generate-response', {
         body: { 
           messages: [...messages, userMessage],
-          system: "You are a helpful AI assistant for a restaurant management system. Help users with their questions about managing their restaurant, menus, staff, and other related topics."
+          system: "You are a helpful AI assistant for MaestroAI restaurant management system. Provide specific help with menu management, staff scheduling, inventory tracking, order processing, table management, kitchen workflows, customer feedback analysis, and other restaurant operations. When appropriate, suggest practical efficiency improvements based on industry best practices."
         }
       });
 
@@ -118,9 +119,9 @@ export const AIAssistant = () => {
       </Button>
 
       {isOpen && (
-        <div className="fixed bottom-24 right-8 w-[400px] bg-background/95 backdrop-blur-lg border border-border/50 rounded-xl shadow-2xl">
+        <div className="fixed bottom-24 right-8 w-[400px] bg-background/95 backdrop-blur-lg border border-border/50 rounded-xl shadow-2xl z-50">
           <div className="flex justify-between items-center p-4 border-b">
-            <h3 className="text-lg font-semibold">AI Assistant</h3>
+            <h3 className="text-lg font-semibold">Restaurant AI Assistant</h3>
             <Button
               variant="ghost"
               size="icon"
@@ -152,6 +153,14 @@ export const AIAssistant = () => {
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] rounded-xl p-3 bg-secondary/50 backdrop-blur-sm mr-12 flex items-center">
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <span>Thinking...</span>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
 
@@ -161,7 +170,7 @@ export const AIAssistant = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder="Ask about restaurant management..."
                 className="flex-1"
                 disabled={isLoading}
               />
@@ -172,7 +181,11 @@ export const AIAssistant = () => {
                 className="shrink-0"
                 aria-label="Send message"
               >
-                <Send className="h-4 w-4" />
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>

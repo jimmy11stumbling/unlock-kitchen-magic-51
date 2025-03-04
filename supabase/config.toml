@@ -1,1 +1,4 @@
-project_id = "quchvwzsyfmzqyyywbco"
+
+project_id = 'quchvwzsyfmzqyyywbco'
+[functions.generate-response]
+verify_jwt = false

@@ -1,11 +1,24 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+interface RequestBody {
+  messages: Message[];
+  system?: string;
+}
+
+const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_API_KEY = Deno.env.get('CLAUDE_API_KEY') || '';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -14,93 +27,97 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
-    const claudeApiKey = Deno.env.get('CLAUDE_API_KEY');
+    // Check if this is a request from our Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+    );
 
-    if (!claudeApiKey) {
-      console.error('Claude API key not configured');
+    // Get current user
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+
+    // Parse request body
+    const body: RequestBody = await req.json();
+    const { messages, system } = body;
+
+    if (!messages || !Array.isArray(messages)) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Claude API key not configured' 
-        }), 
-        { 
-          status: 500,
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          } 
+        JSON.stringify({
+          error: 'Invalid request: messages array is required'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    console.log('Sending request to Claude API with messages:', messages);
+    console.log('Generating response for user message:', messages[messages.length - 1].content);
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Default system prompt if none provided
+    const systemPrompt = system || 
+      "You are a helpful AI assistant for a MaestroAI restaurant management system. " + 
+      "You provide specific advice for restaurant management, menu planning, staff scheduling, " +
+      "inventory management, customer service, and other restaurant operations. " +
+      "Keep your responses practical and focused on restaurant management.";
+
+    // Format messages for Anthropic
+    const anthropicMessages = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+
+    // Call Anthropic Claude API
+    const response = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${claudeApiKey}`,
-        'anthropic-version': '2024-02-15-preview',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        messages: messages.map(msg => ({
-          role: msg.role,
-          content: msg.content
-        })),
-        model: "claude-3-opus-20240229",
+        model: 'claude-3-haiku-20240307',
         max_tokens: 1000,
-        system: "You are a helpful AI assistant that helps users with their restaurant management system. Be concise but friendly in your responses."
-      }),
+        messages: anthropicMessages,
+        system: systemPrompt
+      })
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Claude API error response:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData
-      });
+      const errorText = await response.text();
+      console.error('Anthropic API error:', errorText);
       
-      throw new Error(`Claude API error: ${response.statusText}`);
+      throw new Error(`Anthropic API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log('Claude API response:', data);
-
-    if (!data.content || !data.content[0] || !data.content[0].text) {
-      console.error('Unexpected response structure:', data);
-      throw new Error('Unexpected response format from Claude API');
-    }
-
-    const responseMessage = data.content[0].text;
-    console.log('Sending response message:', responseMessage);
+    const responseData = await response.json();
     
+    // Log the successful completion
+    console.log('Successfully generated response');
+
+    // Return the response with CORS headers
     return new Response(
       JSON.stringify({ 
-        message: responseMessage 
+        message: responseData.content[0].text,
+        model: responseData.model
       }),
       { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   } catch (error) {
     console.error('Error in generate-response function:', error);
     
-    // Return a properly formatted error response
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'An unexpected error occurred',
-        details: error instanceof Error ? error.stack : undefined
+        error: error.message || 'An error occurred while generating a response' 
       }),
       { 
         status: 500,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   }
