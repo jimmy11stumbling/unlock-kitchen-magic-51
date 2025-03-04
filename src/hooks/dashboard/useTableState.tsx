@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import type { TableLayout, Order, MenuItem, KitchenOrder } from "@/types/staff";
 
@@ -74,14 +73,21 @@ export const useTableState = () => {
     const kitchenOrder: KitchenOrder = {
       id: kitchenOrders.length + 1,
       orderId: order.id,
+      tableNumber: order.tableNumber,
+      serverName: order.serverName,
+      status: "new",
+      timestamp: new Date().toISOString(),
+      estimatedPrepTime: 30,
+      specialInstructions: order.specialInstructions,
       items: order.items.map(item => ({
-        menuItemId: item.id,
+        name: item.name,
         quantity: item.quantity,
         status: "pending",
         cookingStation: "main",
         assignedChef: "",
         modifications: [],
         allergenAlert: false,
+        menuItemId: item.id
       })),
       priority: "normal",
       notes: "",

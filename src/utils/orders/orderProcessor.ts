@@ -53,10 +53,17 @@ export const createKitchenOrder = (
   return {
     id: order.id,
     orderId: order.id,
+    tableNumber: order.tableNumber,
+    serverName: order.serverName,
+    status: "new",
+    timestamp: order.timestamp,
+    estimatedPrepTime: order.estimatedPrepTime,
+    specialInstructions: order.specialInstructions,
     items: order.items.map(item => ({
-      menuItemId: item.id,
+      name: item.name,
       quantity: item.quantity,
       status: "pending",
+      menuItemId: item.id,
       cookingStation: menuItems.find(m => m.id === item.id)?.category === "main" ? "hot" : "cold",
       assignedChef: "",
       modifications: [],

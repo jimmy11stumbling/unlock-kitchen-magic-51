@@ -111,7 +111,7 @@ export interface InventoryItem {
   minQuantity: number;
   price: number;
   category: string;
-  expiryDate?: string; // Add the missing property
+  expiryDate?: string;
 }
 
 export interface Order {
@@ -200,14 +200,14 @@ export interface KitchenOrder {
   orderId?: number;
   tableNumber: number;
   serverName: string;
-  status: "new" | "in-progress" | "ready" | "completed" | "cancelled";
+  status: "new" | "in-progress" | "ready" | "completed" | "cancelled" | "preparing";
   timestamp: string;
   estimatedPrepTime: number;
   specialInstructions?: string;
   items: {
     name: string;
     quantity: number;
-    status: "pending" | "cooking" | "ready" | "cancelled";
+    status: "pending" | "cooking" | "ready" | "cancelled" | "preparing";
     modifications: string[];
     menuItemId?: number;
     cookingStation?: string;
@@ -253,8 +253,7 @@ export interface DailySales {
   totalRevenue: number;
 }
 
-// Add missing TableStatus and TableData types
-export type TableStatus = "available" | "occupied" | "reserved" | "cleaning";
+export type TableStatus = "available" | "occupied" | "reserved" | "cleaning" | "dirty";
 
 export interface TableData {
   id: number;
@@ -263,4 +262,9 @@ export interface TableData {
   status: TableStatus;
   section: string;
   orders?: Order[];
+  reservation?: {
+    id: number;
+    customerName: string;
+    time: string;
+  };
 }
